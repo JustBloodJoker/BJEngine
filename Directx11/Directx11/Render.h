@@ -1,0 +1,81 @@
+#pragma once
+
+#include "pch.h"
+
+#include "Input.h"
+#include "Camera.h"
+#include "Object.h"
+#include "Sound.h"
+
+namespace BJEngine {
+
+
+	class Render
+	{
+	public:
+
+		Render()
+		{
+			driverType = D3D_DRIVER_TYPE_NULL;
+			featureLevel = D3D_FEATURE_LEVEL_11_0;
+			pd3dDevice = nullptr;
+			pImmediateContext = nullptr;
+			pSwapChain = nullptr;
+			pRenderTargetView = nullptr;
+		}
+		~Render() {  };
+
+		bool CreateDevice();
+		void BeginFrame();
+		void EndFrame();
+
+		bool Init();
+		bool Draw();
+		void Close();
+
+		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
+		void SetInput(Input* in) { this->input = in; }
+		bool InitObjs(Object* object);
+
+		void* operator new(size_t i)
+		{
+			return _aligned_malloc(i, 16);
+		}
+
+		void operator delete(void* p)
+		{
+			_aligned_free(p);
+		}
+
+		dx::XMMATRIX GetProjMatrix() { return Projection; };
+
+		ID3D11Device* GetDevice() { return pd3dDevice; }
+		ID3D11DeviceContext* GetContext(){ return pImmediateContext; }
+
+	private:
+		
+		Input* input;
+		BJAudio::Sound* sound;
+		Camera* cam;
+		std::vector<Object*> obj;
+		
+		ID3D11DepthStencilView* depthStencilView;
+		ID3D11Texture2D* depthStencilBuffer;
+
+		ID3D11Device* pd3dDevice;
+		ID3D11DeviceContext* pImmediateContext;
+	
+		dx::XMMATRIX Projection;
+
+		HWND hwnd;
+
+		D3D_DRIVER_TYPE driverType;
+		D3D_FEATURE_LEVEL featureLevel;
+
+		IDXGISwapChain* pSwapChain;
+		ID3D11RenderTargetView* pRenderTargetView;
+
+	};
+
+
+}

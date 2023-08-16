@@ -1,0 +1,16 @@
+Log is create: 08/16/23 12:04:14.
+---------------------------------------
+
+12:04:14::123: *DEBUG: wnd was created
+12:04:15::211: *DEBUG: input was created
+12:04:15::366: *DEBUG: Create camera
+12:04:15::366: *DEBUG: render was created
+12:04:24::9841: *DEBUG: Closing camera
+12:04:24::9841: *DEBUG: Shader was closed
+12:04:24::9841: *DEBUG: Shader was closed
+12:04:24::9841: *DEBUG: Render was closed
+12:04:24::9841: *DEBUG: Close input
+12:04:24::9842: *DEBUG: Destroing wnd
+
+---------------------------------------
+Logs end: 08/16/23 12:04:24.
