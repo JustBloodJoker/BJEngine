@@ -38,19 +38,19 @@ namespace BJEngine {
 
 		if (input->CheckKeyState(DIK_W))
 		{
-			moveBackForward += moveSpeed * deltaTime;
+			eye += moveSpeed * deltaTime * cameraDirection;
 		}
 		if (input->CheckKeyState(DIK_S))
 		{
-			moveBackForward -= moveSpeed * deltaTime;
+			eye -= moveSpeed * deltaTime * cameraDirection;
 		}
 		if (input->CheckKeyState(DIK_D))
 		{
-			moveLeftRight += moveSpeed * deltaTime;
+			eye += moveSpeed * deltaTime * rightDirection;
 		}
 		if (input->CheckKeyState(DIK_A))
 		{
-			moveLeftRight -= moveSpeed * deltaTime;
+			eye -= moveSpeed * deltaTime * rightDirection;
 		}
 		if (input->CheckKeyState(DIK_SPACE))
 		{
@@ -74,25 +74,11 @@ namespace BJEngine {
 
 	void Camera::UpdateCamera()
 	{
-		camRotationMatrix = dx::XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0);
-		at = dx::XMVector3TransformCoord(DefaultForward, camRotationMatrix);
+		at = dx::XMVector3TransformCoord(dx::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
+			dx::XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0));
 		at = dx::XMVector3Normalize(at);
-
-		dx::XMMATRIX RotateYTempMatrix;
-		RotateYTempMatrix = dx::XMMatrixRotationY(camYaw);
-
-		camRight = dx::XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-		up = dx::XMVector3TransformCoord(up, RotateYTempMatrix);
-		camForward = dx::XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
-
-		eye += moveLeftRight * camRight;
-		eye += moveBackForward * camForward;
-
-		moveLeftRight = 0.0f;
-		moveBackForward = 0.0f;
-
-		at = eye + at;
-
+		up = dx::XMVector3TransformCoord(up, dx::XMMatrixRotationY(camYaw));
+		at += eye;
 		viewMatrix = XMMatrixLookAtLH(eye, at, up);
 	}
 

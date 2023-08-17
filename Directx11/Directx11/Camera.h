@@ -27,22 +27,8 @@ namespace BJEngine {
 		dx::XMVECTOR at;
 		dx::XMVECTOR up;
 
-
-		dx::XMVECTOR DefaultForward = dx::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-		dx::XMVECTOR DefaultRight = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-		dx::XMVECTOR camForward = dx::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-		dx::XMVECTOR camRight = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-
-		dx::XMMATRIX camRotationMatrix;
-		dx::XMMATRIX groundWorld;
-
-		float moveLeftRight = 0.0f;
-		float moveBackForward = 0.0f;
-
 		float camYaw = 0.0f;
 		float camPitch = 0.0f;
-
-
 	};
 
 
