@@ -10,6 +10,7 @@ namespace BJEngine {
 
 		friend class DirectionalLight;
 		friend class PointLight;
+		friend class SpotLight;
 
 	public:
 

@@ -28,6 +28,9 @@ namespace BJEngine {
 			pointLight->InitLight(pd3dDevice);
 		}
 
+		if (spotLight != nullptr) {
+			spotLight->InitLight(pd3dDevice);
+		}
 
 		D3D11_BUFFER_DESC bd;
 		ZeroMemory(&bd, sizeof(bd));
@@ -99,6 +102,10 @@ namespace BJEngine {
 
 		if (pointLight != nullptr) {
 			pointLight->DrawLight(pImmediateContext);
+		}
+
+		if (spotLight != nullptr) {
+			spotLight->DrawLight(pImmediateContext);
 		}
 
 		world = dx::XMMatrixScaling(500.0f, 10.0f, 500.0f) * dx::XMMatrixTranslation(0.0f, 10.0f, 0.0f);

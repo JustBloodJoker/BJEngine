@@ -102,6 +102,9 @@
     <ClInclude Include="Log.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="SpotLight.h">
+      <Filter>LIGHT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Directx11.cpp">
@@ -160,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="SpotLight.cpp">
+      <Filter>LIGHT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

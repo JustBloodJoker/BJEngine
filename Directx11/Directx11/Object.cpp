@@ -29,6 +29,7 @@ namespace BJEngine {
 	{
 		LCLOSE(directionalLight);
 		LCLOSE(pointLight);
+		LCLOSE(spotLight);
 		CLOSE(texture);
 		CLOSE(shader);
 		RELEASE(pVertexBuffer);
@@ -85,6 +86,11 @@ namespace BJEngine {
 		pointLight = new PointLight(lightdesc);
 	}
 
+	void Object::SetSpotLight(SpotLightDesc* lightdesc)
+	{
+		spotLight = new SpotLight(lightdesc);
+	}
+
 	void Object::SetDevice(ID3D11Device* pd3dDevice)
 	{
 		this->pd3dDevice = pd3dDevice;
@@ -100,7 +106,6 @@ namespace BJEngine {
 		this->view = view;
 		this->projection = projection;
 	}
-
 
 	HRESULT Object::IsRasterizedObj()
 	{

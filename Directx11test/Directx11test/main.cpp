@@ -25,8 +25,18 @@ int main() {
 	pld->ambient = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	pld->diffuse = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
+	BJEngine::SpotLightDesc* sld= new BJEngine::SpotLightDesc();
+	sld->pos = dx::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	sld->dir = dx::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	sld->range = 1000.0f;
+	sld->cone = 20.0f;
+	sld->att = dx::XMFLOAT3(0.4f, 0.02f, 0.0f);
+	sld->ambient = dx::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	sld->diffuse = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
 	BJEngine::Map* map = new BJEngine::Map();
-	//map->SetPointLight(pld);
+	map->SetPointLight(pld);
+	map->SetSpotLight(sld);
 	map->SetDirectionLight(ld);
 	map->SetShader(shader);
 	map->SetTexture(texture2);

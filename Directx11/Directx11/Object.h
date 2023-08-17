@@ -4,6 +4,7 @@
 #include "Textures.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 #include "Camera.h"
 
 namespace BJEngine {
@@ -47,6 +48,13 @@ namespace BJEngine {
 			dx::XMMATRIX  World;
 		};
 
+		struct IsLightsConstantBuffer
+		{
+			bool isDirLight;
+			bool isPointLight;
+			bool isSpotLight;
+		};
+
 		void SetCamera(Camera* cam);
 		void SetRastVal(bool choose);
 		void SetShader(Shader* shader);
@@ -54,18 +62,18 @@ namespace BJEngine {
 		void SetTransparency(bool choose, float* blendFactor);
 		void SetDirectionLight(DirectionalLightDesc* lightdesc);
 		void SetPointLight(PointLightDesc* lightdesc);
+		void SetSpotLight(SpotLightDesc* lightdesc);
 		void SetDevice(ID3D11Device* pd3dDevice);
 		void SetDeviceContext(ID3D11DeviceContext* pImmediateContext);
 		void SetViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projection);
 
 		virtual bool HasTexture() final { return hastext; };
-		virtual bool HasNormals() final { return hasnorm; };
-		virtual bool HasColor()   final { return hascolor; };
 
 	private:
 		Camera* cam;
 		DirectionalLight* directionalLight = nullptr;
 		PointLight* pointLight = nullptr;
+		SpotLight* spotLight = nullptr;
 		Textures* texture;
 		Shader* shader;
 
@@ -78,8 +86,6 @@ namespace BJEngine {
 		dx::XMMATRIX projection;
 
 		bool hastext = false;
-		bool hasnorm = false;
-		bool hascolor = false;
 
 		ID3D11Device* pd3dDevice;
 		ID3D11DeviceContext* pImmediateContext;

@@ -20,9 +20,25 @@ struct PointLight
     float4 diffuse;
 };
 
-cbuffer DirectionLight : register(b1)
+cbuffer PointLight : register(b1)
 {
     PointLight pointlight;
+};
+
+struct SpotLight
+{
+    float3 pos;
+    float  range;
+    float3 dir;
+    float cone;
+    float3 att;
+    float4 ambient;
+    float4 diffuse;
+};
+
+cbuffer SpotLight : register(b2)
+{
+    SpotLight spotlight;
 };
 
 cbuffer WorldMatrixBuffer : register(b0)
@@ -92,7 +108,28 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         
     finalColor = saturate(finalColor + finalAmbient);
     
+    lightToPixelVec = spotlight.pos - input.worldPos;
+    d = length(lightToPixelVec);
+    
+    finalAmbient = diffuse * spotlight.ambient;
 
+    if( d > spotlight.range )
+        return float4(finalColor, diffuse.a);
+    
+    lightToPixelVec /= d; 
+        
+    howMuchLight = dot(lightToPixelVec, input.normal);
+
+    if( howMuchLight > 0.0f )
+    {    
+        finalColor += diffuse * spotlight.diffuse;
+                    
+        finalColor /= (spotlight.att[0] + (spotlight.att[1] * d)) + (spotlight.att[2] * (d*d));        
+
+        finalColor *= pow(max(dot(-lightToPixelVec, spotlight.dir), 0.0f), spotlight.cone);
+    }
+    
+    finalColor = saturate(finalColor + finalAmbient);
 
     return float4(finalColor, diffuse.a);
 }
