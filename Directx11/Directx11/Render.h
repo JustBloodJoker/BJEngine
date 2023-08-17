@@ -29,9 +29,9 @@ namespace BJEngine {
 		void BeginFrame();
 		void EndFrame();
 
-		bool Init();
-		bool Draw();
-		void Close();
+		virtual bool Init();
+		virtual bool Draw();
+		virtual void Close();
 
 		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
 		void SetInput(Input* in) { this->input = in; }
