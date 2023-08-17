@@ -32,11 +32,6 @@ namespace BJEngine {
 
 	private:
 
-		struct ConstantBufferDirectionalLight
-		{
-			DirectionalLightDesc light;
-		};
-
 		DirectionalLightDesc* light;
 
 	};

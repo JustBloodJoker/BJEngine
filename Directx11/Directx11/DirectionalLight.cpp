@@ -26,7 +26,7 @@ namespace BJEngine {
 			D3D11_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(ConstantBufferDirectionalLight);
+			bd.ByteWidth = sizeof(ConstantBufferLight);
 			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 			bd.CPUAccessFlags = 0;
 
@@ -44,11 +44,13 @@ namespace BJEngine {
 
 	void DirectionalLight::DrawLight(ID3D11DeviceContext* pImmediateContext)
 	{
-		ConstantBufferDirectionalLight LIGHT;
+		ConstantBufferLight LIGHT;
 
 		if (isLightOn)
 		{
-			LIGHT.light = *light;
+			LIGHT.light.ambient = light->ambient;
+			LIGHT.light.diffuse = light->diffuse;
+			LIGHT.light.dir = light->dir;
 		}
 
 		pImmediateContext->UpdateSubresource(lightBuffer, 0, NULL, &LIGHT, 0, 0);

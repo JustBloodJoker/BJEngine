@@ -20,18 +20,11 @@ namespace BJEngine {
 
 		shader->Init(pd3dDevice);
 
-		if (directionalLight != nullptr) {
-			directionalLight->InitLight(pd3dDevice);
-		}
+		light->InitLight(pd3dDevice);
 
-		if (pointLight != nullptr) {
-			pointLight->InitLight(pd3dDevice);
-		}
+		InitIsLightConstantBuffer();
 
-		if (spotLight != nullptr) {
-			spotLight->InitLight(pd3dDevice);
-		}
-
+		
 		D3D11_BUFFER_DESC bd;
 		ZeroMemory(&bd, sizeof(bd));
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -96,16 +89,10 @@ namespace BJEngine {
 		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		if (directionalLight != nullptr) {
-			directionalLight->DrawLight(pImmediateContext);
-		}
+		DrawIsLightConstantBuffer();
 
-		if (pointLight != nullptr) {
-			pointLight->DrawLight(pImmediateContext);
-		}
-
-		if (spotLight != nullptr) {
-			spotLight->DrawLight(pImmediateContext);
+		if (light != nullptr) {
+			light->DrawLight(pImmediateContext);
 		}
 
 		world = dx::XMMatrixScaling(500.0f, 10.0f, 500.0f) * dx::XMMatrixTranslation(0.0f, 10.0f, 0.0f);

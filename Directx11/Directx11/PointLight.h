@@ -31,17 +31,12 @@ namespace BJEngine {
         ~PointLight();
 
         bool InitLight(ID3D11Device* pd3dDevice) override;
-
         void DrawLight(ID3D11DeviceContext* pImmediateContext) override;
-        void DrawLight(ID3D11DeviceContext* pImmediateContext, float x, float y, float z);
-
+        
     private:
         PointLightDesc* light;
 
-        struct ConstantBufferPointLight
-        {
-            PointLightDesc light;
-        };
+        
     };
 
 

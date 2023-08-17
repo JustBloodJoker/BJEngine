@@ -3,6 +3,23 @@
 
 namespace BJEngine {
 
+	struct LightDesc {
+		LightDesc()
+		{
+			ZeroMemory(this, sizeof(LightDesc));
+		}
+		dx::XMFLOAT3 pos;
+		float range;
+		dx::XMFLOAT3 dir;
+		float cone;
+		dx::XMFLOAT3 att;
+		float pad;
+		dx::XMFLOAT4 ambient;
+		dx::XMFLOAT4 diffuse;
+		
+		
+	};
+
 
 	class Light
 	{
@@ -30,6 +47,10 @@ namespace BJEngine {
 		ID3D11Buffer* lightBuffer;
 		bool isLightOn = false;
 
+		struct ConstantBufferLight
+		{
+			LightDesc light;
+		};
 	};
 
 

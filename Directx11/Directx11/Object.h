@@ -29,6 +29,9 @@ namespace BJEngine {
 		virtual void Draw();
 		virtual bool Init();
 
+		bool InitIsLightConstantBuffer();
+		void DrawIsLightConstantBuffer();
+
 		struct Vertex
 		{
 			Vertex() {}
@@ -50,9 +53,10 @@ namespace BJEngine {
 
 		struct IsLightsConstantBuffer
 		{
-			bool isDirLight;
-			bool isPointLight;
-			bool isSpotLight;
+			BOOL isDirLight;
+			BOOL isPointLight;
+			BOOL isSpotLight;
+			int pad;
 		};
 
 		void SetCamera(Camera* cam);
@@ -71,11 +75,13 @@ namespace BJEngine {
 
 	private:
 		Camera* cam;
-		DirectionalLight* directionalLight = nullptr;
-		PointLight* pointLight = nullptr;
-		SpotLight* spotLight = nullptr;
+		Light* light = nullptr;
 		Textures* texture;
 		Shader* shader;
+
+
+		IsLightsConstantBuffer istypeoflight;
+		ID3D11Buffer* ilcb;
 
 		ID3D11Buffer* pVertexBuffer;
 		ID3D11Buffer* pIndexBuffer;

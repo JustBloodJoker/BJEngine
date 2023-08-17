@@ -25,8 +25,6 @@ namespace BJEngine {
 
 	void Cube::Close()
 	{
-		LCLOSE(directionalLight);
-		LCLOSE(pointLight);
 		CLOSE(texture);
 		CLOSE(shader);
 		RELEASE(pVertexBuffer);
@@ -50,13 +48,6 @@ namespace BJEngine {
 		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		if (directionalLight != nullptr) {
-			directionalLight->DrawLight(pImmediateContext);
-		}
-
-		if (pointLight != nullptr) {
-			pointLight->DrawLight(pImmediateContext);
-		}
 
 		ConstantBuffer cb;
 		cb.WVP = XMMatrixTranspose(world * view * projection);
@@ -80,13 +71,7 @@ namespace BJEngine {
 
 		shader->Init(pd3dDevice);
 
-		if (directionalLight != nullptr) {
-			directionalLight->InitLight(pd3dDevice);
-		}
 
-		if (pointLight != nullptr) {
-			pointLight->InitLight(pd3dDevice);
-		}
 
 		D3D11_BUFFER_DESC bd;
 		ZeroMemory(&bd, sizeof(bd));

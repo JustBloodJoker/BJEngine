@@ -27,9 +27,7 @@ namespace BJEngine {
 
 	void Object::Close()
 	{
-		LCLOSE(directionalLight);
-		LCLOSE(pointLight);
-		LCLOSE(spotLight);
+		LCLOSE(light);
 		CLOSE(texture);
 		CLOSE(shader);
 		RELEASE(pVertexBuffer);
@@ -38,6 +36,7 @@ namespace BJEngine {
 		RELEASE(wireFrame);
 		RELEASE(transparency);
 		DELETE(blendFactor);
+		RELEASE(ilcb);
 	}
 
 	void Object::Draw()
@@ -48,6 +47,32 @@ namespace BJEngine {
 	bool Object::Init()
 	{
 		return true;
+	}
+
+	bool Object::InitIsLightConstantBuffer()
+	{
+		D3D11_BUFFER_DESC bd;
+		ZeroMemory(&bd, sizeof(bd));
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.ByteWidth = sizeof(IsLightsConstantBuffer);
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = 0;
+
+		HRESULT hr = pd3dDevice->CreateBuffer(&bd, NULL, &ilcb);
+		if (FAILED(hr)) {
+			Log::Get()->Err("IslightConstantBuffer create error");
+			return false;
+		}
+
+		return true;
+
+	}
+
+	void Object::DrawIsLightConstantBuffer()
+	{
+		pImmediateContext->UpdateSubresource(ilcb, 0, NULL, &istypeoflight, 0, 0);
+		pImmediateContext->PSSetConstantBuffers(1, 1, &ilcb);
+
 	}
 
 	void Object::SetCamera(Camera* cam)
@@ -78,17 +103,35 @@ namespace BJEngine {
 
 	void Object::SetDirectionLight(DirectionalLightDesc* lightdesc)
 	{
-		directionalLight = new DirectionalLight(lightdesc);
+		if (light != nullptr) {
+			ZeroMemory(&istypeoflight, sizeof(IsLightsConstantBuffer));
+			LCLOSE(light);
+		}
+
+		light = new DirectionalLight(lightdesc);
+		istypeoflight.isDirLight = true;
 	}
 
 	void Object::SetPointLight(PointLightDesc* lightdesc)
 	{
-		pointLight = new PointLight(lightdesc);
+		if (light != nullptr) {
+			ZeroMemory(&istypeoflight, sizeof(IsLightsConstantBuffer));
+			LCLOSE(light);
+		}
+
+		light = new PointLight(lightdesc);
+		istypeoflight.isPointLight = true;
 	}
 
 	void Object::SetSpotLight(SpotLightDesc* lightdesc)
 	{
-		spotLight = new SpotLight(lightdesc);
+		if (light != nullptr) {
+			ZeroMemory(&istypeoflight, sizeof(IsLightsConstantBuffer));
+			LCLOSE(light);
+		}
+
+		light = new SpotLight(lightdesc);
+		istypeoflight.isSpotLight = true;
 	}
 
 	void Object::SetDevice(ID3D11Device* pd3dDevice)
