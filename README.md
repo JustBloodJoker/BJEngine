@@ -13,5 +13,8 @@ version 1.1
 Create SpotLight class. Added spotlight to the shader
 
 version 1.1.1
-The ability to create multiple light sources for a single object has been disabled
-Created a boolean constant buffer to determine the type of light object present
+The ability to create multiple light sources for a single object has been disabled.
+Created a boolean constant buffer to determine the type of light object present.
+
+version 1.1.2
+Changed camera from first-person to free-look. Optimized memory usage in the Camera class.
