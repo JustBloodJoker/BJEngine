@@ -23,4 +23,7 @@ version 1.1.3
 The methods of the Render class: Close, Init, and Draw, are now virtual.
 
 version 1.2
-Added the Rasterize state to the Map class. Created the StaticModelOBJ class (matrix-changing functions will be added soon).
+Added the Rasterize state to the Map class. Created the StaticModelOBJ class.
+
+version 1.2.1
+Added matrix-changing functions
