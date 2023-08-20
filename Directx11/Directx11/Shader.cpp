@@ -56,7 +56,7 @@ namespace BJEngine {
 			return false;
 		}
 
-		UINT numElements = ARRAYSIZE(layout);
+		
 
 		hr = device->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), &pVertexLayout);
 		if (FAILED(hr))

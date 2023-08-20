@@ -91,12 +91,12 @@ namespace BJEngine {
 		float ClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);
 		pImmediateContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		pImmediateContext->OMSetRenderTargets(1, &pRenderTargetView, depthStencilView);
 	}
 
 	void Render::EndFrame()
 	{
 		pSwapChain->Present(0, 0);
-		pImmediateContext->OMSetRenderTargets(1, &pRenderTargetView, depthStencilView);
 	}
 
 	bool Render::Init()
@@ -153,14 +153,10 @@ namespace BJEngine {
 
 		cam->CameraMove(input);
 
-		
-		for (auto el : obj) {
-			el->SetViewAndProjectionMatrix(cam->GetViewMatrix(), GetProjMatrix());
-			el->Draw();
-		}
+
 
 		EndFrame();
-
+		
 		return true;
 	}
 
@@ -168,9 +164,7 @@ namespace BJEngine {
 	{
 		CLOSE(sound);
 		CLOSE(cam);
-		for (auto& el : obj) {
-			CLOSE(el);
-		}
+
 		RELEASE(depthStencilView);
 		RELEASE(depthStencilBuffer);
 		RELEASE(pd3dDevice);
@@ -183,20 +177,7 @@ namespace BJEngine {
 		Log::Get()->Debug("Render was closed");
 	}
 
-	bool BJEngine::Render::InitObjs(Object* object)
-	{
-		object->SetCamera(cam);
-		object->SetDevice(GetDevice());
-		object->SetDeviceContext(GetContext());
-
-		if (!object->Init()) {
-			return false;
-		};
-
-		obj.push_back(object);
-
-		return true;
-	}
+	
 
 
 }

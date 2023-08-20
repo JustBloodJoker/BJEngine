@@ -18,13 +18,20 @@ namespace BJEngine {
 	{
 		HRESULT hr = S_OK;
 
+		D3D11_INPUT_ELEMENT_DESC layout[3] = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		shader->SetInputLayout(layout, ARRAYSIZE(layout));
 		shader->Init(pd3dDevice);
 
+		if(light != nullptr)
 		light->InitLight(pd3dDevice);
 
 		InitIsLightConstantBuffer();
 
-		
 		D3D11_BUFFER_DESC bd;
 		ZeroMemory(&bd, sizeof(bd));
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -74,6 +81,17 @@ namespace BJEngine {
 		if (FAILED(IsTransparencyObj()))
 			return false;
 
+		ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+		cmdesc.FillMode = D3D11_FILL_SOLID;
+		cmdesc.FrontCounterClockwise = true;
+		cmdesc.CullMode = D3D11_CULL_NONE;
+		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullNone);
+		if (FAILED(hr))
+		{
+			Log::Get()->Err("Create rast state error");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -107,7 +125,7 @@ namespace BJEngine {
 			pImmediateContext->PSSetShaderResources(0, 1, &texture->GetTexture());
 			pImmediateContext->PSSetSamplers(0, 1, &texture->GetTexSamplerState());
 		}
-
+		pImmediateContext->RSSetState(renStateCullNone);
 		pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 		pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
 		pImmediateContext->DrawIndexed(6, 0, 0);

@@ -29,14 +29,13 @@ namespace BJEngine {
 		void BeginFrame();
 		void EndFrame();
 
-		virtual bool Init();
+		bool Init();
 		virtual bool Draw();
 		virtual void Close();
 
 		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
 		void SetInput(Input* in) { this->input = in; }
-		bool InitObjs(Object* object);
-
+		
 		void* operator new(size_t i)
 		{
 			return _aligned_malloc(i, 16);
@@ -51,13 +50,13 @@ namespace BJEngine {
 
 		ID3D11Device* GetDevice() { return pd3dDevice; }
 		ID3D11DeviceContext* GetContext(){ return pImmediateContext; }
-
+		Camera* GetCamera() { return cam; }
+		Input* GetInput() { return input; }
 	private:
 		
 		Input* input;
 		BJAudio::Sound* sound;
 		Camera* cam;
-		std::vector<Object*> obj;
 		
 		ID3D11DepthStencilView* depthStencilView;
 		ID3D11Texture2D* depthStencilBuffer;

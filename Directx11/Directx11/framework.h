@@ -18,9 +18,6 @@
 #include <dxsdk-d3dx/D3DX11.h>
 #include <d3d11.h>
 
-#include <vector>
-
-#include <string>
 
 
 #include <DirectXMath.h>
@@ -30,20 +27,16 @@ namespace dx = DirectX;
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-
+#include <vector>
 #include <fstream>
-
+#include <istream>
+#include <string>
+#include <sstream>
 #include <map>
 
 #include <d3dcompiler.h>
-
-
 #include <dwrite.h>
 #include <d2d1.h>
-
-
-
 #include <xaudio2.h>
 #include <x3daudio.h>
-
 #include <dinput.h>

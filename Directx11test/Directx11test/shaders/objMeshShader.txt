@@ -1,0 +1,133 @@
+struct Light
+{
+	float3 pos;
+	float range;
+	float3 dir;
+	float cone;
+	float3 att;
+	float4 ambient;
+	float4 diffuse;
+};
+
+cbuffer Light : register(b0)
+{
+    Light light;
+};
+
+cbuffer isLights : register(b1)
+{
+    int isDirLight;
+    int isPointLight;
+    int isSpotLight;
+};
+
+cbuffer pixelTexureBuffer : register(b2)
+{
+	float4 diffuse;
+	int isTexture;
+	int isNormalMap;
+};
+
+cbuffer WorldMatrixBuffer : register(b0)
+{
+    float4x4 WVP;
+    float4x4 World;
+};
+
+
+Texture2D ObjTexture;
+Texture2D ObjNormMap;
+SamplerState ObjSamplerState;
+
+struct VS_OUTPUT
+{
+    float4 Pos : SV_POSITION;
+    float4 worldPos : POSITION;
+    float2 TexCoord : TEXCOORD;
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+};
+
+
+VS_OUTPUT VS(float4 inPos : POSITION, float2 inTexCoord : TEXCOORD, float3 normal : NORMAL, float3 tangent : TANGENT)
+{
+    VS_OUTPUT output;
+
+    output.Pos = mul(inPos, WVP);
+    output.worldPos = mul(inPos, World);
+    output.normal = mul(normal, World);
+    output.tangent = mul(tangent, World);
+    output.TexCoord = inTexCoord;
+
+    return output;
+}
+
+float4 PS(VS_OUTPUT input) : SV_TARGET
+{
+    input.normal = normalize(input.normal);
+    float4 diffuse = diffuse;
+    if(isTexture) diffuse = ObjTexture.Sample( ObjSamplerState, input.TexCoord );
+
+  if(isNormalMap == true)
+    {
+        float4 normalMap = ObjNormMap.Sample( ObjSamplerState, input.TexCoord );
+        normalMap = (2.0f*normalMap) - 1.0f;
+        input.tangent = normalize(input.tangent - dot(input.tangent, input.normal)*input.normal);
+        float3 biTangent = cross(input.normal, input.tangent);
+        float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
+        input.normal = normalize(mul(normalMap, texSpace));
+    }
+
+if(isSpotLight == true){
+    
+
+    float3 finalColor = float3(0.0f, 0.0f, 0.0f);
+    float3 lightToPixelVec = light.pos - input.worldPos;
+    float d = length(lightToPixelVec);
+    float3 finalAmbient = diffuse * light.ambient;
+    if( d > light.range )
+        return float4(finalAmbient, diffuse.a);
+       
+    lightToPixelVec /= d;  
+    float howMuchLight = dot(lightToPixelVec, input.normal);
+    if( howMuchLight > 0.0f )
+    {    
+        finalColor += diffuse * light.diffuse;
+        finalColor /= (light.att[0] + (light.att[1] * d)) + (light.att[2] * (d*d));        
+        finalColor *= pow(max(dot(-lightToPixelVec, light.dir), 0.0f), light.cone);
+    }
+    finalColor = saturate(finalColor + finalAmbient);
+    return float4(finalColor, diffuse.a);
+}else if (isDirLight == true)
+    {
+    input.normal = normalize(input.normal);
+    float3 finalColor;
+    finalColor = diffuse * light.ambient;
+    finalColor += saturate(dot(light.dir, input.normal) * light.diffuse * diffuse);
+    return float4(finalColor, diffuse.a);
+    } else if (isPointLight == true){
+    
+    input.normal = normalize(input.normal);
+    float3 finalColor = float3(0.0f, 0.0f, 0.0f);
+    float3 lightToPixelVec = light.pos - input.worldPos;
+    float d = length(lightToPixelVec);
+    float3 finalAmbient = diffuse * light.ambient;
+
+    if( d > light.range )
+        return float4(finalAmbient, diffuse.a);
+        
+    lightToPixelVec /= d; 
+    
+    float howMuchLight = dot(lightToPixelVec, input.normal);
+
+    if( howMuchLight > 0.0f )
+    {    
+        finalColor += howMuchLight * diffuse * light.diffuse;
+        finalColor /= light.att[0] + (light.att[1] * d) + (light.att[2] * (d*d));
+    }    
+        
+    finalColor = saturate(finalColor + finalAmbient);
+    
+    return float4(finalColor, diffuse.a);
+    } else return diffuse; 
+}

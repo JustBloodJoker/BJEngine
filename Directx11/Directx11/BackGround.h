@@ -19,6 +19,7 @@ namespace BJEngine {
 		
 
 	private:
+		ID3D11DepthStencilState* depthStateLessEqual;
 
 		int latLines = 10, longLines = 10;
 		int numSphereVertices = ((latLines - 2) * longLines) + 2;
@@ -29,8 +30,6 @@ namespace BJEngine {
 		
 		void CreateSphere();
 	
-		ID3D11RasterizerState* renStateCullNone;
-		ID3D11DepthStencilState* depthStateLessEqual;
 	};
 
 

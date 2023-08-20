@@ -50,6 +50,13 @@ namespace BJEngine {
             return false;
         }
 
+        D3D11_INPUT_ELEMENT_DESC layout[3] = {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        };
+
+        shader->SetInputLayout(layout, ARRAYSIZE(layout));
         shader->Init(pd3dDevice);
 
         texture->InitCubeMap(pd3dDevice);
@@ -96,9 +103,18 @@ namespace BJEngine {
 
     void BackGround::Draw()
     {
+        
+        pImmediateContext->IASetInputLayout(shader->GetInputLayout());
+        pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        
+
+        
+
+
+
         world = dx::XMMatrixIdentity();
 
-        world = dx::XMMatrixScaling(5.0f, 5.0f, 5.0f) * dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
+        world = dx::XMMatrixScaling(5.0f, -5.0f, 5.0f) * dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
 
         UINT stride = sizeof(Vertex);
         UINT offset = 0;
@@ -127,7 +143,6 @@ namespace BJEngine {
     void BackGround::Close()
     {
         this->Object::Close();
-        RELEASE(renStateCullNone);
         RELEASE(depthStateLessEqual);
         vertices.clear();
         indices.clear();

@@ -105,6 +105,9 @@
     <ClInclude Include="SpotLight.h">
       <Filter>LIGHT</Filter>
     </ClInclude>
+    <ClInclude Include="StaticModelOBJ.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Directx11.cpp">
@@ -166,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="SpotLight.cpp">
       <Filter>LIGHT</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticModelOBJ.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -17,6 +17,7 @@ namespace BJEngine {
 		friend class Cube;
 		friend class Map;
 		friend class BackGround;
+		friend class StaticModelOBJ;
 
 	public:
 
@@ -110,6 +111,9 @@ namespace BJEngine {
 
 
 		D3D11_RASTERIZER_DESC cmdesc;
+
+		ID3D11RasterizerState* renStateCullNone;
+		
 	};
 
 

@@ -37,6 +37,7 @@ namespace BJEngine {
 		RELEASE(transparency);
 		DELETE(blendFactor);
 		RELEASE(ilcb);
+		RELEASE(renStateCullNone);
 	}
 
 	void Object::Draw()
