@@ -15,40 +15,12 @@ namespace BJEngine {
 
     bool BackGround::Init()
     {
+        HRESULT hr = S_OK;
         D3D11_BUFFER_DESC bd;
-        ZeroMemory(&bd, sizeof(bd));
-
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(Vertex) * numSphereVertices;
-        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        bd.CPUAccessFlags = 0;
-        bd.MiscFlags = 0;
-
         D3D11_SUBRESOURCE_DATA pSystem;
-        ZeroMemory(&pSystem, sizeof(pSystem));
-
-        pSystem.pSysMem = &vertices[0];
-
-        HRESULT hr = pd3dDevice->CreateBuffer(&bd, &pSystem, &pVertexBuffer);
-        if (FAILED(hr))
-        {
-            Log::Get()->Err("vertex buffer create error");
-            return false;
-        }
-
-        ZeroMemory(&bd, sizeof(bd));
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(DWORD) * numSphereFaces * 3;
-        bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-        bd.CPUAccessFlags = 0;
-        bd.MiscFlags = 0;
-        pSystem.pSysMem = &indices[0];
-        hr = pd3dDevice->CreateBuffer(&bd, &pSystem, &pIndexBuffer);
-        if (FAILED(hr))
-        {
-            Log::Get()->Err("index buffer create error");
-            return false;
-        }
+        
+        pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * numSphereVertices, &vertices[0]);
+        pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(DWORD) * numSphereFaces * 3, &indices[0]);
 
         D3D11_INPUT_ELEMENT_DESC layout[3] = {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -86,17 +58,9 @@ namespace BJEngine {
             return false;
         }
 
-        ZeroMemory(&bd, sizeof(bd));
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(ConstantBuffer);
-        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bd.CPUAccessFlags = 0;
-        hr = pd3dDevice->CreateBuffer(&bd, NULL, &pConstantBuffer);
-        if (FAILED(hr))
-        {
-            Log::Get()->Err("constant buffer create error");
-            return false;
-        }
+
+        pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
+
 
         return true;
     }

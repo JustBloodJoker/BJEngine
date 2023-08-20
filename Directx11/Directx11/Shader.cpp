@@ -56,8 +56,6 @@ namespace BJEngine {
 			return false;
 		}
 
-		
-
 		hr = device->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), &pVertexLayout);
 		if (FAILED(hr))
 		{

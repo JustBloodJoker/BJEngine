@@ -52,21 +52,13 @@ namespace BJEngine {
 
 	bool Object::InitIsLightConstantBuffer()
 	{
-		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(IsLightsConstantBuffer);
-		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		bd.CPUAccessFlags = 0;
+		
+		ilcb = Object::InitConstantBuffer<IsLightsConstantBuffer>(pd3dDevice);
 
-		HRESULT hr = pd3dDevice->CreateBuffer(&bd, NULL, &ilcb);
-		if (FAILED(hr)) {
-			Log::Get()->Err("IslightConstantBuffer create error");
+		if (ilcb != nullptr)
+			return true;
+		else
 			return false;
-		}
-
-		return true;
-
 	}
 
 	void Object::DrawIsLightConstantBuffer()
@@ -226,5 +218,5 @@ namespace BJEngine {
 
 	}
 
-
+	
 }

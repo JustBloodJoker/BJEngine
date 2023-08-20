@@ -3,6 +3,8 @@
 
 namespace BJEngine {
 
+
+
 	Map::Map()
 	{
 		MapDesc* md = new MapDesc();
@@ -31,45 +33,10 @@ namespace BJEngine {
 		light->InitLight(pd3dDevice);
 
 		InitIsLightConstantBuffer();
-
-		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(Vertex) * 4;
-		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		bd.CPUAccessFlags = 0;
-		D3D11_SUBRESOURCE_DATA InitData;
-		ZeroMemory(&InitData, sizeof(InitData));
-		InitData.pSysMem = vertices;
-		hr = pd3dDevice->CreateBuffer(&bd, &InitData, &pVertexBuffer);
-		if (FAILED(hr)) 
-		{
-			Log::Get()->Err("vertex buffer create error");
-			return false;
-		}
-
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(WORD) * 6;
-		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		bd.CPUAccessFlags = 0;
-		InitData.pSysMem = indices;
-		hr = pd3dDevice->CreateBuffer(&bd, &InitData, &pIndexBuffer);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("index buffer create error");
-			return false;
-		}
-
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(ConstantBuffer);
-		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		bd.CPUAccessFlags = 0;
-		hr = pd3dDevice->CreateBuffer(&bd, NULL, &pConstantBuffer);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("constant buffer create error");
-			return false;
-		}
+		
+		pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * 4, vertices);
+		pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * 6, indices);
+		pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
 
 		if (FAILED(IsRasterizedObj()))
 			return false;

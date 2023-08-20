@@ -174,9 +174,4 @@
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="shader.txt">
-      <Filter>Shaders</Filter>
-    </Text>
-  </ItemGroup>
 </Project>

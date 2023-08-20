@@ -20,7 +20,8 @@ namespace BJEngine {
 
 		bool Init(ID3D11Device* device);
 
-		void SetInputLayout(D3D11_INPUT_ELEMENT_DESC* tempLayout, UINT elementsNum) { layout = tempLayout; numElements = elementsNum; }
+		void SetInputLayout(D3D11_INPUT_ELEMENT_DESC* tempLayout, UINT elementsNum) 
+		{ layout = tempLayout; numElements = elementsNum; }
 
 		ID3D11InputLayout* GetInputLayout() { return pVertexLayout; }
 		ID3D11VertexShader* GetVertexShader() { return pVertexShader; }

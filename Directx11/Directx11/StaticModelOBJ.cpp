@@ -43,48 +43,13 @@ namespace BJEngine {
 
         for (int i = 0; i < packVertices.size(); i++)
         {
-            D3D11_BUFFER_DESC bd;
-            ZeroMemory(&bd, sizeof(bd));
-            bd.Usage = D3D11_USAGE_DEFAULT;
-            bd.ByteWidth = packVertices[i].vertices.size() * sizeof(Vertex);
-            bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-            bd.CPUAccessFlags = 0;
-            D3D11_SUBRESOURCE_DATA InitData;
-            ZeroMemory(&InitData, sizeof(InitData));
-            InitData.pSysMem = &packVertices[i].vertices[0];
-
             packpVertexBuffer.push_back({});
-            hr = pd3dDevice->CreateBuffer(&bd, &InitData, &packpVertexBuffer[i]);
-            if (FAILED(hr))
-            {
-                Log::Get()->Err("vertex buffer create error");
-                return false;
-            }
+            packpVertexBuffer[i] = Object::InitVertexBuffer(pd3dDevice, packVertices[i].vertices.size() * sizeof(Vertex), &packVertices[i].vertices[0]);
         }
 
-        ZeroMemory(&bd, sizeof(bd));
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(ConstantBuffer);
-        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bd.CPUAccessFlags = 0;
-        hr = pd3dDevice->CreateBuffer(&bd, NULL, &pConstantBuffer);
-        if (FAILED(hr))
-        {
-            Log::Get()->Err("constant buffer create error");
-            return false;
-        }
+        pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
         
-        ZeroMemory(&bd, sizeof(bd));
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(AdditionalConstantBuffer);
-        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bd.CPUAccessFlags = 0;
-        hr = pd3dDevice->CreateBuffer(&bd, NULL, &pAdditionalConstantBuffer);
-        if (FAILED(hr))
-        {
-            Log::Get()->Err("constant buffer create error");
-            return false;
-        }
+        pAdditionalConstantBuffer = Object::InitConstantBuffer<AdditionalConstantBuffer>(pd3dDevice);
 
         for (int i = 0; i < packVertices.size(); i++)
         {

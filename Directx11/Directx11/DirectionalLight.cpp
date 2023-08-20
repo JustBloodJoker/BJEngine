@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "DirectionalLight.h"
+#include "Object.h"
 
 namespace BJEngine {
 
@@ -23,23 +24,14 @@ namespace BJEngine {
 	bool DirectionalLight::InitLight(ID3D11Device* pd3dDevice)
 	{
 		if (isLightOn) {
-			D3D11_BUFFER_DESC bd;
-			ZeroMemory(&bd, sizeof(bd));
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(ConstantBufferLight);
-			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			HRESULT hr = pd3dDevice->CreateBuffer(&bd, NULL, &lightBuffer);
-
-			if (FAILED(hr)) {
+			lightBuffer = Object::InitConstantBuffer<ConstantBufferLight>(pd3dDevice);
+			if (lightBuffer == nullptr) {
 				Log::Get()->Err("Dir light create error");
+				return FAILED(E_FAIL);
 			}
-
-			return FAILED(hr);
 		}
-		else
-			return true;
+		return false;
+			
 	}
 
 	void DirectionalLight::DrawLight(ID3D11DeviceContext* pImmediateContext)
