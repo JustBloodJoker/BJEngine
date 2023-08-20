@@ -116,6 +116,10 @@ namespace BJEngine {
             return false;
         }
 
+        rotation = dx::XMMatrixRotationY(3.14f);
+        scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
+        pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+        
         return true;
 	}
 
@@ -125,8 +129,8 @@ namespace BJEngine {
         pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         world = dx::XMMatrixIdentity();
-
-        world = dx::XMMatrixRotationY(3.14f) * dx::XMMatrixScaling(1.0f, 1.0f, 1.0f) * dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+        
+        world = rotation * scale * pos;
         
         UINT stride = sizeof(Vertex);
         UINT offset = 0;

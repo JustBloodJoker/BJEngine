@@ -68,5 +68,10 @@ namespace BJEngine {
 
 	}
 
+	void SpotLight::SetPos(float x, float y, float z)
+	{
+		light->pos = dx::XMFLOAT3(x,y,z);
+	}
+
 
 }

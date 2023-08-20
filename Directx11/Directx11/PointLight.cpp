@@ -60,6 +60,11 @@ namespace BJEngine {
 		}
 	}
 
+	void PointLight::SetPos(float x, float y, float z)
+	{
+		light->pos = dx::XMFLOAT3(x, y, z);
+	}
+
 	
 
 

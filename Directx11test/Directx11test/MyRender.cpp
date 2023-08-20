@@ -23,7 +23,7 @@ void MyRender::InitParams()
 	sld->dir = dx::XMFLOAT3(0.0f, 0.0f, 1.0f);
 	sld->range = 1000.0f;
 	sld->cone = 20.0f;
-	sld->att = dx::XMFLOAT3(0.4f, 0.02f, 0.0f);
+	sld->att = dx::XMFLOAT3(0.9f, 0.02f, 0.0f);
 	sld->ambient = dx::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	sld->diffuse = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -45,10 +45,6 @@ void MyRender::InitParams()
 	InitObjs(dynamic_cast<BJEngine::Object*>(bg));
 
 
-
-
-
-
 }
 
 bool MyRender::Draw()
@@ -61,8 +57,16 @@ bool MyRender::Draw()
 
 	for (auto el : obj) {
 		el->SetViewAndProjectionMatrix(GetCamera()->GetViewMatrix(), GetProjMatrix());
-		el->Draw();
+		
 	}
+	obj[0]->Draw();
+	
+
+	obj[1]->Draw();
+	obj[1]->SetObjectMatrixPos(0.0f, -0.68f, 0.0f);
+	obj[1]->SetObjectMatrixRotation(3.14f / 90.0f);
+
+	obj[2]->Draw();
 
 	EndFrame();
 

@@ -34,7 +34,7 @@ namespace BJEngine {
 
         void DrawLight(ID3D11DeviceContext* pImmediateContext) override;
         
-
+        void SetPos(float x, float y, float z);
     private:
 
         SpotLightDesc* light;

@@ -151,6 +151,21 @@ namespace BJEngine {
 		this->projection = projection;
 	}
 
+	void Object::SetObjectMatrixPos(float x, float y, float z)
+	{
+		pos = dx::XMMatrixTranslation(x, y, z);
+	}
+
+	void Object::SetObjectMatrixScale(float x, float y, float z)
+	{
+		scale = dx::XMMatrixScaling(x, y, z);
+	}
+
+	void Object::SetObjectMatrixRotation(float angle)
+	{
+		rotation = dx::XMMatrixRotationY(angle);
+	}
+
 	HRESULT Object::IsRasterizedObj()
 	{
 		if (isRasterized) {

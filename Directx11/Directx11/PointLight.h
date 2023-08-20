@@ -33,6 +33,8 @@ namespace BJEngine {
         bool InitLight(ID3D11Device* pd3dDevice) override;
         void DrawLight(ID3D11DeviceContext* pImmediateContext) override;
         
+
+        void SetPos(float x, float y, float z);
     private:
         PointLightDesc* light;
 

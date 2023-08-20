@@ -92,6 +92,10 @@ namespace BJEngine {
 			return false;
 		}
 
+		rotation = dx::XMMatrixRotationY(0.0f);
+		scale = dx::XMMatrixScaling(500.0f, 10.0f, 500.0f);
+		pos = dx::XMMatrixTranslation(0.0f, 10.0f, 0.0f);
+
 		return true;
 	}
 
@@ -112,8 +116,8 @@ namespace BJEngine {
 		if (light != nullptr) {
 			light->DrawLight(pImmediateContext);
 		}
-
-		world = dx::XMMatrixScaling(500.0f, 10.0f, 500.0f) * dx::XMMatrixTranslation(0.0f, 10.0f, 0.0f);
+		
+		world = rotation *  scale * pos;
 
 		ConstantBuffer cb;
 		cb.WVP = XMMatrixTranspose(world * view * projection);

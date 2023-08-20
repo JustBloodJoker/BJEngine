@@ -74,6 +74,10 @@ namespace BJEngine {
 
 		virtual bool HasTexture() final { return hastext; };
 
+		void SetObjectMatrixPos(float x, float y, float z);
+		void SetObjectMatrixScale(float x, float y, float z);
+		void SetObjectMatrixRotation(float angle);
+
 	private:
 		Camera* cam;
 		Light* light = nullptr;
@@ -91,6 +95,10 @@ namespace BJEngine {
 		dx::XMMATRIX world;
 		dx::XMMATRIX view;
 		dx::XMMATRIX projection;
+
+		dx::XMMATRIX rotation;
+		dx::XMMATRIX scale;
+		dx::XMMATRIX pos;
 
 		bool hastext = false;
 
