@@ -21,3 +21,6 @@ Changed camera from first-person to free-look. Optimized memory usage in the Cam
 
 version 1.1.3
 The methods of the Render class: Close, Init, and Draw, are now virtual.
+
+version 1.2
+Added the Rasterize state to the Map class. Created the StaticModelOBJ class (matrix-changing functions will be added soon).
