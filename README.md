@@ -27,3 +27,6 @@ Added the Rasterize state to the Map class. Created the StaticModelOBJ class.
 
 version 1.2.1
 Added matrix-changing functions
+
+version 1.2.2
+Added functions to create Constant buffer, vertex buffer and index buffer.
