@@ -33,3 +33,6 @@ Added functions to create Constant buffer, vertex buffer and index buffer.
 
 version 1.3
 Added class Model which use Assimp to load and draw scene (with normal map and texture)
+
+version 1.3.1
+fixed a bug with the lights and objects after changing their positions. Fixed a bug with loadind models without textures. (only obj models tested)
