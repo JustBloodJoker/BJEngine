@@ -30,3 +30,6 @@ Added matrix-changing functions
 
 version 1.2.2
 Added functions to create Constant buffer, vertex buffer and index buffer.
+
+version 1.3
+Added class Model which use Assimp to load and draw scene (with normal map and texture)
