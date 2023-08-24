@@ -29,11 +29,6 @@ namespace BJEngine {
 		shader->SetInputLayout(layout, ARRAYSIZE(layout));
 		shader->Init(pd3dDevice);
 
-		if(light != nullptr)
-		light->InitLight(pd3dDevice);
-
-		InitIsLightConstantBuffer();
-		
 		pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * 4, vertices);
 		pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * 6, indices);
 		pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
@@ -78,12 +73,6 @@ namespace BJEngine {
 		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		DrawIsLightConstantBuffer();
-
-		if (light != nullptr) {
-			light->DrawLight(pImmediateContext);
-		}
-		
 		world = rotation *  scale * pos;
 
 		ConstantBuffer cb;

@@ -3,11 +3,19 @@
 
 namespace BJEngine {
 
+    Input* Input::m_instance = nullptr;
+
+    IDirectInputDevice8* Input::keyboardInput = nullptr;
+    IDirectInputDevice8* Input::mouseInput = nullptr;
+
+    BYTE Input::keyboardState[256] = {};
+    DIMOUSESTATE Input::mouseCurrentState = {};
+    DIMOUSESTATE Input::mouseLastState = {};
+    LPDIRECTINPUT8 Input::directInput = NULL;
 
     Input::Input()
     {
-        keyboardInput = nullptr;
-        mouseInput = nullptr;
+    
     }
 
     Input::~Input()
@@ -26,6 +34,14 @@ namespace BJEngine {
     bool Input::InitDirectInput(HWND hwnd)
     {
         HRESULT hr = DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, NULL);
+        
+        if (!m_instance)
+        {
+            m_instance = this;
+        }
+
+        keyboardInput = nullptr;
+        mouseInput = nullptr;
 
         if (FAILED(hr))
         {
@@ -64,7 +80,7 @@ namespace BJEngine {
             Log::Get()->Err("SetDataFormat DI error");
             exit(Log::DIERROR);
         }
-        hr = mouseInput->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+        hr = mouseInput->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
         if (FAILED(hr))
         {
             Log::Get()->Err("SetCooperativeLevel DI error");

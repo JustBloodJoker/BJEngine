@@ -2,9 +2,6 @@
 #include "pch.h"
 #include "Shader.h"
 #include "Textures.h"
-#include "DirectionalLight.h"
-#include "PointLight.h"
-#include "SpotLight.h"
 #include "Camera.h"
 
 namespace BJEngine {
@@ -18,6 +15,7 @@ namespace BJEngine {
 		friend class Map;
 		friend class BackGround;
 		friend class StaticModelOBJ;
+		friend class Model;
 
 	public:
 
@@ -29,9 +27,6 @@ namespace BJEngine {
 
 		virtual void Draw();
 		virtual bool Init();
-
-		bool InitIsLightConstantBuffer();
-		void DrawIsLightConstantBuffer();
 
 		struct Vertex
 		{
@@ -52,14 +47,6 @@ namespace BJEngine {
 			dx::XMMATRIX  World;
 		};
 
-		struct IsLightsConstantBuffer
-		{
-			BOOL isDirLight;
-			BOOL isPointLight;
-			BOOL isSpotLight;
-			int pad;
-		};
-
 		template <typename ConstantBufferType>
 		static ID3D11Buffer* InitConstantBuffer(ID3D11Device* pd3dDevice);
 
@@ -74,9 +61,6 @@ namespace BJEngine {
 		void SetShader(Shader* shader);
 		void SetTexture(Textures* texture);
 		void SetTransparency(bool choose, float* blendFactor);
-		void SetDirectionLight(DirectionalLightDesc* lightdesc);
-		void SetPointLight(PointLightDesc* lightdesc);
-		void SetSpotLight(SpotLightDesc* lightdesc);
 		void SetDevice(ID3D11Device* pd3dDevice);
 		void SetDeviceContext(ID3D11DeviceContext* pImmediateContext);
 		void SetViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projection);
@@ -84,18 +68,15 @@ namespace BJEngine {
 		virtual bool HasTexture() final { return hastext; };
 
 		void SetObjectMatrixPos(float x, float y, float z);
+		void SetObjectMatrixPos(dx::XMFLOAT3 xmf3);
 		void SetObjectMatrixScale(float x, float y, float z);
 		void SetObjectMatrixRotation(float angle);
 
 	private:
 		Camera* cam;
-		Light* light = nullptr;
 		Textures* texture;
 		Shader* shader;
-
-		IsLightsConstantBuffer istypeoflight;
-
-		ID3D11Buffer* ilcb;
+		
 		ID3D11Buffer* pVertexBuffer;
 		ID3D11Buffer* pIndexBuffer;
 		ID3D11Buffer* pConstantBuffer;

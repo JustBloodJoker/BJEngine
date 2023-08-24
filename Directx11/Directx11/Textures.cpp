@@ -30,7 +30,6 @@ namespace BJEngine {
 			NULL, NULL, &Texture, NULL);
 
 		if (FAILED(hr)) {
-			Log::Get()->Err("CreateShaderResourseView error");
 			return true;
 		}
 
@@ -46,7 +45,6 @@ namespace BJEngine {
 		hr = device->CreateSamplerState(&sampDesc, &TexSamplerState);
 		
 		if (FAILED(hr)) {
-			Log::Get()->Err("CreateSamplerState error");
 			return true;
 		}
 

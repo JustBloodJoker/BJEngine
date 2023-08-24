@@ -140,9 +140,38 @@ namespace BJEngine {
 
 		Projection = dx::XMMatrixPerspectiveFovLH(0.4f * 3.14f, WIDTH / HEIGHT, 1.0f, 1000.0f);
 
-		
+		InitIsLightConstantBuffer();
 
 		return true;
+	}
+
+	bool Render::DrawWnd()
+	{
+		BeginFrame();
+		GetCamera()->CameraMove();
+
+		Draw();
+		if(islight)
+			light->DrawLight(pImmediateContext);
+
+		DrawIsLightConstantBuffer();
+		
+		EndFrame();
+
+		return true;
+	}
+
+	Object* Render::InitObjs(Object* object)
+	{
+		object->SetCamera(cam);
+		object->SetDevice(pd3dDevice);
+		object->SetDeviceContext(pImmediateContext);
+
+		if (!object->Init()) {
+			return nullptr;
+		};
+
+		return object;
 	}
 
 	bool Render::Draw()
@@ -151,7 +180,7 @@ namespace BJEngine {
 		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		//sound->InitAndPlay(TEXT("892dc731-9cb3-4c48-8a11-0f7316e2b3ed.wav"));
 
-		cam->CameraMove(input);
+		cam->CameraMove();
 
 
 
@@ -160,11 +189,56 @@ namespace BJEngine {
 		return true;
 	}
 
+	void Render::SetLight(LightDesc* ld, int typeOfLight)
+	{
+		Light* spl = new Light(ld);
+
+		switch(typeOfLight)
+		{
+		case SPOTLIGHT:
+			istypeoflight = { false };
+			istypeoflight.isSpotLight = true;
+			break;
+
+		case DIRECTIONALLIGHT:
+			istypeoflight = { false };
+			istypeoflight.isDirLight = true;
+			break;
+		
+		case POINTLIGHT:
+			istypeoflight = { false };
+			istypeoflight.isPointLight = true;
+			break;
+		}
+		islight = true;
+		spl->InitLight(pd3dDevice);
+
+		light = spl;
+	}
+
+	bool Render::InitIsLightConstantBuffer()
+	{
+		ilcb = Object::InitConstantBuffer<IsLightsConstantBuffer>(pd3dDevice);
+
+		if (ilcb != nullptr)
+			return true;
+		else
+			return false;
+	}
+	
+	void Render::DrawIsLightConstantBuffer()
+	{
+		pImmediateContext->UpdateSubresource(ilcb, 0, NULL, &istypeoflight, 0, 0);
+		pImmediateContext->PSSetConstantBuffers(1, 1, &ilcb);
+
+	}
+
 	void Render::Close()
 	{
 		CLOSE(sound);
 		CLOSE(cam);
-
+		LCLOSE(light);
+		RELEASE(ilcb);
 		RELEASE(depthStencilView);
 		RELEASE(depthStencilBuffer);
 		RELEASE(pd3dDevice);

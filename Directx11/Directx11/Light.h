@@ -32,6 +32,7 @@ namespace BJEngine {
 	public:
 
 		Light();
+		Light(LightDesc* tld);
 		~Light();
 
 		void Close();
@@ -39,13 +40,17 @@ namespace BJEngine {
 		ID3D11Buffer* GetConstantBuffer();
 		bool IsLightOn();
 
-		virtual bool InitLight(ID3D11Device* pd3dDevice);
-		virtual void DrawLight(ID3D11DeviceContext* pImmediateContext);
+		bool InitLight(ID3D11Device* pd3dDevice);
+		void DrawLight(ID3D11DeviceContext* pImmediateContext);
 
+		void SetPos(float x, float y, float z);
+		dx::XMFLOAT3 GetPos();
+		
 	private:
-
 		ID3D11Buffer* lightBuffer;
 		bool isLightOn = false;
+
+		LightDesc* lightdesc;
 
 		struct ConstantBufferLight
 		{

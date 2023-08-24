@@ -17,9 +17,17 @@ namespace BJEUtils {
 		_FULLSCREEN
 	};
 
+	enum {
+		SPOTLIGHT,
+		POINTLIGHT,
+		DIRECTIONALLIGHT
+	};
 
 #define FRAMEWORKVERSION 1
 
 #define LOGNAME "log.txt"
 
+	std::wstring aiStringToWString(aiString aiStr);
+
+	
 }

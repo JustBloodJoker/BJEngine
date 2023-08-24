@@ -23,7 +23,7 @@ cbuffer isLights : register(b1)
 
 cbuffer pixelTexureBuffer : register(b2)
 {
-	float4 diffuse;
+	float4 dif;
 	int isTexture;
 	int isNormalMap;
 };
@@ -48,7 +48,6 @@ struct VS_OUTPUT
     float3 tangent : TANGENT;
 };
 
-
 VS_OUTPUT VS(float4 inPos : POSITION, float2 inTexCoord : TEXCOORD, float3 normal : NORMAL, float3 tangent : TANGENT)
 {
     VS_OUTPUT output;
@@ -56,7 +55,10 @@ VS_OUTPUT VS(float4 inPos : POSITION, float2 inTexCoord : TEXCOORD, float3 norma
     output.Pos = mul(inPos, WVP);
     output.worldPos = mul(inPos, World);
     output.normal = mul(normal, World);
-    output.tangent = mul(tangent, World);
+    if(isNormalMap)
+    {
+    	output.tangent = mul(tangent, World);
+    }
     output.TexCoord = inTexCoord;
 
     return output;
@@ -64,23 +66,26 @@ VS_OUTPUT VS(float4 inPos : POSITION, float2 inTexCoord : TEXCOORD, float3 norma
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
+
     input.normal = normalize(input.normal);
-    float4 diffuse = diffuse;
-    if(isTexture) diffuse = ObjTexture.Sample( ObjSamplerState, input.TexCoord );
 
-  if(isNormalMap == true)
-    {
-        float4 normalMap = ObjNormMap.Sample( ObjSamplerState, input.TexCoord );
-        normalMap = (2.0f*normalMap) - 1.0f;
-        input.tangent = normalize(input.tangent - dot(input.tangent, input.normal)*input.normal);
-        float3 biTangent = cross(input.normal, input.tangent);
-        float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
-        input.normal = normalize(mul(normalMap, texSpace));
-    }
+	float4 diffuse = dif;
+	
+	if(isTexture)
+	{
+		diffuse = ObjTexture.Sample( ObjSamplerState, input.TexCoord );
+	}
 
+	if(isNormalMap == true)
+    	{
+        	float4 normalMap = ObjNormMap.Sample( ObjSamplerState, input.TexCoord );
+        	normalMap = (2.0f*normalMap) - 1.0f;
+        	input.tangent = normalize(input.tangent - dot(input.tangent, input.normal)*input.normal);
+        	float3 biTangent = cross(input.normal, input.tangent);
+        	float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
+        	input.normal = normalize(mul(normalMap, texSpace));
+    	}
 if(isSpotLight == true){
-    
-
     float3 finalColor = float3(0.0f, 0.0f, 0.0f);
     float3 lightToPixelVec = light.pos - input.worldPos;
     float d = length(lightToPixelVec);
@@ -100,14 +105,12 @@ if(isSpotLight == true){
     return float4(finalColor, diffuse.a);
 }else if (isDirLight == true)
     {
-    input.normal = normalize(input.normal);
     float3 finalColor;
     finalColor = diffuse * light.ambient;
     finalColor += saturate(dot(light.dir, input.normal) * light.diffuse * diffuse);
     return float4(finalColor, diffuse.a);
     } else if (isPointLight == true){
     
-    input.normal = normalize(input.normal);
     float3 finalColor = float3(0.0f, 0.0f, 0.0f);
     float3 lightToPixelVec = light.pos - input.worldPos;
     float d = length(lightToPixelVec);
@@ -129,5 +132,5 @@ if(isSpotLight == true){
     finalColor = saturate(finalColor + finalAmbient);
     
     return float4(finalColor, diffuse.a);
-    } else return diffuse; 
+    } else return diffuse; //return ObjTexture.Sample( ObjSamplerState, input.TexCoord );
 }

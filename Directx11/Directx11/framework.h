@@ -8,7 +8,13 @@
 #pragma comment (lib, "dinput8.lib")
 #pragma comment (lib, "dxguid.lib")
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/material.h>
+#include <assimp/texture.h>
+#include <assimp/postprocess.h>
 
+#define NOMINMAX
 #define _XM_NO_INTRINSICS_
 #include <Windows.h>
 
@@ -23,10 +29,6 @@
 #include <DirectXMath.h>
 namespace dx = DirectX;
 
-#include <assimp/Importer.hpp>
-#include <assimp/mesh.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
 #include <vector>
 #include <fstream>
 #include <istream>
@@ -40,3 +42,7 @@ namespace dx = DirectX;
 #include <xaudio2.h>
 #include <x3daudio.h>
 #include <dinput.h>
+
+
+#include <locale>
+#include <codecvt>

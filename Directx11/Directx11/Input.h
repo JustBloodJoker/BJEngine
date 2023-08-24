@@ -10,6 +10,8 @@ namespace BJEngine {
 		Input();
 		~Input();
 
+		static Input* Get() { return m_instance; }
+
 		void Close();
 
 		bool InitDirectInput(HWND hwnd);
@@ -22,14 +24,15 @@ namespace BJEngine {
 		DIMOUSESTATE GetCurrState() { return mouseCurrentState; }
 		DIMOUSESTATE GetLastState() { return mouseLastState; }
 	private:
+		static Input* m_instance;
 
-		IDirectInputDevice8* keyboardInput;
-		IDirectInputDevice8* mouseInput;
+		static IDirectInputDevice8* keyboardInput;
+		static IDirectInputDevice8* mouseInput;
 
-		BYTE keyboardState[256];
-		DIMOUSESTATE mouseCurrentState;
-		DIMOUSESTATE mouseLastState;
-		LPDIRECTINPUT8 directInput;
+		static BYTE keyboardState[256];
+		static DIMOUSESTATE mouseCurrentState;
+		static DIMOUSESTATE mouseLastState;
+		static LPDIRECTINPUT8 directInput;
 
 	};
 

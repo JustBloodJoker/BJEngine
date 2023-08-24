@@ -31,15 +31,13 @@ namespace BJFrameWork {
 		}
 		Log::Get()->Debug("wnd was created");
 
-		input = new Input();
-		if (!input->InitDirectInput(wnd->GetHWND()))
+		if (!Input::Get()->InitDirectInput(wnd->GetHWND()))
 		{
 			return false;
 		};
 		Log::Get()->Debug("input was created");
 
 		render->SetHWND(wnd->GetHWND());
-		render->SetInput(input);
 		if (!render->Init())
 		{
 			return false;
@@ -59,7 +57,7 @@ namespace BJFrameWork {
 			return false;
 
 
-		if (!render->Draw())
+		if (!render->DrawWnd())
 			return false;
 
 
@@ -70,7 +68,7 @@ namespace BJFrameWork {
 	{
 		init = false;
 		CLOSE(render);
-		CLOSE(input);
+		Input::Get()->Close();
 		CLOSE(wnd);
 		Log::Get()->~Log();
 	}

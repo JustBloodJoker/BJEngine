@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 #include "pch.h"
 #include "Input.h"
 
@@ -12,7 +12,7 @@ namespace BJEngine {
 		~Camera();
 
 		void Close();
-		void CameraMove(Input* input);
+		void CameraMove();
 			
 		void UpdateCamera();
 
@@ -26,7 +26,7 @@ namespace BJEngine {
 		dx::XMVECTOR eye;
 		dx::XMVECTOR at;
 		dx::XMVECTOR up;
-
+		
 		float camYaw = 0.0f;
 		float camPitch = 0.0f;
 	};

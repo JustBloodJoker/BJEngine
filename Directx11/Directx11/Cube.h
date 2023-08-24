@@ -5,61 +5,8 @@
 
 namespace BJEngine {
 
-
-    struct CubeDesc {
-
-        Object::Vertex vertices[24] = {
-                  Object::Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f,-1.0f, -1.0f, -1.0f),
-                  Object::Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f,-1.0f,  1.0f, -1.0f),
-                  Object::Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 1.0f,  1.0f, -1.0f),
-                  Object::Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f),
-
-                  Object::Vertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f,-1.0f, -1.0f, 1.0f),
-                  Object::Vertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f),
-                  Object::Vertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f),
-                  Object::Vertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f,-1.0f,  1.0f, 1.0f),
-
-                  Object::Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f,-1.0f, 1.0f, -1.0f),
-                  Object::Vertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f,-1.0f, 1.0f,  1.0f),
-                  Object::Vertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f),
-                  Object::Vertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f),
-
-                  Object::Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f,-1.0f, -1.0f, -1.0f),
-                  Object::Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, -1.0f, -1.0f),
-                  Object::Vertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, -1.0f,  1.0f),
-                  Object::Vertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f,-1.0f, -1.0f,  1.0f),
-
-                  Object::Vertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f,-1.0f, -1.0f,  1.0f),
-                  Object::Vertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f,-1.0f,  1.0f,  1.0f),
-                  Object::Vertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f,-1.0f,  1.0f, -1.0f),
-                  Object::Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f,-1.0f, -1.0f, -1.0f),
-
-                  Object::Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, -1.0f, -1.0f),
-                  Object::Vertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 1.0f,  1.0f, -1.0f),
-                  Object::Vertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 1.0f,  1.0f,  1.0f),
-                  Object::Vertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f, 1.0f, -1.0f,  1.0f), };
-
-        WORD indices[36] = {
-
-            0,  1,  2,
-            0,  2,  3,
-
-            4,  5,  6,
-            4,  6,  7,
-
-            8,  9, 10,
-            8, 10, 11,
-
-            12, 13, 14,
-            12, 14, 15,
-
-            16, 17, 18,
-            16, 18, 19,
-
-            20, 21, 22,
-            20, 22, 23
-        };
-    };
+    struct CubeDesc;
+   
 
 
     class Cube :
@@ -75,11 +22,55 @@ namespace BJEngine {
         bool Init() override;
         void Close() override;
 
+        struct Vertex 
+        {
+            Vertex() {}
+            Vertex(float x, float y, float z,
+                float cr, float cg, float cb, float ca)
+                : pos(x, y, z), color(cr, cg, cb, ca) {}
+
+            dx::XMFLOAT3 pos;
+            dx::XMFLOAT4 color;
+        };
     private:
 
         Vertex* vertices;
         WORD* indices;
 
+    };
+
+    struct CubeDesc {
+
+        Cube::Vertex vertices[8] = {
+                     Cube::Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f),
+                     Cube::Vertex(-1.0f, +1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f),
+                     Cube::Vertex(+1.0f, +1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f),
+                     Cube::Vertex(+1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 1.0f),
+                     Cube::Vertex(-1.0f, -1.0f, +1.0f, 0.0f, 1.0f, 1.0f, 1.0f),
+                     Cube::Vertex(-1.0f, +1.0f, +1.0f, 1.0f, 1.0f, 1.0f, 1.0f),
+                     Cube::Vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 1.0f, 1.0f),
+                     Cube::Vertex(+1.0f, -1.0f, +1.0f, 1.0f, 0.0f, 0.0f, 1.0f), };
+
+        WORD indices[36] = {
+
+                0, 1, 2,
+                0, 2, 3,
+
+                4, 6, 5,
+                4, 7, 6,
+
+                4, 5, 1,
+                4, 1, 0,
+
+                3, 2, 6,
+                3, 6, 7,
+
+                1, 5, 6,
+                1, 6, 2,
+
+                4, 0, 3,
+                4, 3, 7
+        };
     };
 
 

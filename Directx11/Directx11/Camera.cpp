@@ -25,9 +25,9 @@ namespace BJEngine {
 		Log::Get()->Debug("Closing camera");
 	}
 
-	void Camera::CameraMove(Input* input)
+	void Camera::CameraMove()
 	{
-		input->StartDetectInput();
+		Input::Get()->StartDetectInput();
 
 		float moveSpeed = 5.0f; 
 		float deltaTime = 0.016f;
@@ -36,39 +36,55 @@ namespace BJEngine {
 		DirectX::XMVECTOR rightDirection = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), cameraDirection));
 		DirectX::XMVECTOR upDirection = DirectX::XMVector3Cross(cameraDirection, rightDirection);
 
-		if (input->CheckKeyState(DIK_W))
+		if (Input::Get()->CheckKeyState(DIK_W))
 		{
 			eye += moveSpeed * deltaTime * cameraDirection;
 		}
-		if (input->CheckKeyState(DIK_S))
+		if (Input::Get()->CheckKeyState(DIK_S))
 		{
 			eye -= moveSpeed * deltaTime * cameraDirection;
 		}
-		if (input->CheckKeyState(DIK_D))
+		if (Input::Get()->CheckKeyState(DIK_D))
 		{
 			eye += moveSpeed * deltaTime * rightDirection;
 		}
-		if (input->CheckKeyState(DIK_A))
+		if (Input::Get()->CheckKeyState(DIK_A))
 		{
 			eye -= moveSpeed * deltaTime * rightDirection;
 		}
-		if (input->CheckKeyState(DIK_SPACE))
+		if (Input::Get()->CheckKeyState(DIK_SPACE))
 		{
 			eye += moveSpeed * deltaTime * up;
 		}
-		if (input->CheckKeyState(DIK_LCONTROL))
+		if (Input::Get()->CheckKeyState(DIK_LCONTROL))
 		{
 			eye -= moveSpeed * deltaTime * up;
 		}
-		if ((input->GetCurrState().lX != input->GetLastState().lX) || (input->GetCurrState().lY != input->GetLastState().lY))
+		//if ((Input::GetCurrState().lX != Input::GetLastState().lX) || (Input::GetCurrState().lY != Input::GetLastState().lY))
+		//{
+		//	camYaw += Input::GetLastState().lX * 0.001f;
+		//
+		//	camPitch += Input::GetCurrState().lY * 0.001f;
+		//
+		//	Input::EndDetectInput();
+		//}
+		if (Input::Get()->CheckKeyState(DIK_LEFT))
 		{
-			camYaw += input->GetLastState().lX * 0.001f;
-
-			camPitch += input->GetCurrState().lY * 0.001f;
-
-			input->EndDetectInput();
+			camYaw -= 0.03f;
 		}
-		
+		if (Input::Get()->CheckKeyState(DIK_RIGHT))
+		{
+			camYaw += 0.03f;
+		}
+		if (Input::Get()->CheckKeyState(DIK_UP))
+		{
+			camPitch -= 0.03f;
+		}
+		if (Input::Get()->CheckKeyState(DIK_DOWN))
+		{
+			camPitch += 0.03f;
+		}
+
 		UpdateCamera();
 	}
 

@@ -41,6 +41,9 @@ namespace BJEngine {
 		DrawRasterized();
 		DrawTransparency();
 
+		world = dx::XMMatrixIdentity();
+		world = rotation * scale * pos;
+
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		pImmediateContext->IASetInputLayout(shader->GetInputLayout());
@@ -48,69 +51,43 @@ namespace BJEngine {
 		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-
 		ConstantBuffer cb;
 		cb.WVP = XMMatrixTranspose(world * view * projection);
-		cb.World = world;
 		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 		pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
-
-		if (hastext) {
-			pImmediateContext->PSSetShaderResources(0, 1, &texture->GetTexture());
-			pImmediateContext->PSSetSamplers(0, 1, &texture->GetTexSamplerState());
-		}
 
 		pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 		pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
 		pImmediateContext->DrawIndexed(36, 0, 0);
+
+		
 	}
 
 	bool Cube::Init()
 	{
 		HRESULT hr = S_OK;
 
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+
+		if(shader == nullptr)
+			shader = new BJEngine::Shader(L"shaders\\cubeShader.txt", L"shaders\\cubeShader.txt", "VS", "PS");
+
+		if (shader == nullptr)
+		{
+			Log::Get()->Err("shader cube error");
+			return false;
+		}
+
+		shader->SetInputLayout(layout, ARRAYSIZE(layout));
 		shader->Init(pd3dDevice);
 
-
-
-		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(Vertex) * 24;
-		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		bd.CPUAccessFlags = 0;
-		D3D11_SUBRESOURCE_DATA InitData;
-		ZeroMemory(&InitData, sizeof(InitData));
-		InitData.pSysMem = vertices;
-		hr = pd3dDevice->CreateBuffer(&bd, &InitData, &pVertexBuffer);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("vertex buffer create error");
-			return false;
-		}
-
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(WORD) * 36;
-		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		bd.CPUAccessFlags = 0;
-		InitData.pSysMem = indices;
-		hr = pd3dDevice->CreateBuffer(&bd, &InitData, &pIndexBuffer);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("index buffer create error");
-			return false;
-		}
-
-		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(ConstantBuffer);
-		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		bd.CPUAccessFlags = 0;
-		hr = pd3dDevice->CreateBuffer(&bd, NULL, &pConstantBuffer);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("constant buffer create error");
-			return false;
-		}
+		pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * 24, vertices);
+		pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * 36, indices);
+		pConstantBuffer = Object::InitConstantBuffer<ConstantBuffer>(pd3dDevice);
 
 		if (FAILED(IsRasterizedObj()))
 			return false;
@@ -121,6 +98,10 @@ namespace BJEngine {
 		}
 		if (FAILED(IsTransparencyObj()))
 			return false;
+
+		rotation = dx::XMMatrixRotationY(0.0f);
+		scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
+		pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
 
 		return true;
 	}

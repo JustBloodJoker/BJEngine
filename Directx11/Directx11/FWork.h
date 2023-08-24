@@ -23,8 +23,7 @@ namespace BJFrameWork {
 
 	protected:
 		bool m_frame();
-
-		Input* input;
+		
 		Window* wnd;
 		Render* render;
 

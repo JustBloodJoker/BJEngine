@@ -75,12 +75,6 @@
     <ClInclude Include="Light.h">
       <Filter>LIGHT</Filter>
     </ClInclude>
-    <ClInclude Include="DirectionalLight.h">
-      <Filter>LIGHT</Filter>
-    </ClInclude>
-    <ClInclude Include="PointLight.h">
-      <Filter>LIGHT</Filter>
-    </ClInclude>
     <ClInclude Include="Sound.h">
       <Filter>sound</Filter>
     </ClInclude>
@@ -102,10 +96,10 @@
     <ClInclude Include="Log.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="SpotLight.h">
-      <Filter>LIGHT</Filter>
-    </ClInclude>
     <ClInclude Include="StaticModelOBJ.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
       <Filter>Objects</Filter>
     </ClInclude>
   </ItemGroup>
@@ -143,12 +137,6 @@
     <ClCompile Include="Light.cpp">
       <Filter>LIGHT</Filter>
     </ClCompile>
-    <ClCompile Include="DirectionalLight.cpp">
-      <Filter>LIGHT</Filter>
-    </ClCompile>
-    <ClCompile Include="PointLight.cpp">
-      <Filter>LIGHT</Filter>
-    </ClCompile>
     <ClCompile Include="Sound.cpp">
       <Filter>sound</Filter>
     </ClCompile>
@@ -167,10 +155,10 @@
     <ClCompile Include="Log.cpp">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="SpotLight.cpp">
-      <Filter>LIGHT</Filter>
-    </ClCompile>
     <ClCompile Include="StaticModelOBJ.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>

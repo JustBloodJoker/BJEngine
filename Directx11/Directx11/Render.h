@@ -2,6 +2,7 @@
 
 #include "pch.h"
 
+#include "Light.h"
 #include "Input.h"
 #include "Camera.h"
 #include "Object.h"
@@ -30,11 +31,12 @@ namespace BJEngine {
 		void EndFrame();
 
 		bool Init();
+		bool DrawWnd();
+		Object* InitObjs(Object* object);
+
 		virtual bool Draw();
 		virtual void Close();
-
 		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
-		void SetInput(Input* in) { this->input = in; }
 		
 		void* operator new(size_t i)
 		{
@@ -47,14 +49,17 @@ namespace BJEngine {
 		}
 
 		dx::XMMATRIX GetProjMatrix() { return Projection; };
-
 		ID3D11Device* GetDevice() { return pd3dDevice; }
 		ID3D11DeviceContext* GetContext(){ return pImmediateContext; }
 		Camera* GetCamera() { return cam; }
-		Input* GetInput() { return input; }
+
+		void SetLight(LightDesc* ld, int typeOfLight);
+		Light* GetLight() { return light; }
 	private:
-		
-		Input* input;
+
+		bool InitIsLightConstantBuffer();
+		void DrawIsLightConstantBuffer();
+		bool islight = false;
 		BJAudio::Sound* sound;
 		Camera* cam;
 		
@@ -73,6 +78,17 @@ namespace BJEngine {
 
 		IDXGISwapChain* pSwapChain;
 		ID3D11RenderTargetView* pRenderTargetView;
+
+		struct IsLightsConstantBuffer
+		{
+			BOOL isDirLight;
+			BOOL isPointLight;
+			BOOL isSpotLight;
+			int pad;
+		};
+		Light* light = nullptr;
+		IsLightsConstantBuffer istypeoflight;
+		ID3D11Buffer* ilcb;
 
 	};
 

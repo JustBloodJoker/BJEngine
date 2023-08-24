@@ -31,11 +31,6 @@ namespace BJEngine {
         
         shader->SetInputLayout(layout, ARRAYSIZE(layout));
         shader->Init(pd3dDevice);
-        
-        if(light != nullptr)
-        light->InitLight(pd3dDevice);
-
-        InitIsLightConstantBuffer();
 
         HRESULT hr = S_OK;
         D3D11_BUFFER_DESC bd;
@@ -101,12 +96,7 @@ namespace BJEngine {
         UINT offset = 0;
         ConstantBuffer constantBuffer;
         AdditionalConstantBuffer acb;
-        DrawIsLightConstantBuffer();
-
-        if (light != nullptr) {
-            light->DrawLight(pImmediateContext);
-        }
-
+        
         for (int i = 0; i < packpVertexBuffer.size(); ++i)
         {
             pImmediateContext->IASetInputLayout(shader->GetInputLayout());

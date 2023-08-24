@@ -27,7 +27,6 @@ namespace BJEngine {
 
 	void Object::Close()
 	{
-		LCLOSE(light);
 		CLOSE(texture);
 		CLOSE(shader);
 		RELEASE(pVertexBuffer);
@@ -36,7 +35,6 @@ namespace BJEngine {
 		RELEASE(wireFrame);
 		RELEASE(transparency);
 		DELETE(blendFactor);
-		RELEASE(ilcb);
 		RELEASE(renStateCullNone);
 	}
 
@@ -48,24 +46,6 @@ namespace BJEngine {
 	bool Object::Init()
 	{
 		return true;
-	}
-
-	bool Object::InitIsLightConstantBuffer()
-	{
-		
-		ilcb = Object::InitConstantBuffer<IsLightsConstantBuffer>(pd3dDevice);
-
-		if (ilcb != nullptr)
-			return true;
-		else
-			return false;
-	}
-
-	void Object::DrawIsLightConstantBuffer()
-	{
-		pImmediateContext->UpdateSubresource(ilcb, 0, NULL, &istypeoflight, 0, 0);
-		pImmediateContext->PSSetConstantBuffers(1, 1, &ilcb);
-
 	}
 
 	void Object::SetCamera(Camera* cam)
@@ -94,39 +74,6 @@ namespace BJEngine {
 		this->blendFactor = blendFactor;
 	}
 
-	void Object::SetDirectionLight(DirectionalLightDesc* lightdesc)
-	{
-		if (light != nullptr) {
-			ZeroMemory(&istypeoflight, sizeof(IsLightsConstantBuffer));
-			LCLOSE(light);
-		}
-
-		light = new DirectionalLight(lightdesc);
-		istypeoflight.isDirLight = true;
-	}
-
-	void Object::SetPointLight(PointLightDesc* lightdesc)
-	{
-		if (light != nullptr) {
-			ZeroMemory(&istypeoflight, sizeof(IsLightsConstantBuffer));
-			LCLOSE(light);
-		}
-
-		light = new PointLight(lightdesc);
-		istypeoflight.isPointLight = true;
-	}
-
-	void Object::SetSpotLight(SpotLightDesc* lightdesc)
-	{
-		if (light != nullptr) {
-			ZeroMemory(&istypeoflight, sizeof(IsLightsConstantBuffer));
-			LCLOSE(light);
-		}
-
-		light = new SpotLight(lightdesc);
-		istypeoflight.isSpotLight = true;
-	}
-
 	void Object::SetDevice(ID3D11Device* pd3dDevice)
 	{
 		this->pd3dDevice = pd3dDevice;
@@ -146,6 +93,11 @@ namespace BJEngine {
 	void Object::SetObjectMatrixPos(float x, float y, float z)
 	{
 		pos = dx::XMMatrixTranslation(x, y, z);
+	}
+
+	void Object::SetObjectMatrixPos(dx::XMFLOAT3 xmf3)
+	{
+		pos = dx::XMMatrixTranslation(xmf3.x, xmf3.y, xmf3.z);
 	}
 
 	void Object::SetObjectMatrixScale(float x, float y, float z)

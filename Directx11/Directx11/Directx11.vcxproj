@@ -112,12 +112,19 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -129,6 +136,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -137,12 +145,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BackGround.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cube.h" />
-    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="DirectxFramework.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FWork.h" />
@@ -150,15 +163,14 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="PointLight.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="Sound3D.h" />
     <ClInclude Include="SoundUtilits.h" />
-    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="StaticModelOBJ.h" />
     <ClInclude Include="Textures.h" />
     <ClInclude Include="Utilites.h" />
@@ -168,13 +180,13 @@
     <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cube.cpp" />
-    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Directx11.cpp" />
     <ClCompile Include="FWork.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -182,12 +194,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Sound3D.cpp" />
-    <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="StaticModelOBJ.cpp" />
     <ClCompile Include="Textures.cpp" />
     <ClCompile Include="Window.cpp" />

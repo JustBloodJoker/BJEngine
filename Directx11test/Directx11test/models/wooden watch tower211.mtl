@@ -10,5 +10,5 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd models\\textures\\wood.png
-map_Bump models\\textures\\woodbump.png
+map_Kd models\textures\Wood_Tower_Col.jpg
+map_Bump models\textures\Wood_Tower_Nor.jpg

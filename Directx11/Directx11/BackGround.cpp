@@ -78,7 +78,7 @@ namespace BJEngine {
 
         world = dx::XMMatrixIdentity();
 
-        world = dx::XMMatrixScaling(5.0f, -5.0f, 5.0f) * dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
+        world = dx::XMMatrixScaling(5.0f, 5.0f, 5.0f) * dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
 
         UINT stride = sizeof(Vertex);
         UINT offset = 0;
