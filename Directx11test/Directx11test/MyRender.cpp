@@ -44,21 +44,19 @@ void MyRender::InitParams()
 
 	obj.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(map)));
 	obj.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(fbx)));
-
 	obj.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(bg)));
-
 }
 
 bool MyRender::Draw()
 {
 	for (auto el : obj) {
 		el->SetViewAndProjectionMatrix(GetCamera()->GetViewMatrix(), GetProjMatrix());
-		
 	}
 	
 	obj[0]->Draw();
 	
 	obj[1]->Draw();
+	obj[1]->SetObjectMatrixPos(10.0f, 0.0f, 10.0f);
 
 	obj[2]->Draw();
 	

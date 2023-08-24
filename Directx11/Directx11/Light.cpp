@@ -38,7 +38,7 @@ namespace BJEngine {
     {
             lightBuffer = Object::InitConstantBuffer<ConstantBufferLight>(pd3dDevice);
             if (lightBuffer == nullptr) {
-                Log::Get()->Err("Dir light create error");
+                Log::Get()->Err("light create error");
                 return FAILED(E_FAIL);
             }
         

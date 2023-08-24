@@ -102,6 +102,9 @@
     <ClInclude Include="Model.h">
       <Filter>Objects</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowMap.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Directx11.cpp">
@@ -159,6 +162,9 @@
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="Model.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>

@@ -75,7 +75,7 @@ void BJEngine::Model::Draw()
 	
 		ConstantBuffer cb;
 		cb.WVP = XMMatrixTranspose(world * view * projection);
-		cb.World = world;
+		cb.World = XMMatrixTranspose(world);;
 
 		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 		pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
@@ -177,10 +177,13 @@ bool BJEngine::Model::LoadModel()
 			packVertices[i][j].pos.x = mesh->mVertices[j].x;
 			packVertices[i][j].pos.y = mesh->mVertices[j].y;
 			packVertices[i][j].pos.z = mesh->mVertices[j].z;
-
-			packVertices[i][j].texCoord.x = mesh->mTextureCoords[0][j].x;
-			packVertices[i][j].texCoord.y = mesh->mTextureCoords[0][j].y;
-
+			
+			if (addConstBuffer[packMaterials[i]].hasText)
+			{
+				packVertices[i][j].texCoord.x = mesh->mTextureCoords[0][j].x;
+				packVertices[i][j].texCoord.y = mesh->mTextureCoords[0][j].y;
+			}
+			
 			packVertices[i][j].normal.x = mesh->mNormals[j].x;
 			packVertices[i][j].normal.y = mesh->mNormals[j].y;
 			packVertices[i][j].normal.z = mesh->mNormals[j].z;

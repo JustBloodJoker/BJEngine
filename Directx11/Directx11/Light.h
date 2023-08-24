@@ -29,6 +29,10 @@ namespace BJEngine {
 		friend class PointLight;
 		friend class SpotLight;
 
+		struct ConstantBufferLight
+		{
+			LightDesc light;
+		};
 	public:
 
 		Light();
@@ -45,17 +49,18 @@ namespace BJEngine {
 
 		void SetPos(float x, float y, float z);
 		dx::XMFLOAT3 GetPos();
-		
+
+		LightDesc* lightdesc;
 	private:
 		ID3D11Buffer* lightBuffer;
 		bool isLightOn = false;
 
-		LightDesc* lightdesc;
 
-		struct ConstantBufferLight
-		{
-			LightDesc light;
-		};
+	
+
+		dx::XMMATRIX view;
+		dx::XMMATRIX projection;
+
 	};
 
 
