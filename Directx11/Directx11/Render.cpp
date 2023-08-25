@@ -140,8 +140,6 @@ namespace BJEngine {
 
 		Projection = dx::XMMatrixPerspectiveFovLH(0.4f * 3.14f, WIDTH / HEIGHT, 1.0f, 1000.0f);
 
-		InitIsLightConstantBuffer();
-
 		return true;
 	}
 
@@ -153,8 +151,6 @@ namespace BJEngine {
 		Draw();
 		if(islight)
 			light->DrawLight(pImmediateContext);
-
-		DrawIsLightConstantBuffer();
 		
 		EndFrame();
 
@@ -191,46 +187,22 @@ namespace BJEngine {
 
 	void Render::SetLight(LightDesc* ld, int typeOfLight)
 	{
-		Light* spl = new Light(ld);
-
-		switch(typeOfLight)
+		ld->typeofLight = typeOfLight;
+		if (light == nullptr)
 		{
-		case SPOTLIGHT:
-			istypeoflight = { false };
-			istypeoflight.isSpotLight = true;
-			break;
-
-		case DIRECTIONALLIGHT:
-			istypeoflight = { false };
-			istypeoflight.isDirLight = true;
-			break;
-		
-		case POINTLIGHT:
-			istypeoflight = { false };
-			istypeoflight.isPointLight = true;
-			break;
+			light = new Light(ld);
+		} 
+		else
+		{
+			light->SetLightDesc(ld);
 		}
 		islight = true;
-		spl->InitLight(pd3dDevice);
 
-		light = spl;
-	}
-
-	bool Render::InitIsLightConstantBuffer()
-	{
-		ilcb = Object::InitConstantBuffer<IsLightsConstantBuffer>(pd3dDevice);
-
-		if (ilcb != nullptr)
-			return true;
-		else
-			return false;
-	}
-	
-	void Render::DrawIsLightConstantBuffer()
-	{
-		pImmediateContext->UpdateSubresource(ilcb, 0, NULL, &istypeoflight, 0, 0);
-		pImmediateContext->PSSetConstantBuffers(1, 1, &ilcb);
-
+		if (!isInitlight)
+		{
+			light->InitLight(pd3dDevice);
+			isInitlight = true;
+		}
 	}
 
 	void Render::Close()
@@ -238,7 +210,6 @@ namespace BJEngine {
 		CLOSE(sound);
 		CLOSE(cam);
 		LCLOSE(light);
-		RELEASE(ilcb);
 		RELEASE(depthStencilView);
 		RELEASE(depthStencilBuffer);
 		RELEASE(pd3dDevice);
@@ -250,8 +221,6 @@ namespace BJEngine {
 
 		Log::Get()->Debug("Render was closed");
 	}
-
-	
 
 
 }

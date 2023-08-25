@@ -1,3 +1,5 @@
+#define MAX_LIGHT_NUM 5
+
 struct Light
 {
 	float3 pos;
@@ -5,20 +7,15 @@ struct Light
 	float3 dir;
 	float cone;
 	float3 att;
+	int typeofLight;
 	float4 ambient;
 	float4 diffuse;
 };
 
 cbuffer Light : register(b0)
 {
-    Light light;
-};
-
-cbuffer isLights : register(b1)
-{
-    int isDirLight;
-    int isPointLight;
-    int isSpotLight;
+    Light light[MAX_LIGHT_NUM];
+    int countOfLights;
 };
 
 cbuffer pixelTexureBuffer : register(b2)
@@ -67,16 +64,21 @@ VS_OUTPUT VS(float4 inPos : POSITION, float2 inTexCoord : TEXCOORD, float3 norma
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
 
-    input.normal = normalize(input.normal);
+    	input.normal = normalize(input.normal);
 
 	float4 diffuse = dif;
+	float3 finalColor = float3(0.0f, 0.0f, 0.0f);
+	float3 finalAmbient = float3(0.0f,0.0f,0.0f);
 	
+	float3 colors[MAX_LIGHT_NUM];	
+	float3 ambients[MAX_LIGHT_NUM];
+
 	if(isTexture)
 	{
 		diffuse = ObjTexture.Sample( ObjSamplerState, input.TexCoord );
 	}
 
-	if(isNormalMap == true)
+	if(isNormalMap)
     	{
         	float4 normalMap = ObjNormMap.Sample( ObjSamplerState, input.TexCoord );
         	normalMap = (2.0f*normalMap) - 1.0f;
@@ -85,52 +87,78 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         	float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
         	input.normal = normalize(mul(normalMap, texSpace));
     	}
-if(isSpotLight == true){
-    float3 finalColor = float3(0.0f, 0.0f, 0.0f);
-    float3 lightToPixelVec = light.pos - input.worldPos;
-    float d = length(lightToPixelVec);
-    float3 finalAmbient = diffuse * light.ambient;
-    if( d > light.range )
-        return float4(finalAmbient, diffuse.a);
-       
-    lightToPixelVec /= d;  
-    float howMuchLight = dot(lightToPixelVec, input.normal);
-    if( howMuchLight > 0.0f )
-    {    
-        finalColor += diffuse * light.diffuse;
-        finalColor /= (light.att[0] + (light.att[1] * d)) + (light.att[2] * (d*d));        
-        finalColor *= pow(max(dot(-lightToPixelVec, light.dir), 0.0f), light.cone);
-    }
-    finalColor = saturate(finalColor + finalAmbient);
-    return float4(finalColor, diffuse.a);
-}else if (isDirLight == true)
-    {
-    float3 finalColor;
-    finalColor = diffuse * light.ambient;
-    finalColor += saturate(dot(light.dir, input.normal) * light.diffuse * diffuse);
-    return float4(finalColor, diffuse.a);
-    } else if (isPointLight == true){
-    
-    float3 finalColor = float3(0.0f, 0.0f, 0.0f);
-    float3 lightToPixelVec = light.pos - input.worldPos;
-    float d = length(lightToPixelVec);
-    float3 finalAmbient = diffuse * light.ambient;
+	
+for(int i = 0; i < countOfLights; i++)
+{
+	float3 lightToPixelVec = light[i].pos - input.worldPos;
+	float d = length(lightToPixelVec);
+	
+	if(light[i].typeofLight == 0)
+	{
+    		colors[i] = float3(0.0f, 0.0f, 0.0f);
+		float3 tamb = diffuse * light[i].ambient;
+		ambients[i] = tamb;
+    		
+		if( d > light[i].range )
+		{
+        	
+		colors[i] = ambients[i];
+       		continue;
 
-    if( d > light.range )
-        return float4(finalAmbient, diffuse.a);
-        
-    lightToPixelVec /= d; 
+		}
+    		lightToPixelVec /= d;  
+    	
+		float howMuchLight = dot(lightToPixelVec, input.normal);
+    		if( howMuchLight > 0.0f )
+    		{    
+        		colors[i] += diffuse * light[i].diffuse;
+        		colors[i] /= (light[i].att[0] + (light[i].att[1] * d)) + (light[i].att[2] * (d*d));        
+        		colors[i] *= pow(max(dot(-lightToPixelVec, light[i].dir), 0.0f), light[i].cone);
+    		}
+    		
+		colors[i] = saturate(colors[i] + ambients[i]);
+	}	
+		else if (light[i].typeofLight == 2)
+    		{
     
-    float howMuchLight = dot(lightToPixelVec, input.normal);
+    		colors[i] = diffuse * light[i].ambient;
+    		colors[i] += saturate(dot(light[i].dir, input.normal) * light[i].diffuse * diffuse);
+    
+		return float4(colors[i], diffuse.a);
+    		
+		} 
+			else if (light[i].typeofLight == 1)
+			{
+    
+    				colors[i] = float3(0.0f, 0.0f, 0.0f);
+    				
+    				float3 tamb = diffuse * light[i].ambient;
+				ambients[i] = tamb;
 
-    if( howMuchLight > 0.0f )
-    {    
-        finalColor += howMuchLight * diffuse * light.diffuse;
-        finalColor /= light.att[0] + (light.att[1] * d) + (light.att[2] * (d*d));
-    }    
-        
-    finalColor = saturate(finalColor + finalAmbient);
+    				if( d > light[i].range )
+				{
+        	
+				colors[i] = ambients[i];
+       				continue;
+
+				}
+
+    				lightToPixelVec /= d; 
     
-    return float4(finalColor, diffuse.a);
-    } else return diffuse; //return ObjTexture.Sample( ObjSamplerState, input.TexCoord );
+    				float howMuchLight = dot(lightToPixelVec, input.normal);
+
+    				if( howMuchLight > 0.0f )
+    				{    
+        				colors[i] += diffuse * light[i].diffuse;
+        				colors[i] /= light[i].att[0] + (light[i].att[1] * d) + (light[i].att[2] * (d*d));
+    				}    
+        
+    				colors[i] = saturate(colors[i] + ambients[i]);
+    			} 
+				else return diffuse;
+}
+
+	finalColor = saturate(colors[0] + colors[1] + colors[2] + colors[3] + colors[4]);
+
+	return float4(finalColor, diffuse.a);
 }

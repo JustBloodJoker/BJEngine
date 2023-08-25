@@ -57,9 +57,8 @@ namespace BJEngine {
 		Light* GetLight() { return light; }
 	private:
 
-		bool InitIsLightConstantBuffer();
-		void DrawIsLightConstantBuffer();
 		bool islight = false;
+		bool isInitlight = false;
 		BJAudio::Sound* sound;
 		Camera* cam;
 		
@@ -79,16 +78,8 @@ namespace BJEngine {
 		IDXGISwapChain* pSwapChain;
 		ID3D11RenderTargetView* pRenderTargetView;
 
-		struct IsLightsConstantBuffer
-		{
-			BOOL isDirLight;
-			BOOL isPointLight;
-			BOOL isSpotLight;
-			int pad;
-		};
 		Light* light = nullptr;
-		IsLightsConstantBuffer istypeoflight;
-		ID3D11Buffer* ilcb;
+	
 
 	};
 

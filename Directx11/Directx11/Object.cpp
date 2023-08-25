@@ -3,7 +3,6 @@
 
 namespace BJEngine {
 
-
 	Object::Object()
 	{
 		world = dx::XMMatrixIdentity();
@@ -48,7 +47,7 @@ namespace BJEngine {
 		return true;
 	}
 
-	void Object::SetCamera(Camera* cam)
+	void Object::SetCamera(Camera*& cam)
 	{
 		this->cam = cam;
 	}
@@ -58,12 +57,12 @@ namespace BJEngine {
 		isRasterized = choose;
 	}
 
-	void Object::SetShader(Shader* shader)
+	void Object::SetShader(Shader*& shader)
 	{
 		this->shader = shader;
 	}
 
-	void Object::SetTexture(Textures* texture)
+	void Object::SetTexture(Textures*& texture)
 	{
 		this->texture = texture; hastext = true;
 	}
@@ -74,12 +73,12 @@ namespace BJEngine {
 		this->blendFactor = blendFactor;
 	}
 
-	void Object::SetDevice(ID3D11Device* pd3dDevice)
+	void Object::SetDevice(ID3D11Device*& pd3dDevice)
 	{
 		this->pd3dDevice = pd3dDevice;
 	}
 
-	void Object::SetDeviceContext(ID3D11DeviceContext* pImmediateContext)
+	void Object::SetDeviceContext(ID3D11DeviceContext*& pImmediateContext)
 	{
 		this->pImmediateContext = pImmediateContext;
 	}
@@ -105,9 +104,19 @@ namespace BJEngine {
 		scale = dx::XMMatrixScaling(x, y, z);
 	}
 
-	void Object::SetObjectMatrixRotation(float angle)
+	void Object::SetObjectMatrixRotationY(float angle)
 	{
 		rotation = dx::XMMatrixRotationY(angle);
+	}
+
+	void Object::SetObjectMatrixRotationX(float angle)
+	{
+		rotation = dx::XMMatrixRotationX(angle);
+	}
+
+	void Object::SetObjectMatrixRotationZ(float angle)
+	{
+		rotation = dx::XMMatrixRotationZ(angle);
 	}
 
 	HRESULT Object::IsRasterizedObj()

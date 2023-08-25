@@ -13,7 +13,7 @@ namespace BJEngine {
 		dx::XMFLOAT3 dir;
 		float cone;
 		dx::XMFLOAT3 att;
-		float pad;
+		int typeofLight;
 		dx::XMFLOAT4 ambient;
 		dx::XMFLOAT4 diffuse;
 		
@@ -31,8 +31,13 @@ namespace BJEngine {
 
 		struct ConstantBufferLight
 		{
-			LightDesc light;
+			LightDesc light[5];
+			int lightsCount;
+			int pad;
+			int pad1;
+			int pad2;
 		};
+
 	public:
 
 		Light();
@@ -47,16 +52,14 @@ namespace BJEngine {
 		bool InitLight(ID3D11Device* pd3dDevice);
 		void DrawLight(ID3D11DeviceContext* pImmediateContext);
 
-		void SetPos(float x, float y, float z);
-		dx::XMFLOAT3 GetPos();
+		void SetLightDesc(LightDesc* tld);
+		void SetPos(float x, float y, float z, int index);
+		dx::XMFLOAT3 GetPos(int index);
 
-		LightDesc* lightdesc;
+		
 	private:
 		ID3D11Buffer* lightBuffer;
-		bool isLightOn = false;
-
-
-	
+		ConstantBufferLight bufferdesclight;
 
 		dx::XMMATRIX view;
 		dx::XMMATRIX projection;

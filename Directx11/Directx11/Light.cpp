@@ -7,12 +7,13 @@ namespace BJEngine {
 
     Light::Light()
     {
-        isLightOn = false;
+
     }
 
     Light::Light(LightDesc* tld)
     {
-        lightdesc = tld;
+        bufferdesclight.light[bufferdesclight.lightsCount] = *tld;
+        bufferdesclight.lightsCount = 1;
     }
 
     Light::~Light()
@@ -29,11 +30,6 @@ namespace BJEngine {
         return lightBuffer;
     }
 
-    bool Light::IsLightOn()
-    {
-        return isLightOn;
-    }
-
     bool Light::InitLight(ID3D11Device* pd3dDevice)
     {
             lightBuffer = Object::InitConstantBuffer<ConstantBufferLight>(pd3dDevice);
@@ -48,22 +44,27 @@ namespace BJEngine {
     void Light::DrawLight(ID3D11DeviceContext* pImmediateContext)
     {
 
-        ConstantBufferLight LIGHT;
-
-        LIGHT.light = *lightdesc;
-
-        pImmediateContext->UpdateSubresource(lightBuffer, 0, NULL, &LIGHT, 0, 0);
+       
+        pImmediateContext->UpdateSubresource(lightBuffer, 0, NULL, &bufferdesclight, 0, 0);
         pImmediateContext->PSSetConstantBuffers(0, 1, &lightBuffer);
     }
 
-    void Light::SetPos(float x, float y, float z)
+    void Light::SetLightDesc(LightDesc* tld)
     {
-        lightdesc->pos = dx::XMFLOAT3(x, y, z);
+        if (bufferdesclight.lightsCount == 5) return;
+
+        bufferdesclight.light[bufferdesclight.lightsCount] = *tld;
+        bufferdesclight.lightsCount++;
     }
 
-    dx::XMFLOAT3 Light::GetPos()
+    void Light::SetPos(float x, float y, float z, int index)
     {
-        return lightdesc->pos;
+        bufferdesclight.light[index].pos = dx::XMFLOAT3(x, y, z);
+    }
+
+    dx::XMFLOAT3 Light::GetPos(int index)
+    {
+        return bufferdesclight.light[index].pos;
     }
 
     

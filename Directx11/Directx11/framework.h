@@ -12,7 +12,9 @@
 #include <assimp/scene.h>
 #include <assimp/material.h>
 #include <assimp/texture.h>
+#include <assimp/anim.h>
 #include <assimp/postprocess.h>
+
 
 #define NOMINMAX
 #define _XM_NO_INTRINSICS_
@@ -42,7 +44,6 @@ namespace dx = DirectX;
 #include <xaudio2.h>
 #include <x3daudio.h>
 #include <dinput.h>
-
 
 #include <locale>
 #include <codecvt>

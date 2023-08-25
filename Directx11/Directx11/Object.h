@@ -56,13 +56,13 @@ namespace BJEngine {
 		template <typename IndicesType>
 		static ID3D11Buffer* InitIndicesBuffer(ID3D11Device* pd3dDevice, int sizeInBytes, IndicesType* tindices);
 
-		void SetCamera(Camera* cam);
+		void SetCamera(Camera*& cam);
 		void SetRastVal(bool choose);
-		void SetShader(Shader* shader);
-		void SetTexture(Textures* texture);
+		void SetShader(Shader*& shader);
+		void SetTexture(Textures*& texture);
 		void SetTransparency(bool choose, float* blendFactor);
-		void SetDevice(ID3D11Device* pd3dDevice);
-		void SetDeviceContext(ID3D11DeviceContext* pImmediateContext);
+		void SetDevice(ID3D11Device*& pd3dDevice);
+		void SetDeviceContext(ID3D11DeviceContext*& pImmediateContext);
 		void SetViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projection);
 
 		virtual bool HasTexture() final { return hastext; };
@@ -70,7 +70,9 @@ namespace BJEngine {
 		void SetObjectMatrixPos(float x, float y, float z);
 		void SetObjectMatrixPos(dx::XMFLOAT3 xmf3);
 		void SetObjectMatrixScale(float x, float y, float z);
-		void SetObjectMatrixRotation(float angle);
+		void SetObjectMatrixRotationY(float angle);
+		void SetObjectMatrixRotationX(float angle);
+		void SetObjectMatrixRotationZ(float angle);
 
 	private:
 		Camera* cam;

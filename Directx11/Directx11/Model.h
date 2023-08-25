@@ -11,7 +11,7 @@ namespace BJEngine {
     {
     public:
         Model();
-        Model(const char* fbxFileName);
+        Model(const char* FileName);
         ~Model();
 
         bool Init() override;
@@ -65,6 +65,10 @@ namespace BJEngine {
 
         std::vector<Material> materials;
         const char* filename;
+
+        std::vector<aiAnimation*> animation;
+        bool isAnimation = false;
+        bool InitAnimation();
     };
 
 
