@@ -36,3 +36,6 @@ Added class Model which use Assimp to load and draw scene (with normal map and t
 
 version 1.3.1
 fixed a bug with the lights and objects after changing their positions. Fixed a bug with loadind models without textures. (only obj models tested)
+
+version 1.3.2
+Added Multilighting (Max 5 lights) (Types: Spot or Point).
