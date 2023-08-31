@@ -39,3 +39,6 @@ fixed a bug with the lights and objects after changing their positions. Fixed a 
 
 version 1.3.2
 Added Multilighting (Max 5 lights) (Types: Spot or Point).
+
+version 1.3.3
+Added Frustum for models. Added the ability to create terrain from heightmap bitmap picture.
