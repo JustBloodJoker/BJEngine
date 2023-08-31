@@ -44,7 +44,7 @@ namespace BJEngine {
 
         pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
         
-        pAdditionalConstantBuffer = Object::InitConstantBuffer<AdditionalConstantBuffer>(pd3dDevice);
+        pAdditionalBuffer = Object::InitConstantBuffer<AdditionalConstantBuffer>(pd3dDevice);
 
         for (int i = 0; i < packVertices.size(); i++)
         {
@@ -79,7 +79,9 @@ namespace BJEngine {
         rotation = dx::XMMatrixRotationY(3.14f);
         scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
         pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-        
+       
+        isInited = true;
+
         return true;
 	}
 
@@ -127,8 +129,8 @@ namespace BJEngine {
             {
                 acb.hasNormalMap = FALSE;
             }
-            pImmediateContext->UpdateSubresource(pAdditionalConstantBuffer, 0, NULL, &acb, 0, 0);
-            pImmediateContext->PSSetConstantBuffers(2, 1, &pAdditionalConstantBuffer);
+            pImmediateContext->UpdateSubresource(pAdditionalBuffer, 0, NULL, &acb, 0, 0);
+            pImmediateContext->PSSetConstantBuffers(2, 1, &pAdditionalBuffer);
             
             pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &constantBuffer, 0, 0);
             pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
@@ -156,7 +158,7 @@ namespace BJEngine {
 	void StaticModelOBJ::Close()
 	{
         Object::Close();
-        RELEASE(pAdditionalConstantBuffer);
+        RELEASE(pAdditionalBuffer);
         mat.clear();
         packVertices.clear();
         objs.clear();

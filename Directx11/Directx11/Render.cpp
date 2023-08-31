@@ -138,20 +138,26 @@ namespace BJEngine {
 
 		sound = new BJAudio::Sound();
 
-		Projection = dx::XMMatrixPerspectiveFovLH(0.4f * 3.14f, WIDTH / HEIGHT, 1.0f, 1000.0f);
-
+		
 		return true;
 	}
 
 	bool Render::DrawWnd()
-	{
+	{	
 		BeginFrame();
 		GetCamera()->CameraMove();
+		//sound->InitAndPlay(TEXT("892dc731-9cb3-4c48-8a11-0f7316e2b3ed.wav"));
 
-		Draw();
-		if(islight)
+		if (islight)
 			light->DrawLight(pImmediateContext);
-		
+
+		for (auto& object : objects)
+		{
+			object->SetViewAndProjectionMatrix(GetCamera()->GetViewMatrix(), GetCamera()->GetProjectionMatrix());
+		}
+
+		DrawActions();
+
 		EndFrame();
 
 		return true;
@@ -159,28 +165,24 @@ namespace BJEngine {
 
 	Object* Render::InitObjs(Object* object)
 	{
-		object->SetCamera(cam);
-		object->SetDevice(pd3dDevice);
-		object->SetDeviceContext(pImmediateContext);
 
-		if (!object->Init()) {
-			return nullptr;
-		};
+		if (!object->IsInited())
+		{
+			object->SetCamera(cam);
+			object->SetDevice(pd3dDevice);
+			object->SetDeviceContext(pImmediateContext);
+
+			if (!object->Init()) {
+				return nullptr;
+			};
+		}
+		objects.push_back(object);
 
 		return object;
 	}
 
-	bool Render::Draw()
+	bool Render::DrawActions()
 	{
-		BeginFrame();
-		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//sound->InitAndPlay(TEXT("892dc731-9cb3-4c48-8a11-0f7316e2b3ed.wav"));
-
-		cam->CameraMove();
-
-
-
-		EndFrame();
 		
 		return true;
 	}
@@ -207,6 +209,12 @@ namespace BJEngine {
 
 	void Render::Close()
 	{
+
+		for (auto& el : objects) {
+			CLOSE(el);
+		}
+		objects.clear();
+
 		CLOSE(sound);
 		CLOSE(cam);
 		LCLOSE(light);
@@ -218,8 +226,10 @@ namespace BJEngine {
 		RELEASE(pImmediateContext);
 		RELEASE(pSwapChain);
 		RELEASE(pRenderTargetView);
-
+		
 		Log::Get()->Debug("Render was closed");
+
+		
 	}
 
 

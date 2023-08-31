@@ -103,6 +103,9 @@ namespace BJEngine {
 		scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
 		pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
 
+		Log::Get()->Debug("Cube is inited");
+		isInited = true;
+
 		return true;
 	}
 

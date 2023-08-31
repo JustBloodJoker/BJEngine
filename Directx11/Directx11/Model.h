@@ -19,16 +19,6 @@ namespace BJEngine {
         void Close() override;
     private:
 
-        struct AdditionalConstantBuffer
-        {
-            dx::XMFLOAT4 diffuse;
-            BOOL hasText;
-            BOOL hasNormalMap;
-            BOOL pad;
-            BOOL pad1;
-        };
-        ID3D11Buffer* pAdditionalBuffer;
-        std::vector<AdditionalConstantBuffer> addConstBuffer;
 
         struct Vertex
         {
@@ -69,6 +59,9 @@ namespace BJEngine {
         std::vector<aiAnimation*> animation;
         bool isAnimation = false;
         bool InitAnimation();
+
+        dx::XMVECTOR minExtentLocal;
+        dx::XMVECTOR maxExtentLocal;
     };
 
 

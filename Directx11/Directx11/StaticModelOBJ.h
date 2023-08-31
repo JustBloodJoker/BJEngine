@@ -39,14 +39,6 @@ namespace BJEngine {
 
 		};
 		
-		struct AdditionalConstantBuffer
-		{
-			dx::XMFLOAT4 diffuse;
-			BOOL hasText;
-			BOOL hasNormalMap;
-			BOOL pad;
-			BOOL pad1;
-		};
 		struct MaterialDesc
 		{
 			std::wstring textKDName;
@@ -60,8 +52,6 @@ namespace BJEngine {
 	private:
 		
 		bool LoadObjModel();
-
-		ID3D11Buffer* pAdditionalConstantBuffer;
 
 		std::map<std::wstring, MaterialDesc> mat;
 		std::vector<VertexDesc> packVertices;

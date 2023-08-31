@@ -8,8 +8,7 @@ public:
 	~MyRender() = default;
 
 	void InitParams();
-	bool Draw() override;
-	void Close() override;
+	bool DrawActions() override;
 
 private:
 

@@ -124,8 +124,6 @@ for(int i = 0; i < countOfLights; i++)
     		colors[i] = diffuse * light[i].ambient;
     		colors[i] += saturate(dot(light[i].dir, input.normal) * light[i].diffuse * diffuse);
     
-		return float4(colors[i], diffuse.a);
-    		
 		} 
 			else if (light[i].typeofLight == 1)
 			{

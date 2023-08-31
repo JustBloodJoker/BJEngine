@@ -60,7 +60,9 @@ namespace BJEngine {
 
 
         pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
-
+        
+        Log::Get()->Debug("CubeMap is inited"); 
+        isInited = true;
 
         return true;
     }

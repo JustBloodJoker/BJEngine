@@ -64,7 +64,7 @@ namespace BJEngine {
 		void SetDevice(ID3D11Device*& pd3dDevice);
 		void SetDeviceContext(ID3D11DeviceContext*& pImmediateContext);
 		void SetViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projection);
-
+		
 		virtual bool HasTexture() final { return hastext; };
 
 		void SetObjectMatrixPos(float x, float y, float z);
@@ -74,7 +74,11 @@ namespace BJEngine {
 		void SetObjectMatrixRotationX(float angle);
 		void SetObjectMatrixRotationZ(float angle);
 
+		bool IsInited() { return isInited; }
+
 	private:
+		bool isInited = false;
+
 		Camera* cam;
 		Textures* texture;
 		Shader* shader;
@@ -112,7 +116,19 @@ namespace BJEngine {
 		D3D11_RASTERIZER_DESC cmdesc;
 
 		ID3D11RasterizerState* renStateCullNone;
-		
+
+		struct AdditionalConstantBuffer
+		{
+			dx::XMFLOAT4 diffuse;
+			BOOL hasText;
+			BOOL hasNormalMap;
+			BOOL pad;
+			BOOL pad1;
+		};
+		ID3D11Buffer* pAdditionalBuffer;
+		std::vector<AdditionalConstantBuffer> addConstBuffer;
+
+		dx::BoundingBox objectBox;
 	};
 
 	template<typename ConstantBufferType>

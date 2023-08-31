@@ -59,50 +59,61 @@ namespace BJEngine {
 		scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
 		pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
 
+		Log::Get()->Debug("Model is inited");
+		isInited = true;
+
 		return true;
 	}
 
 	void Model::Draw()
 	{
-		UINT stride = sizeof(Vertex);
-		UINT offset = 0;
-		pImmediateContext->IASetInputLayout(shader->GetInputLayout());
 		world = rotation * scale * pos;
-		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(maxExtentLocal, world),
+			dx::XMVector3Transform(minExtentLocal, world)
+			);
 
-		for (int i = 0; i < packpVertexBuffer.size(); i++)
+		if (cam->GetFrustum().Intersects(objectBox) || cam->GetFrustum().Contains(objectBox))
 		{
+			UINT stride = sizeof(Vertex);
+			UINT offset = 0;
+			pImmediateContext->IASetInputLayout(shader->GetInputLayout());
+			
+			pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			pImmediateContext->IASetVertexBuffers(0, 1, &packpVertexBuffer[i], &stride, &offset);
-			pImmediateContext->IASetIndexBuffer(packpIndexBuffer[i], DXGI_FORMAT_R16_UINT, 0);
-
-			ConstantBuffer cb;
-			cb.WVP = XMMatrixTranspose(world * view * projection);
-			cb.World = XMMatrixTranspose(world);;
-
-			pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
-			pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
-
-			pImmediateContext->UpdateSubresource(pAdditionalBuffer, 0, NULL, &addConstBuffer[packMaterials[i]], 0, 0);
-			pImmediateContext->PSSetConstantBuffers(2, 1, &pAdditionalBuffer);
-
-			if (addConstBuffer[packMaterials[i]].hasText)
+			for (int i = 0; i < packpVertexBuffer.size(); i++)
 			{
-				pImmediateContext->PSSetShaderResources(0, 1, &materials[packMaterials[i]].texture->GetTexture());
-				pImmediateContext->PSSetSamplers(0, 1, &materials[packMaterials[i]].texture->GetTexSamplerState());
+
+				pImmediateContext->IASetVertexBuffers(0, 1, &packpVertexBuffer[i], &stride, &offset);
+				pImmediateContext->IASetIndexBuffer(packpIndexBuffer[i], DXGI_FORMAT_R16_UINT, 0);
+
+				ConstantBuffer cb;
+				cb.WVP = XMMatrixTranspose(world * view * projection);
+				cb.World = XMMatrixTranspose(world);;
+
+				pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
+				pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
+
+				pImmediateContext->UpdateSubresource(pAdditionalBuffer, 0, NULL, &addConstBuffer[packMaterials[i]], 0, 0);
+				pImmediateContext->PSSetConstantBuffers(2, 1, &pAdditionalBuffer);
+
+				if (addConstBuffer[packMaterials[i]].hasText)
+				{
+					pImmediateContext->PSSetShaderResources(0, 1, &materials[packMaterials[i]].texture->GetTexture());
+					pImmediateContext->PSSetSamplers(0, 1, &materials[packMaterials[i]].texture->GetTexSamplerState());
+				}
+
+				if (addConstBuffer[packMaterials[i]].hasNormalMap)
+				{
+					pImmediateContext->PSSetShaderResources(1, 1, &materials[packMaterials[i]].textureBump->GetTexture());
+					pImmediateContext->PSSetSamplers(0, 1, &materials[packMaterials[i]].texture->GetTexSamplerState());
+				}
+
+				pImmediateContext->RSSetState(renStateCullNone);
+				pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
+				pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
+				pImmediateContext->DrawIndexed(packindices[i].size(), 0, 0);
+
 			}
-
-			if (addConstBuffer[packMaterials[i]].hasNormalMap)
-			{
-				pImmediateContext->PSSetShaderResources(1, 1, &materials[packMaterials[i]].textureBump->GetTexture());
-				pImmediateContext->PSSetSamplers(0, 1, &materials[packMaterials[i]].texture->GetTexSamplerState());
-			}
-
-			pImmediateContext->RSSetState(renStateCullNone);
-			pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
-			pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
-			pImmediateContext->DrawIndexed(packindices[i].size(), 0, 0);
-
 		}
 	}
 
@@ -171,6 +182,16 @@ namespace BJEngine {
 			}
 			pathname.Clear();
 		}
+		
+		dx::XMFLOAT3 minExtent;
+		dx::XMFLOAT3 maxExtent;
+
+		minExtent.x = scene->mMeshes[0]->mVertices[0].x;
+		minExtent.y = scene->mMeshes[0]->mVertices[0].y;
+		minExtent.z = scene->mMeshes[0]->mVertices[0].z;
+		maxExtent.x = scene->mMeshes[0]->mVertices[0].x;
+		maxExtent.y = scene->mMeshes[0]->mVertices[0].y;
+		maxExtent.z = scene->mMeshes[0]->mVertices[0].z;
 
 		for (int i = 0; i < scene->mNumMeshes; i++)
 		{
@@ -187,6 +208,14 @@ namespace BJEngine {
 				packVertices[i][j].pos.x = mesh->mVertices[j].x;
 				packVertices[i][j].pos.y = mesh->mVertices[j].y;
 				packVertices[i][j].pos.z = mesh->mVertices[j].z;
+
+				minExtent.x = std::min(minExtent.x, mesh->mVertices[j].x);
+				minExtent.y = std::min(minExtent.y, mesh->mVertices[j].y);
+				minExtent.z = std::min(minExtent.z, mesh->mVertices[j].z);
+
+				maxExtent.x = std::max(maxExtent.x, mesh->mVertices[j].x);
+				maxExtent.y = std::max(maxExtent.y, mesh->mVertices[j].y);
+				maxExtent.z = std::max(maxExtent.z, mesh->mVertices[j].z);
 
 				if (addConstBuffer[packMaterials[i]].hasText)
 				{
@@ -275,11 +304,13 @@ namespace BJEngine {
 			}
 		}
 
-
-
-
+		minExtentLocal = dx::XMVectorSet(minExtent.x, minExtent.y, minExtent.z, 1.0f);
+		maxExtentLocal = dx::XMVectorSet(maxExtent.x, maxExtent.y, maxExtent.z, 1.0f);
+		
+		
 		return true;
 	}
+
 
 	bool Model::InitAnimation()
 	{

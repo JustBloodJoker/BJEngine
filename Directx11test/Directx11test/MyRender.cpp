@@ -1,11 +1,10 @@
 #include "MyRender.h"
-
 void MyRender::InitParams()
 {
-	shader = new BJEngine::Shader(L"shaders\\shader.txt", L"shaders\\shader.txt", "VS", "PS");
-	shader2 = new BJEngine::Shader(L"shaders\\modelShader.txt", L"shaders\\modelShader.txt", "VS", "PS");
-	shader3 = new BJEngine::Shader(L"shaders\\modelShader.txt", L"shaders\\modelShader.txt", "VS", "PS");
-	shader4 = new BJEngine::Shader(L"shaders\\shader.txt", L"shaders\\shader.txt", "SKYMAP_VS", "SKYMAP_PS");
+	shader = new BJEngine::Shader(L"shaders\\ObjectShader.txt", L"shaders\\ObjectShader.txt", "VS", "PS");
+	shader2 = new BJEngine::Shader(L"shaders\\ObjectShader.txt", L"shaders\\ObjectShader.txt", "VS", "PS");
+	shader3 = new BJEngine::Shader(L"shaders\\ObjectShader.txt", L"shaders\\ObjectShader.txt", "VS", "PS");
+	shader4 = new BJEngine::Shader(L"shaders\\CubeMapShader.txt", L"shaders\\CubeMapShader.txt", "SKYMAP_VS", "SKYMAP_PS");
 
 	texture2 = new BJEngine::Textures(L"models\\textures\\grass.jpg");
 	texture3 = new BJEngine::Textures(L"models\\textures\\Texture6.dds");
@@ -36,9 +35,10 @@ void MyRender::InitParams()
 	SetLight(pld, BJEUtils::POINTLIGHT);
 	
 	map = new BJEngine::Map();
+	//map->SetTerrainTexture("models\\heightmap.bmp");
 	map->SetShader(shader);
 	map->SetTexture(texture2);
-	
+
 	bg = new BJEngine::BackGround();
 	bg->SetTexture(texture3);
 	bg->SetShader(shader4);
@@ -46,40 +46,39 @@ void MyRender::InitParams()
 	obj = new BJEngine::Model("models\\wooden.obj");
 	obj->SetShader(shader2);
 
-	fbx = new BJEngine::Model("Wolf.fbx");
+	fbx = new BJEngine::Model("models\\Wolf.fbx");
 	fbx->SetShader(shader3);
 
-	objects.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(map)));
-	objects.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(obj)));
-	objects.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(fbx)));
-	objects.push_back(InitObjs(dynamic_cast<BJEngine::Object*>(bg)));
+	InitObjs(dynamic_cast<BJEngine::Object*>(map));
+	InitObjs(dynamic_cast<BJEngine::Object*>(obj));
+	InitObjs(dynamic_cast<BJEngine::Object*>(fbx));
+	InitObjs(dynamic_cast<BJEngine::Object*>(bg));
+
+	
 }
 
-bool MyRender::Draw()
+bool MyRender::DrawActions()
 {
-	for (auto el : objects) {
-		el->SetViewAndProjectionMatrix(GetCamera()->GetViewMatrix(), GetProjMatrix());
+	for (float i = -100.0f; i < 100.0f; i += 10.0f)
+	{
+		for (float j = -100.0f; j < 100.0f; j += 10.0f)
+		{
+			obj->SetObjectMatrixPos(i, 0.0f, j);
+			obj->Draw();
+		}
 	}
 	
-	objects[0]->Draw();
-	
-	objects[1]->Draw();
-	objects[1]->SetObjectMatrixPos(10.0f, 0.0f, 0.0f);
+	fbx->SetObjectMatrixRotationX(3.14 * 1.5);
+	fbx->SetObjectMatrixScale(4.0f, 4.0f, 4.0f);
+	fbx->Draw();
 
-	objects[2]->Draw();
-	objects[2]->SetObjectMatrixRotationX(3.14 * 1.5);
-	objects[2]->SetObjectMatrixScale(4.0f, 4.0f, 4.0f);
+	map->SetObjectMatrixScale(500.0f, 10.0f, 500.0f);
+	map->SetObjectMatrixPos(0.0f, 10.0f, 0.0f);
+	map->Draw();
+	//map->SetObjectMatrixPos(-10.0f, -10.0f, -10.f);
 
-	objects[3]->Draw();
+
+	bg->Draw();
 	
 	return true;
-}
-
-void MyRender::Close()
-{
-	Render::Close();
-	for (auto& el : objects) {
-		CLOSE(el);
-	}
-
 }

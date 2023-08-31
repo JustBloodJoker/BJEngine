@@ -168,7 +168,6 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Shader.h" />
-    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="Sound3D.h" />
     <ClInclude Include="SoundUtilits.h" />
@@ -197,7 +196,6 @@
     </ClCompile>
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Sound3D.cpp" />
     <ClCompile Include="StaticModelOBJ.cpp" />

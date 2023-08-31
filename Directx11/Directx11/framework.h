@@ -1,5 +1,6 @@
 #pragma once
 
+#define _CRT_SECURE_NO_WARNINGS
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dsound.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -15,7 +16,6 @@
 #include <assimp/anim.h>
 #include <assimp/postprocess.h>
 
-
 #define NOMINMAX
 #define _XM_NO_INTRINSICS_
 #include <Windows.h>
@@ -29,6 +29,7 @@
 
 
 #include <DirectXMath.h>
+#include <DirectXCollision.h>
 namespace dx = DirectX;
 
 #include <vector>
@@ -47,3 +48,9 @@ namespace dx = DirectX;
 
 #include <locale>
 #include <codecvt>
+
+
+#include <thread>
+#include <mutex>
+
+#include <iostream>

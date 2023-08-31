@@ -19,9 +19,12 @@ namespace BJEngine {
 		void SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
 
 		dx::CXMMATRIX GetViewMatrix();
+		dx::CXMMATRIX GetProjectionMatrix();
+		dx::BoundingFrustum GetFrustum();
 		dx::XMVECTOR GetEyeVector();
 	private:
 		dx::XMMATRIX viewMatrix;
+		dx::XMMATRIX projectionMatrix;
 
 		dx::XMVECTOR eye;
 		dx::XMVECTOR at;
@@ -29,6 +32,8 @@ namespace BJEngine {
 		
 		float camYaw = 0.0f;
 		float camPitch = 0.0f;
+
+		dx::BoundingFrustum frustum;
 	};
 
 

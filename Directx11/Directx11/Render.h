@@ -34,8 +34,9 @@ namespace BJEngine {
 		bool DrawWnd();
 		Object* InitObjs(Object* object);
 
-		virtual bool Draw();
-		virtual void Close();
+
+		virtual bool DrawActions();
+		void Close();
 		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
 		
 		void* operator new(size_t i)
@@ -48,14 +49,16 @@ namespace BJEngine {
 			_aligned_free(p);
 		}
 
-		dx::XMMATRIX GetProjMatrix() { return Projection; };
 		ID3D11Device* GetDevice() { return pd3dDevice; }
 		ID3D11DeviceContext* GetContext(){ return pImmediateContext; }
 		Camera* GetCamera() { return cam; }
 
+		void SetObjectsVector(std::vector<Object*> obj) { this->objects = obj; }
 		void SetLight(LightDesc* ld, int typeOfLight);
 		Light* GetLight() { return light; }
 	private:
+		
+		std::vector<Object*> objects;
 
 		bool islight = false;
 		bool isInitlight = false;
@@ -68,8 +71,7 @@ namespace BJEngine {
 		ID3D11Device* pd3dDevice;
 		ID3D11DeviceContext* pImmediateContext;
 	
-		dx::XMMATRIX Projection;
-
+		
 		HWND hwnd;
 
 		D3D_DRIVER_TYPE driverType;

@@ -1,4 +1,5 @@
 #pragma once
+#include "pch.h"
 #include "Object.h"
 
 namespace BJEngine {
@@ -29,13 +30,28 @@ namespace BJEngine {
 
         bool Init() override;
         void Draw() override;
+        void Close() override;
+
+        void SetTerrainTexture(const char* filename);
+        void InitTerrainTexture();
 
     private:
+        bool isTerrain = false;
+        const char* terrainFileName;
+
+        std::vector<Vertex> vertices;
+        std::vector<WORD> indices;
+
+        int NumVertices;
+        int NumFaces;
 
 
-        Vertex* vertices;
-        WORD* indices;
-
+        struct HeightMapInfo {
+            int terrainWidth;
+            int terrainHeight;
+            dx::XMFLOAT3* heightMap;
+        };
+        HeightMapInfo hmInfo;
 
     };
 

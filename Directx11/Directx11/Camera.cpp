@@ -12,6 +12,10 @@ namespace BJEngine {
 		this->at = at;
 
 		viewMatrix = dx::XMMatrixLookAtLH(eye, at, up);
+		projectionMatrix = dx::XMMatrixPerspectiveFovLH(0.4f * 3.14f, WIDTH / HEIGHT, 1.0f, 1000.0f);
+
+		
+
 		Log::Get()->Debug("Create camera");
 	}
 
@@ -60,13 +64,14 @@ namespace BJEngine {
 		{
 			eye -= moveSpeed * deltaTime * up;
 		}
-		//if ((Input::GetCurrState().lX != Input::GetLastState().lX) || (Input::GetCurrState().lY != Input::GetLastState().lY))
+		//if ((Input::Get()->GetCurrState().lX != Input::Get()->GetLastState().lX) ||
+		//	(Input::Get()->GetCurrState().lY != Input::Get()->GetLastState().lY))
 		//{
-		//	camYaw += Input::GetLastState().lX * 0.001f;
+		//	camYaw += Input::Get()->GetLastState().lX * 0.001f;
 		//
-		//	camPitch += Input::GetCurrState().lY * 0.001f;
+		//	camPitch += Input::Get()->GetCurrState().lY * 0.001f;
 		//
-		//	Input::EndDetectInput();
+		//	Input::Get()->EndDetectInput();
 		//}
 		if (Input::Get()->CheckKeyState(DIK_LEFT))
 		{
@@ -96,6 +101,9 @@ namespace BJEngine {
 		up = dx::XMVector3TransformCoord(up, dx::XMMatrixRotationY(camYaw));
 		at += eye;
 		viewMatrix = XMMatrixLookAtLH(eye, at, up);
+
+		frustum.CreateFromMatrix(frustum,projectionMatrix);
+		frustum.Transform(frustum, DirectX::XMMatrixInverse(nullptr, viewMatrix));
 	}
 
 	void Camera::SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up)
@@ -111,6 +119,16 @@ namespace BJEngine {
 	dx::CXMMATRIX Camera::GetViewMatrix()
 	{
 		return viewMatrix;
+	}
+
+	dx::CXMMATRIX Camera::GetProjectionMatrix()
+	{
+		return projectionMatrix;
+	}
+
+	dx::BoundingFrustum Camera::GetFrustum()
+	{
+		return frustum;
 	}
 
 	dx::XMVECTOR Camera::GetEyeVector()
