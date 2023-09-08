@@ -30,6 +30,7 @@ namespace BJEngine {
 			NULL, NULL, &Texture, NULL);
 
 		if (FAILED(hr)) {
+			Log::Get()->Err("ERROR IN CREATING TEXTURE");
 			return true;
 		}
 

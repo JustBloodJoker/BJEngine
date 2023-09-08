@@ -9,5 +9,4 @@
 #include "Input.h"
 #include "Map.h"
 #include "BackGround.h"
-#include "StaticModelOBJ.h"
 #include "Model.h"

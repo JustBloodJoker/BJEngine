@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Light.h"
-#include "Object.h"
 
 namespace BJEngine {
 
@@ -43,8 +42,6 @@ namespace BJEngine {
 
     void Light::DrawLight(ID3D11DeviceContext* pImmediateContext)
     {
-
-       
         pImmediateContext->UpdateSubresource(lightBuffer, 0, NULL, &bufferdesclight, 0, 0);
         pImmediateContext->PSSetConstantBuffers(0, 1, &lightBuffer);
     }
@@ -59,12 +56,19 @@ namespace BJEngine {
 
     void Light::SetPos(float x, float y, float z, int index)
     {
-        bufferdesclight.light[index].pos = dx::XMFLOAT3(x, y, z);
+        bufferdesclight.light[index].pos = dx::XMFLOAT4(x, y, z, 1.0f);
     }
 
     dx::XMFLOAT3 Light::GetPos(int index)
     {
-        return bufferdesclight.light[index].pos;
+        return dx::XMFLOAT3(bufferdesclight.light[index].pos.x, 
+            bufferdesclight.light[index].pos.y, 
+            bufferdesclight.light[index].pos.z);
+    }
+
+    void Light::InitShadowMap()
+    {
+
     }
 
     

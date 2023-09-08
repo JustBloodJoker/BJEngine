@@ -110,6 +110,7 @@ namespace BJEngine {
     {
         this->Object::Close();
         RELEASE(depthStateLessEqual);
+        CLOSE(texture);
         vertices.clear();
         indices.clear();
     }

@@ -28,18 +28,21 @@ namespace BJEngine {
 	{
 		if (isInited)
 		{
-			CLOSE(texture);
 			CLOSE(shader);
 			RELEASE(pVertexBuffer);
 			RELEASE(pIndexBuffer);
 			RELEASE(pConstantBuffer);
-			RELEASE(pAdditionalBuffer);
-			addConstBuffer.clear();
 			RELEASE(wireFrame);
 			RELEASE(transparency);
 			DELETE(blendFactor);
 			RELEASE(renStateCullNone);
 			isInited = false;
+
+			for (auto& material : materials)
+			{
+				CLOSE(material);
+			}
+			materials.clear();
 		}
 	}
 

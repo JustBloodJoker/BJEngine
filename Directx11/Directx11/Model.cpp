@@ -42,8 +42,7 @@ namespace BJEngine {
 		}
 
 		pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
-		pAdditionalBuffer = Object::InitConstantBuffer<AdditionalConstantBuffer>(pd3dDevice);
-
+		
 		ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
 		cmdesc.FillMode = D3D11_FILL_SOLID;
 		cmdesc.FrontCounterClockwise = true;
@@ -68,60 +67,49 @@ namespace BJEngine {
 	void Model::Draw()
 	{
 		world = rotation * scale * pos;
-		objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(maxExtentLocal, world),
-			dx::XMVector3Transform(minExtentLocal, world)
+		
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		pImmediateContext->IASetInputLayout(shader->GetInputLayout());
+
+		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		for (int i = 0; i < packpVertexBuffer.size(); i++)
+		{
+			objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(maxExtentLocal[i], world),
+				dx::XMVector3Transform(minExtentLocal[i], world)
 			);
 
-		if (cam->GetFrustum().Intersects(objectBox) || cam->GetFrustum().Contains(objectBox))
-		{
-			UINT stride = sizeof(Vertex);
-			UINT offset = 0;
-			pImmediateContext->IASetInputLayout(shader->GetInputLayout());
-			
-			pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			for (int i = 0; i < packpVertexBuffer.size(); i++)
+			if (cam->GetFrustum().Intersects(objectBox) || cam->GetFrustum().Contains(objectBox))
 			{
-
 				pImmediateContext->IASetVertexBuffers(0, 1, &packpVertexBuffer[i], &stride, &offset);
 				pImmediateContext->IASetIndexBuffer(packpIndexBuffer[i], DXGI_FORMAT_R16_UINT, 0);
 
 				ConstantBuffer cb;
 				cb.WVP = XMMatrixTranspose(world * view * projection);
-				cb.World = XMMatrixTranspose(world);;
+				cb.World = world;
+				cb.ViewMatrix = cam->GetViewMatrix();
 
 				pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 				pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
+				;
 
-				pImmediateContext->UpdateSubresource(pAdditionalBuffer, 0, NULL, &addConstBuffer[packMaterials[i]], 0, 0);
-				pImmediateContext->PSSetConstantBuffers(2, 1, &pAdditionalBuffer);
-
-				if (addConstBuffer[packMaterials[i]].hasText)
-				{
-					pImmediateContext->PSSetShaderResources(0, 1, &materials[packMaterials[i]].texture->GetTexture());
-					pImmediateContext->PSSetSamplers(0, 1, &materials[packMaterials[i]].texture->GetTexSamplerState());
-				}
-
-				if (addConstBuffer[packMaterials[i]].hasNormalMap)
-				{
-					pImmediateContext->PSSetShaderResources(1, 1, &materials[packMaterials[i]].textureBump->GetTexture());
-					pImmediateContext->PSSetSamplers(0, 1, &materials[packMaterials[i]].texture->GetTexSamplerState());
-				}
+				materials[packMaterials[i]]->Draw(pImmediateContext, 2, 0, 1);
 
 				pImmediateContext->RSSetState(renStateCullNone);
 				pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 				pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
 				pImmediateContext->DrawIndexed(packindices[i].size(), 0, 0);
-
 			}
 		}
+		
+			
+		
 	}
 
 	void Model::Close()
 	{
 		Object::Close();
-		RELEASE(pAdditionalBuffer);
-		addConstBuffer.clear();
 		packVertices.clear();
 		packindices.clear();
 		packMaterials.clear();
@@ -146,39 +134,49 @@ namespace BJEngine {
 
 		for (int i = 0; i < scene->mNumMaterials; i++)
 		{
-			materials.push_back({});
-			addConstBuffer.push_back({});
+			materials.push_back(new Materials(pd3dDevice));
 
-			aiColor3D diffuseColor;
-			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == AI_SUCCESS;
-			materials[i].difColor.x = diffuseColor.r;
-			materials[i].difColor.y = diffuseColor.g;
-			materials[i].difColor.z = diffuseColor.b;
+			aiColor3D tColor = { 0.0f,0.0f,0.0f };
+		
+			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, tColor) == AI_SUCCESS;
 
-			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_TRANSPARENT, materials[i].difColor.w) == AI_SUCCESS;
+			float tt = 0.0f;
+			scene->mMaterials[i]->Get(AI_MATKEY_TRANSPARENCYFACTOR, tt);
 
-			addConstBuffer[i].diffuse = materials[i].difColor;
+			materials[i]->SetParam(DIFFUSE, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
+
+			tColor = { 0,0,0 };
+			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, tColor);
+			materials[i]->SetParam(SPECULAR, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
+
+			tColor = { 0,0,0 };
+			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_EMISSIVE, tColor);
+			materials[i]->SetParam(EMISSIVE, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
+
+			tColor = { 0,0,0 };
+			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, tColor);
+
+			float tp = 0.0f;
+			scene->mMaterials[i]->Get(AI_MATKEY_SHININESS, tp);
+
+			materials[i]->SetParam(AMBIENT, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
+
+			
+			materials[i]->SetParam(SPECULAR_POWER, tp);
 
 			aiString pathname;
 			scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &pathname);
-			materials[i].textKDName = BJEUtils::aiStringToWString(pathname);
 
 			if (pathname.length != 0)
 			{
-				materials[i].texture = new Textures(materials[i].textKDName.c_str());
-				materials[i].texture->InitTextures(pd3dDevice);
-				addConstBuffer[i].hasText = true;
+				materials[i]->SetTexture(HAS_TEXTURE, BJEUtils::aiStringToWString(pathname), pd3dDevice);
 			}
 			pathname.Clear();
 
 			scene->mMaterials[i]->GetTexture(aiTextureType_HEIGHT, 0, &pathname);
-			materials[i].textBumpName = BJEUtils::aiStringToWString(pathname);
-
 			if (pathname.length != 0)
 			{
-				materials[i].textureBump = new Textures(materials[i].textBumpName.c_str());
-				materials[i].textureBump->InitTextures(pd3dDevice);
-				addConstBuffer[i].hasNormalMap = true;
+				materials[i]->SetTexture(HAS_NORMAL_TEXTURE, BJEUtils::aiStringToWString(pathname), pd3dDevice);
 			}
 			pathname.Clear();
 		}
@@ -186,12 +184,7 @@ namespace BJEngine {
 		dx::XMFLOAT3 minExtent;
 		dx::XMFLOAT3 maxExtent;
 
-		minExtent.x = scene->mMeshes[0]->mVertices[0].x;
-		minExtent.y = scene->mMeshes[0]->mVertices[0].y;
-		minExtent.z = scene->mMeshes[0]->mVertices[0].z;
-		maxExtent.x = scene->mMeshes[0]->mVertices[0].x;
-		maxExtent.y = scene->mMeshes[0]->mVertices[0].y;
-		maxExtent.z = scene->mMeshes[0]->mVertices[0].z;
+		
 
 		for (int i = 0; i < scene->mNumMeshes; i++)
 		{
@@ -200,6 +193,13 @@ namespace BJEngine {
 			packVertices.push_back({});
 			packindices.push_back({});
 			packMaterials.push_back(mesh->mMaterialIndex);
+
+			minExtent.x = mesh->mVertices[0].x;
+			minExtent.y = mesh->mVertices[0].y;
+			minExtent.z = mesh->mVertices[0].z;
+			maxExtent.x = mesh->mVertices[0].x;
+			maxExtent.y = mesh->mVertices[0].y;
+			maxExtent.z = mesh->mVertices[0].z;
 
 			for (int j = 0; j < mesh->mNumVertices; j++)
 			{
@@ -217,27 +217,25 @@ namespace BJEngine {
 				maxExtent.y = std::max(maxExtent.y, mesh->mVertices[j].y);
 				maxExtent.z = std::max(maxExtent.z, mesh->mVertices[j].z);
 
-				if (addConstBuffer[packMaterials[i]].hasText)
-				{
-					packVertices[i][j].texCoord.x = mesh->mTextureCoords[0][j].x;
-					packVertices[i][j].texCoord.y = mesh->mTextureCoords[0][j].y;
-				}
+				packVertices[i][j].texCoord.x = mesh->mTextureCoords[0][j].x;
+				packVertices[i][j].texCoord.y = mesh->mTextureCoords[0][j].y;				
 
 				packVertices[i][j].normal.x = mesh->mNormals[j].x;
 				packVertices[i][j].normal.y = mesh->mNormals[j].y;
 				packVertices[i][j].normal.z = mesh->mNormals[j].z;
 
-				if (addConstBuffer[packMaterials[i]].hasNormalMap)
+				packVertices[i][j].tangent = dx::XMFLOAT3(0.0f, 0.0f, 0.0f);
+				if (mesh->HasTangentsAndBitangents())
 				{
-					packVertices[i][j].tangent = dx::XMFLOAT3(0.0f, 0.0f, 0.0f);
-					if (mesh->HasTangentsAndBitangents())
-					{
-						packVertices[i][j].tangent.x = mesh->mTangents[j].x;
-						packVertices[i][j].tangent.y = mesh->mTangents[j].y;
-						packVertices[i][j].tangent.z = mesh->mTangents[j].z;
-					}
+					packVertices[i][j].tangent.x = mesh->mTangents[j].x;
+					packVertices[i][j].tangent.y = mesh->mTangents[j].y;
+					packVertices[i][j].tangent.z = mesh->mTangents[j].z;
 				}
+				
 			}
+
+			minExtentLocal.push_back(dx::XMVectorSet(minExtent.x, minExtent.y, minExtent.z, 1.0f));
+			maxExtentLocal.push_back(dx::XMVectorSet(maxExtent.x, maxExtent.y, maxExtent.z, 1.0f));
 
 			for (int j = 0; j < mesh->mNumFaces; j++)
 			{
@@ -245,54 +243,51 @@ namespace BJEngine {
 				packindices[i].push_back(mesh->mFaces[j].mIndices[1]);
 				packindices[i].push_back(mesh->mFaces[j].mIndices[2]);
 			}
-			if (addConstBuffer[packMaterials[i]].hasNormalMap)
+			if (!mesh->HasTangentsAndBitangents())
 			{
-				if (!mesh->HasTangentsAndBitangents())
+				for (UINT j = 0; j < packindices[i].size(); j += 3)
 				{
-					for (UINT j = 0; j < packindices[i].size(); j += 3)
-					{
-						UINT i0 = packindices[i][j];
-						UINT i1 = packindices[i][j + 1];
-						UINT i2 = packindices[i][j + 2];
+					UINT i0 = packindices[i][j];
+					UINT i1 = packindices[i][j + 1];
+					UINT i2 = packindices[i][j + 2];
 
-						const dx::XMFLOAT3& p0 = packVertices[i][i0].pos;
-						const dx::XMFLOAT3& p1 = packVertices[i][i1].pos;
-						const dx::XMFLOAT3& p2 = packVertices[i][i2].pos;
+					const dx::XMFLOAT3& p0 = packVertices[i][i0].pos;
+					const dx::XMFLOAT3& p1 = packVertices[i][i1].pos;
+					const dx::XMFLOAT3& p2 = packVertices[i][i2].pos;
 
-						const dx::XMFLOAT2& tc0 = packVertices[i][i0].texCoord;
-						const dx::XMFLOAT2& tc1 = packVertices[i][i1].texCoord;
-						const dx::XMFLOAT2& tc2 = packVertices[i][i2].texCoord;
+					const dx::XMFLOAT2& tc0 = packVertices[i][i0].texCoord;
+					const dx::XMFLOAT2& tc1 = packVertices[i][i1].texCoord;
+					const dx::XMFLOAT2& tc2 = packVertices[i][i2].texCoord;
 
-						dx::XMFLOAT3 edge1(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
-						dx::XMFLOAT3 edge2(p2.x - p0.x, p2.y - p0.y, p2.z - p0.z);
+					dx::XMFLOAT3 edge1(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
+					dx::XMFLOAT3 edge2(p2.x - p0.x, p2.y - p0.y, p2.z - p0.z);
 
-						dx::XMFLOAT2 deltaUV1(tc1.x - tc0.x, tc1.y - tc0.y);
-						dx::XMFLOAT2 deltaUV2(tc2.x - tc0.x, tc2.y - tc0.y);
+					dx::XMFLOAT2 deltaUV1(tc1.x - tc0.x, tc1.y - tc0.y);
+					dx::XMFLOAT2 deltaUV2(tc2.x - tc0.x, tc2.y - tc0.y);
 
-						float denominator = (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-						if (denominator == 0.0f)
-							continue;
+					float denominator = (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+					if (denominator == 0.0f)
+						continue;
 
-						float r = 1.0f / denominator;
+					float r = 1.0f / denominator;
 
-						dx::XMFLOAT3 tangent(
-							(edge1.x * deltaUV2.y - edge2.x * deltaUV1.y) * r,
-							(edge1.y * deltaUV2.y - edge2.y * deltaUV1.y) * r,
-							(edge1.z * deltaUV2.y - edge2.z * deltaUV1.y) * r
-						);
+					dx::XMFLOAT3 tangent(
+						(edge1.x * deltaUV2.y - edge2.x * deltaUV1.y) * r,
+						(edge1.y * deltaUV2.y - edge2.y * deltaUV1.y) * r,
+						(edge1.z * deltaUV2.y - edge2.z * deltaUV1.y) * r
+					);
 
-						packVertices[i][i0].tangent = dx::XMFLOAT3(packVertices[i][i0].tangent.x + tangent.x,
-							packVertices[i][i0].tangent.y + tangent.y,
-							packVertices[i][i0].tangent.z + tangent.z);
+					packVertices[i][i0].tangent = dx::XMFLOAT3(packVertices[i][i0].tangent.x + tangent.x,
+						packVertices[i][i0].tangent.y + tangent.y,
+						packVertices[i][i0].tangent.z + tangent.z);
 
-						packVertices[i][i1].tangent = dx::XMFLOAT3(packVertices[i][i1].tangent.x + tangent.x,
-							packVertices[i][i1].tangent.y + tangent.y,
-							packVertices[i][i1].tangent.z + tangent.z);
+					packVertices[i][i1].tangent = dx::XMFLOAT3(packVertices[i][i1].tangent.x + tangent.x,
+						packVertices[i][i1].tangent.y + tangent.y,
+						packVertices[i][i1].tangent.z + tangent.z);
 
-						packVertices[i][i2].tangent = dx::XMFLOAT3(packVertices[i][i2].tangent.x + tangent.x,
-							packVertices[i][i2].tangent.y + tangent.y,
-							packVertices[i][i2].tangent.z + tangent.z);
-					}
+					packVertices[i][i2].tangent = dx::XMFLOAT3(packVertices[i][i2].tangent.x + tangent.x,
+						packVertices[i][i2].tangent.y + tangent.y,
+						packVertices[i][i2].tangent.z + tangent.z);
 				}
 				for (UINT j = 0; j < packVertices[i].size(); ++j)
 				{
@@ -303,11 +298,6 @@ namespace BJEngine {
 				}
 			}
 		}
-
-		minExtentLocal = dx::XMVectorSet(minExtent.x, minExtent.y, minExtent.z, 1.0f);
-		maxExtentLocal = dx::XMVectorSet(maxExtent.x, maxExtent.y, maxExtent.z, 1.0f);
-		
-		
 		return true;
 	}
 

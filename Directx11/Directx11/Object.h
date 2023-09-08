@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Textures.h"
 #include "Camera.h"
+#include "Materials.h"
 
 namespace BJEngine {
 
@@ -44,7 +45,8 @@ namespace BJEngine {
 		struct ConstantBuffer
 		{
 			dx::XMMATRIX WVP;
-			dx::XMMATRIX  World;
+			dx::XMMATRIX World;
+			dx::XMMATRIX ViewMatrix;
 		};
 
 		template <typename ConstantBufferType>
@@ -117,16 +119,7 @@ namespace BJEngine {
 
 		ID3D11RasterizerState* renStateCullNone;
 
-		struct AdditionalConstantBuffer
-		{
-			dx::XMFLOAT4 diffuse;
-			BOOL hasText;
-			BOOL hasNormalMap;
-			BOOL pad;
-			BOOL pad1;
-		};
-		ID3D11Buffer* pAdditionalBuffer;
-		std::vector<AdditionalConstantBuffer> addConstBuffer;
+		std::vector<Materials*> materials;
 
 		dx::BoundingBox objectBox;
 	};

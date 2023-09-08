@@ -34,16 +34,6 @@ namespace BJEngine {
             dx::XMFLOAT3 tangent;
         };
 
-        struct Material
-        {
-            std::wstring textKDName;
-            std::wstring textBumpName;
-            dx::XMFLOAT4 difColor;
-            bool transparent;
-            Textures* texture;
-            Textures* textureBump;
-        };
-
         bool LoadModel();
         
         std::vector<std::vector<Vertex>> packVertices;
@@ -53,15 +43,14 @@ namespace BJEngine {
         std::vector<ID3D11Buffer*> packpVertexBuffer;
         std::vector<ID3D11Buffer*> packpIndexBuffer;
 
-        std::vector<Material> materials;
         const char* filename;
 
         std::vector<aiAnimation*> animation;
         bool isAnimation = false;
         bool InitAnimation();
 
-        dx::XMVECTOR minExtentLocal;
-        dx::XMVECTOR maxExtentLocal;
+        std::vector<dx::XMVECTOR> minExtentLocal;
+        std::vector<dx::XMVECTOR> maxExtentLocal;
     };
 
 

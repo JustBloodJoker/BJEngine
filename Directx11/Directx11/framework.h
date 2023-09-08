@@ -15,6 +15,7 @@
 #include <assimp/texture.h>
 #include <assimp/anim.h>
 #include <assimp/postprocess.h>
+#include <assimp/light.h>
 
 #define NOMINMAX
 #define _XM_NO_INTRINSICS_
@@ -25,8 +26,6 @@
 
 #include <dxsdk-d3dx/D3DX11.h>
 #include <d3d11.h>
-
-
 
 #include <DirectXMath.h>
 #include <DirectXCollision.h>

@@ -44,21 +44,18 @@ namespace BJEngine {
 		pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * vertices.size(), &vertices[0]);
 		pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * indices.size(), &indices[0]);
 		pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
-		pAdditionalBuffer = Object::InitConstantBuffer<AdditionalConstantBuffer>(pd3dDevice);
-		addConstBuffer.push_back({});
-		addConstBuffer[0].diffuse = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		addConstBuffer[0].hasNormalMap = false;
-		addConstBuffer[0].hasText = false;
-		
+
+		materials.push_back(new Materials(pd3dDevice));
+		materials[0]->SetParam(DIFFUSE, dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+		materials[0]->SetParam(AMBIENT, dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 			
 		if (FAILED(IsRasterizedObj()))
 			return false;
 
 		if (hastext) {
-			addConstBuffer[0].hasText = true;
-			if (texture->InitTextures(pd3dDevice))
-				return false;
+			materials[0]->SetTexture(HAS_TEXTURE, texture, pd3dDevice);
 		}
+
 		if (FAILED(IsTransparencyObj()))
 			return false;
 
@@ -97,19 +94,15 @@ namespace BJEngine {
 
 		world = rotation *  scale * pos;
 
-		pImmediateContext->UpdateSubresource(pAdditionalBuffer, 0, NULL, &addConstBuffer[0], 0, 0);
-		pImmediateContext->PSSetConstantBuffers(2, 1, &pAdditionalBuffer);
+		materials[0]->Draw(pImmediateContext, 2, 0, 1);
 
 		ConstantBuffer cb;
 		cb.WVP = XMMatrixTranspose(world * view * projection);
-		cb.World = XMMatrixTranspose(world);
+		cb.World = world;
+		cb.ViewMatrix = cam->GetViewMatrix();
 		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 		pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
 
-		if (hastext) {
-			pImmediateContext->PSSetShaderResources(0, 1, &texture->GetTexture());
-			pImmediateContext->PSSetSamplers(0, 1, &texture->GetTexSamplerState());
-		}
 		pImmediateContext->RSSetState(renStateCullNone);
 		pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 		pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);

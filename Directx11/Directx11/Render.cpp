@@ -189,7 +189,7 @@ namespace BJEngine {
 
 	void Render::SetLight(LightDesc* ld, int typeOfLight)
 	{
-		ld->typeofLight = typeOfLight;
+		ld->lightType = typeOfLight;
 		if (light == nullptr)
 		{
 			light = new Light(ld);

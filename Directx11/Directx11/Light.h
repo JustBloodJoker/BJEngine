@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "Object.h"
 
 namespace BJEngine {
 
@@ -7,17 +8,20 @@ namespace BJEngine {
 		LightDesc()
 		{
 			ZeroMemory(this, sizeof(LightDesc));
+			color = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		}
-		dx::XMFLOAT3 pos;
-		float range;
-		dx::XMFLOAT3 dir;
-		float cone;
+
+		dx::XMFLOAT4 pos;
+		dx::XMFLOAT4 dir;
+		dx::XMFLOAT4 color;
+
 		dx::XMFLOAT3 att;
-		int typeofLight;
-		dx::XMFLOAT4 ambient;
-		dx::XMFLOAT4 diffuse;
-		
-		
+		float angle;
+
+		int lightType;
+		int enabled;
+		int pad;
+		int pad1;
 	};
 
 
@@ -47,7 +51,6 @@ namespace BJEngine {
 		void Close();
 
 		ID3D11Buffer* GetConstantBuffer();
-		bool IsLightOn();
 
 		bool InitLight(ID3D11Device* pd3dDevice);
 		void DrawLight(ID3D11DeviceContext* pImmediateContext);
@@ -56,13 +59,14 @@ namespace BJEngine {
 		void SetPos(float x, float y, float z, int index);
 		dx::XMFLOAT3 GetPos(int index);
 
-		
+		void InitShadowMap();
+
 	private:
 		ID3D11Buffer* lightBuffer;
 		ConstantBufferLight bufferdesclight;
 
-		dx::XMMATRIX view;
-		dx::XMMATRIX projection;
+		dx::XMMATRIX viewSM;
+		dx::XMMATRIX projectionSM;
 
 	};
 

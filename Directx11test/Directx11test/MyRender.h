@@ -19,7 +19,6 @@ private:
 	BJEngine::Textures* texture2;
 	BJEngine::Textures* texture3;
 
-	BJEngine::LightDesc* ld;
 	BJEngine::LightDesc* pld;
 	BJEngine::LightDesc* sld;
 	BJEngine::Map* map;
