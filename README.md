@@ -42,3 +42,6 @@ Added Multilighting (Max 5 lights) (Types: Spot or Point).
 
 version 1.3.3
 Added Frustum for models. Added the ability to create terrain from heightmap bitmap picture.
+
+version 1.3.4
+Recreated objects shaders. Added additional modifications to the models. 
