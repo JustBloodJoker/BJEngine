@@ -32,10 +32,6 @@ namespace BJEngine {
 			RELEASE(pVertexBuffer);
 			RELEASE(pIndexBuffer);
 			RELEASE(pConstantBuffer);
-			RELEASE(wireFrame);
-			RELEASE(transparency);
-			DELETE(blendFactor);
-			RELEASE(renStateCullNone);
 			isInited = false;
 
 			for (auto& material : materials)
@@ -56,14 +52,13 @@ namespace BJEngine {
 		return true;
 	}
 
+	void Object::MinDraw(dx::XMMATRIX matrix, dx::XMMATRIX mat2)
+	{
+	}
+
 	void Object::SetCamera(Camera*& cam)
 	{
 		this->cam = cam;
-	}
-
-	void Object::SetRastVal(bool choose)
-	{
-		isRasterized = choose;
 	}
 
 	void Object::SetShader(Shader*& shader)
@@ -74,12 +69,6 @@ namespace BJEngine {
 	void Object::SetTexture(Textures*& texture)
 	{
 		this->texture = texture; hastext = true;
-	}
-
-	void Object::SetTransparency(bool choose, float* blendFactor)
-	{
-		this->isTransparency = choose;
-		this->blendFactor = blendFactor;
 	}
 
 	void Object::SetDevice(ID3D11Device*& pd3dDevice)
@@ -96,6 +85,12 @@ namespace BJEngine {
 	{
 		this->view = view;
 		this->projection = projection;
+	}
+
+	void Object::SetLightViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projecion, int index)
+	{
+		this->lView[index] = view;
+		this->lProjection[index] = projecion;
 	}
 
 	void Object::SetObjectMatrixPos(float x, float y, float z)
@@ -128,64 +123,16 @@ namespace BJEngine {
 		rotation = dx::XMMatrixRotationZ(angle);
 	}
 
-	HRESULT Object::IsRasterizedObj()
+	void Object::SetTexturesPrefixPath(std::wstring prefPath)
 	{
-		if (isRasterized) {
-			ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
-			wfdesc.FillMode = D3D11_FILL_WIREFRAME;
-			wfdesc.CullMode = D3D11_CULL_NONE;
-			HRESULT hr = pd3dDevice->CreateRasterizerState(&wfdesc, &wireFrame);
-
-			return hr;
-		}
-
-		return S_OK;
+		this->texturePrefixPath += prefPath;
 	}
 
-	void Object::DrawRasterized()
+
+
+	dx::XMMATRIX Object::GetObjectMatrix()
 	{
-		if (isRasterized) {
-			pImmediateContext->RSSetState(wireFrame);
-		}
-	}
-
-	HRESULT Object::IsTransparencyObj()
-	{
-		if (isTransparency) {
-			D3D11_BLEND_DESC blendDesc;
-			ZeroMemory(&blendDesc, sizeof(blendDesc));
-
-			D3D11_RENDER_TARGET_BLEND_DESC rtbd;
-			ZeroMemory(&rtbd, sizeof(rtbd));
-
-			rtbd.BlendEnable = true;
-			rtbd.SrcBlend = D3D11_BLEND_SRC_COLOR;
-			rtbd.DestBlend = D3D11_BLEND_BLEND_FACTOR;
-			rtbd.BlendOp = D3D11_BLEND_OP_ADD;
-			rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-			rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
-			rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-			rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
-
-			blendDesc.AlphaToCoverageEnable = false;
-			blendDesc.RenderTarget[0] = rtbd;
-
-			if (FAILED(pd3dDevice->CreateBlendState(&blendDesc, &transparency))) return E_FAIL;
-		}
-
-		return S_OK;
-	}
-
-	void Object::DrawTransparency()
-	{
-		if (isTransparency) {
-
-			pImmediateContext->OMSetBlendState(transparency, blendFactor, 0xffffffff);
-		}
-		else {
-			pImmediateContext->OMSetBlendState(0, 0, 0xffffffff);
-		}
-
+		return world;
 	}
 
 	

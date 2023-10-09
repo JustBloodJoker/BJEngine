@@ -9,8 +9,15 @@ namespace BJEUtils {
 #define LCLOSE(p)		{ if(p){delete (p); (p)=nullptr; } }
 #define UNACQUIRE(p)    { if(p){(p)->Unacquire();} }
 
-#define WIDTH 1024
-#define HEIGHT 1024
+	float GetWindowWidth();
+	float GetWindowHeight();
+	bool GetFullScreenState();
+	bool GetIsResizedState();
+
+	void SetFullScreenState(bool F);
+	void SetWindowWidth(float W);
+	void SetWindowHeight(float H);
+	void SetIsResizedState(bool isRes);
 
 	enum {
 		_WINDOWED,
@@ -29,5 +36,7 @@ namespace BJEUtils {
 
 	std::wstring aiStringToWString(aiString aiStr);
 
-	
+
+#define SHADOW_WIDTH 1024
+#define SHADOW_HEIGHT 1024
 }

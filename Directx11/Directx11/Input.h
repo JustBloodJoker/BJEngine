@@ -19,11 +19,12 @@ namespace BJEngine {
 		void StartDetectInput();
 		void EndDetectInput();
 		bool CheckKeyState(int key) { return keyboardState[key] & 0x80; }
-		bool CheckMouseMove(int xory);
 
 		DIMOUSESTATE GetCurrState() { return mouseCurrentState; }
 		DIMOUSESTATE GetLastState() { return mouseLastState; }
+
 	private:
+		
 		static Input* m_instance;
 
 		static IDirectInputDevice8* keyboardInput;

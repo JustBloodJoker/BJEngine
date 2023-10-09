@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Object.h"
 #include "Sound.h"
+#include "Shadow.h"
 
 namespace BJEngine {
 
@@ -33,7 +34,7 @@ namespace BJEngine {
 		bool Init();
 		bool DrawWnd();
 		Object* InitObjs(Object* object);
-
+		void ResizeWindow();
 
 		virtual bool DrawActions();
 		void Close();
@@ -53,8 +54,16 @@ namespace BJEngine {
 		ID3D11DeviceContext* GetContext(){ return pImmediateContext; }
 		Camera* GetCamera() { return cam; }
 
+		void SetLightPos(float x, float y, float z, int indexOfLight);
+		dx::XMFLOAT3 GetLightPos(int index);
+
 		void SetObjectsVector(std::vector<Object*> obj) { this->objects = obj; }
+		
+		void InitImGui();
+		void DrawImGui();
+
 		void SetLight(LightDesc* ld, int typeOfLight);
+
 		Light* GetLight() { return light; }
 	private:
 		
@@ -65,6 +74,8 @@ namespace BJEngine {
 		BJAudio::Sound* sound;
 		Camera* cam;
 		
+
+
 		ID3D11DepthStencilView* depthStencilView;
 		ID3D11Texture2D* depthStencilBuffer;
 
@@ -81,7 +92,9 @@ namespace BJEngine {
 		ID3D11RenderTargetView* pRenderTargetView;
 
 		Light* light = nullptr;
-	
+		std::vector<Shadow*> shadows;
+
+		D3D11_VIEWPORT vp;
 
 	};
 

@@ -15,12 +15,10 @@ namespace BJEngine {
 
     Input::Input()
     {
-    
     }
 
     Input::~Input()
     {
-
     }
 
     void Input::Close()
@@ -39,6 +37,10 @@ namespace BJEngine {
         {
             m_instance = this;
         }
+        else
+        {
+            return true;
+        }
 
         keyboardInput = nullptr;
         mouseInput = nullptr;
@@ -46,47 +48,48 @@ namespace BJEngine {
         if (FAILED(hr))
         {
             Log::Get()->Err("DirectInput8Create error");
-            exit(Log::DIERROR);
+            return false;
         }
 
         hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboardInput, NULL);
         if (FAILED(hr)) 
         {
             Log::Get()->Err("CreateDevice DI error");
-            exit(Log::DIERROR);
+            return false;
         }
 
         hr = directInput->CreateDevice(GUID_SysMouse, &mouseInput, NULL);
         if (FAILED(hr))
         {
             Log::Get()->Err("CreateDevice DI error");
-            exit(Log::DIERROR);
+            return false;
         }
         hr = keyboardInput->SetDataFormat(&c_dfDIKeyboard);
         if (FAILED(hr))
         {
             Log::Get()->Err("SetDataFormat DI error");
-            exit(Log::DIERROR);
+            return false;
         }
         hr = keyboardInput->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
         if (FAILED(hr))
         {
             Log::Get()->Err("SetCooperativeLevel DI error");
-            exit(Log::DIERROR);
+            return false;
         }
         hr = mouseInput->SetDataFormat(&c_dfDIMouse);
         if (FAILED(hr))
         {
             Log::Get()->Err("SetDataFormat DI error");
-            exit(Log::DIERROR);
+            return false;
         }
         hr = mouseInput->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
         if (FAILED(hr))
         {
             Log::Get()->Err("SetCooperativeLevel DI error");
-            exit(Log::DIERROR);
+            return false;
         }
 
+        
         return true;
     }
 
@@ -96,25 +99,12 @@ namespace BJEngine {
         mouseInput->Acquire();
 
         mouseInput->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrentState);
-
         keyboardInput->GetDeviceState(sizeof(keyboardState), (LPVOID)&keyboardState);
     }
 
     void Input::EndDetectInput()
     {
         mouseLastState = mouseCurrentState;
-    }
-
-    bool Input::CheckMouseMove(int xory)
-    {
-        switch (xory) {
-        case 1:
-            return mouseCurrentState.lY != mouseLastState.lY;
-        case 2:
-            return mouseCurrentState.lX != mouseLastState.lX;
-        default:
-            return false;
-        }
     }
 
 

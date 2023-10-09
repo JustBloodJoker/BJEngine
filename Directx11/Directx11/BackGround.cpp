@@ -28,21 +28,15 @@ namespace BJEngine {
             { "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
         };
 
+        if (shader == nullptr)
+        {
+            shader = new BJEngine::Shader(L"shaders\\CubeMapShader.txt", L"shaders\\CubeMapShader.txt", "SKYMAP_VS", "SKYMAP_PS");
+        }
+
         shader->SetInputLayout(layout, ARRAYSIZE(layout));
         shader->Init(pd3dDevice);
 
         texture->InitCubeMap(pd3dDevice);
-
-        ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-        cmdesc.FillMode = D3D11_FILL_SOLID;
-        cmdesc.FrontCounterClockwise = false;
-        cmdesc.CullMode = D3D11_CULL_NONE;
-        hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullNone);
-        if (FAILED(hr))
-        {
-            Log::Get()->Err("Create rast state error");
-            return false;
-        }
 
         D3D11_DEPTH_STENCIL_DESC dssDesc;
         ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
@@ -72,11 +66,6 @@ namespace BJEngine {
         
         pImmediateContext->IASetInputLayout(shader->GetInputLayout());
         pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        
-
-        
-
-
 
         world = dx::XMMatrixIdentity();
 
@@ -95,12 +84,13 @@ namespace BJEngine {
         pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
         pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
         pImmediateContext->PSSetShaderResources(0, 1, &texture->GetTexture());
-        pImmediateContext->PSSetSamplers(0, 1, &texture->GetTexSamplerState());
+        pImmediateContext->PSSetSamplers(0, 1, Textures::GetWrapState());
 
         pImmediateContext->VSSetShader(shader->GetVertexShader(), 0, 0);
         pImmediateContext->PSSetShader(shader->GetPixelShader(), 0, 0);
         pImmediateContext->OMSetDepthStencilState(depthStateLessEqual, 0);
-        pImmediateContext->RSSetState(renStateCullNone);
+        Blend::Get()->DrawNoBlend(pImmediateContext);
+        Blend::Get()->DrawCullStateClockFalse(pImmediateContext);
         pImmediateContext->DrawIndexed(numSphereFaces * 3, 0, 0);
         pImmediateContext->OMSetDepthStencilState(NULL, 0);
 

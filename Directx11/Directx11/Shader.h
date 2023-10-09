@@ -40,9 +40,9 @@ namespace BJEngine {
 		UINT numElements;
 		D3D11_INPUT_ELEMENT_DESC* layout;
 		
-
 		const char* EPVS;
 		const char* EPPS;
+		bool isClosed = true;
 	};
 
 

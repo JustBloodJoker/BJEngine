@@ -57,9 +57,13 @@ namespace BJEngine {
 
 		void SetLightDesc(LightDesc* tld);
 		void SetPos(float x, float y, float z, int index);
+		
 		dx::XMFLOAT3 GetPos(int index);
+		dx::XMFLOAT3 GetDir(int index);
 
 		void InitShadowMap();
+
+		LightDesc GetDesc(int index);
 
 	private:
 		ID3D11Buffer* lightBuffer;

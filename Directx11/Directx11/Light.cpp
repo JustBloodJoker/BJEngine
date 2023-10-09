@@ -42,6 +42,39 @@ namespace BJEngine {
 
     void Light::DrawLight(ID3D11DeviceContext* pImmediateContext)
     {
+        static bool chb;
+
+        for (int i = 0; i < bufferdesclight.lightsCount; i++)
+        {
+            ImGui::Begin(std::string("Light " + std::to_string(i)).c_str());
+            //chb = ;
+            ImGui::Checkbox("enable", (bool*)&bufferdesclight.light[i].enabled);
+            //bufferdesclight.light[i].enabled = chb;
+            ImGui::Text("Color");
+            ImGui::SliderFloat("R", &bufferdesclight.light[i].color.x, 0.0f, 1.0f);
+            ImGui::SliderFloat("G", &bufferdesclight.light[i].color.y, 0.0f, 1.0f);
+            ImGui::SliderFloat("B", &bufferdesclight.light[i].color.z, 0.0f, 1.0f);
+
+           
+
+            if (bufferdesclight.light[i].lightType == 0)
+            {
+                ImGui::Text("Direction");
+                ImGui::SliderFloat("X", &bufferdesclight.light[i].dir.x, -5.0f, 5.0f);
+                ImGui::SliderFloat("Y", &bufferdesclight.light[i].dir.y, -5.0f, 5.0f);
+                ImGui::SliderFloat("Z", &bufferdesclight.light[i].dir.z, -5.0f, 5.0f);
+                ImGui::SliderFloat(" cone", &bufferdesclight.light[i].angle, 0.00005f, M_PI/4.0f, "%.5f");
+            }
+
+            ImGui::Text("Position");
+            ImGui::InputFloat("X", &bufferdesclight.light[i].pos.x);
+            ImGui::InputFloat("Y", &bufferdesclight.light[i].pos.y);
+            ImGui::InputFloat("Z", &bufferdesclight.light[i].pos.z);
+
+            ImGui::End();
+        }
+
+
         pImmediateContext->UpdateSubresource(lightBuffer, 0, NULL, &bufferdesclight, 0, 0);
         pImmediateContext->PSSetConstantBuffers(0, 1, &lightBuffer);
     }
@@ -66,9 +99,21 @@ namespace BJEngine {
             bufferdesclight.light[index].pos.z);
     }
 
+    dx::XMFLOAT3 Light::GetDir(int index)
+    {
+        return dx::XMFLOAT3(bufferdesclight.light[index].dir.x,
+            bufferdesclight.light[index].dir.y,
+            bufferdesclight.light[index].dir.z);
+    }
+
     void Light::InitShadowMap()
     {
+       
+    }
 
+    LightDesc Light::GetDesc(int index)
+    {
+        return  bufferdesclight.light[index];
     }
 
     

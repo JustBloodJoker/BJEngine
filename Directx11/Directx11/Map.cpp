@@ -47,27 +47,10 @@ namespace BJEngine {
 
 		materials.push_back(new Materials(pd3dDevice));
 		materials[0]->SetParam(DIFFUSE, dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-		materials[0]->SetParam(AMBIENT, dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-			
-		if (FAILED(IsRasterizedObj()))
-			return false;
-
+		materials[0]->SetParam(AMBIENT, dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));	
+		
 		if (hastext) {
 			materials[0]->SetTexture(HAS_TEXTURE, texture, pd3dDevice);
-		}
-
-		if (FAILED(IsTransparencyObj()))
-			return false;
-
-		ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-		cmdesc.FillMode = D3D11_FILL_SOLID;
-		cmdesc.FrontCounterClockwise = true;
-		cmdesc.CullMode = D3D11_CULL_NONE;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullNone);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("Create rast state error");
-			return false;
 		}
 
 		rotation = dx::XMMatrixRotationY(0.0f);
@@ -82,9 +65,7 @@ namespace BJEngine {
 
 	void Map::Draw()
 	{
-		DrawRasterized();
-		DrawTransparency();
-
+	
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		pImmediateContext->IASetInputLayout(shader->GetInputLayout());
@@ -94,7 +75,7 @@ namespace BJEngine {
 
 		world = rotation *  scale * pos;
 
-		materials[0]->Draw(pImmediateContext, 2, 0, 1);
+		materials[0]->Draw(pImmediateContext, 2, 0, 1, 100);
 
 		ConstantBuffer cb;
 		cb.WVP = XMMatrixTranspose(world * view * projection);
@@ -103,7 +84,8 @@ namespace BJEngine {
 		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 		pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
 
-		pImmediateContext->RSSetState(renStateCullNone);
+		Blend::Get()->DrawNoBlend(pImmediateContext);
+		Blend::Get()->DrawCullState(pImmediateContext);
 		pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 		pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
 		pImmediateContext->DrawIndexed(indices.size(), 0, 0);

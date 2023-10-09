@@ -31,10 +31,13 @@ namespace BJEngine {
 
 	void Shader::Close()
 	{
-		RELEASE(pVertexLayout);
-		RELEASE(pPixelShader);
-		RELEASE(pVertexShader);
-		Log::Get()->Debug("Shader was closed");
+		if (!isClosed)
+		{
+			RELEASE(pVertexLayout);
+			RELEASE(pPixelShader);
+			RELEASE(pVertexShader);
+			Log::Get()->Debug("Shader was closed");
+		}
 	}
 
 	bool Shader::Init(ID3D11Device* device)
@@ -78,6 +81,8 @@ namespace BJEngine {
 			Log::Get()->Err("pixel shader create error");
 			return false;
 		}
+
+		isClosed = false;
 
 		return true;
 	}

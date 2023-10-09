@@ -17,6 +17,7 @@ namespace BJEngine {
 		void UpdateCamera();
 
 		void SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
+		void SetViewMatrix(dx::XMMATRIX view);
 
 		dx::CXMMATRIX GetViewMatrix();
 		dx::CXMMATRIX GetProjectionMatrix();
@@ -32,6 +33,11 @@ namespace BJEngine {
 		
 		float camYaw = 0.0f;
 		float camPitch = 0.0f;
+
+		static float moveSpeed;
+		static float sensitivity;
+		static bool isButton;
+		static float FoV;
 
 		dx::BoundingFrustum frustum;
 	};

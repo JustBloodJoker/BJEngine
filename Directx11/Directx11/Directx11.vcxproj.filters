@@ -102,11 +102,17 @@
     <ClInclude Include="Materials.h">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="Blend.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Shadow.h">
+      <Filter>LIGHT</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Directx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -160,6 +166,15 @@
     </ClCompile>
     <ClCompile Include="Materials.cpp">
       <Filter>Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Blend.cpp">
+      <Filter>Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Shadow.cpp">
+      <Filter>LIGHT</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

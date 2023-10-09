@@ -1,0 +1,12 @@
+﻿  BackGround.cpp
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(20,32): warning C4101: 'pSystem': unreferenced local variable
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(19,27): warning C4101: 'bd': unreferenced local variable
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(122,29): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(124,35): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(125,33): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(127,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(141,29): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(154,29): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(156,33): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\D3D_Framework\Directx11\Directx11\BackGround.cpp(180,29): warning C4018: '<': signed/unsigned mismatch
+  Directx11.vcxproj -> D:\Projects\D3D_Framework\Directx11\x64\Debug\Directx11.lib

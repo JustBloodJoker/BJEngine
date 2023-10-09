@@ -112,7 +112,6 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -136,7 +135,6 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -153,7 +151,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="BackGround.h" />
+    <ClInclude Include="Blend.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="DirectxFramework.h" />
@@ -169,6 +169,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Shadow.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="Sound3D.h" />
     <ClInclude Include="SoundUtilits.h" />
@@ -177,10 +178,11 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="BackGround.cpp" />
+    <ClCompile Include="Blend.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cube.cpp" />
-    <ClCompile Include="Directx11.cpp" />
     <ClCompile Include="FWork.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Light.cpp" />
@@ -197,6 +199,7 @@
     </ClCompile>
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Shadow.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Sound3D.cpp" />
     <ClCompile Include="Textures.cpp" />

@@ -30,17 +30,11 @@ namespace BJEngine {
 		RELEASE(pVertexBuffer);
 		RELEASE(pIndexBuffer);
 		RELEASE(pConstantBuffer);
-		RELEASE(wireFrame);
-		RELEASE(transparency);
-		DELETE(blendFactor);
 		DELETE(vertices);
 	}
 
 	void Cube::Draw()
 	{
-		DrawRasterized();
-		DrawTransparency();
-
 		world = dx::XMMatrixIdentity();
 		world = rotation * scale * pos;
 
@@ -89,15 +83,10 @@ namespace BJEngine {
 		pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * 36, indices);
 		pConstantBuffer = Object::InitConstantBuffer<ConstantBuffer>(pd3dDevice);
 
-		if (FAILED(IsRasterizedObj()))
-			return false;
-
 		if (hastext) {
 			if (texture->InitTextures(pd3dDevice))
 				return false;
 		}
-		if (FAILED(IsTransparencyObj()))
-			return false;
 
 		rotation = dx::XMMatrixRotationY(0.0f);
 		scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);

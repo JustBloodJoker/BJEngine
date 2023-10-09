@@ -4,6 +4,10 @@
 
 namespace BJEngine {
 
+	float Camera::moveSpeed = 500.0f;
+	float Camera::sensitivity = 0.001f;
+	bool Camera::isButton = false;
+	float Camera::FoV = M_PI / 2;
 
 	Camera::Camera(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up)
 	{
@@ -12,11 +16,11 @@ namespace BJEngine {
 		this->at = at;
 
 		viewMatrix = dx::XMMatrixLookAtLH(eye, at, up);
-		projectionMatrix = dx::XMMatrixPerspectiveFovLH(0.4f * 3.14f, WIDTH / HEIGHT, 1.0f, 1000.0f);
+		projectionMatrix = dx::XMMatrixPerspectiveFovLH(M_PI / 2.0f, BJEUtils::GetWindowWidth() / BJEUtils::GetWindowHeight(), 1.0f, 10000.0f);
 
 		
 
-		Log::Get()->Debug("Create camera");
+		Log::Get()->Debug("Camera was created");
 	}
 
 	Camera::~Camera()
@@ -26,68 +30,66 @@ namespace BJEngine {
 
 	void Camera::Close()
 	{
-		Log::Get()->Debug("Closing camera");
+		Log::Get()->Debug("Camera was closed");
 	}
 
 	void Camera::CameraMove()
 	{
 		Input::Get()->StartDetectInput();
 
-		float moveSpeed = 5.0f; 
-		float deltaTime = 0.016f;
+		if (!isButton)
+		{
+			isButton = ImGui::Button("camera");
+		}
+		if (isButton)
+		{
+			ImGui::Begin("Camera");
+			ImGui::SliderFloat("CameraSpeed", &moveSpeed, 10.0f, 1000.0f);
+			ImGui::SliderFloat("Sensitivity", &sensitivity, 0.00001f, 0.01f);
+			ImGui::SliderFloat("FoV", &FoV, 0.5f, 2.4f);
+
+			isButton = !ImGui::Button("CloseCameraWindow");
+
+			ImGui::End();
+		}
+		
+		projectionMatrix = dx::XMMatrixPerspectiveFovLH(FoV, BJEUtils::GetWindowWidth() / BJEUtils::GetWindowHeight(), 1.0f, 10000.0f);
 
 		DirectX::XMVECTOR cameraDirection = DirectX::XMVector3Normalize(at - eye);
 		DirectX::XMVECTOR rightDirection = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), cameraDirection));
-		DirectX::XMVECTOR upDirection = DirectX::XMVector3Cross(cameraDirection, rightDirection);
-
+		
 		if (Input::Get()->CheckKeyState(DIK_W))
 		{
-			eye += moveSpeed * deltaTime * cameraDirection;
+			eye += moveSpeed * 0.016f * cameraDirection;
 		}
 		if (Input::Get()->CheckKeyState(DIK_S))
 		{
-			eye -= moveSpeed * deltaTime * cameraDirection;
+			eye -= moveSpeed * 0.016f * cameraDirection;
 		}
 		if (Input::Get()->CheckKeyState(DIK_D))
 		{
-			eye += moveSpeed * deltaTime * rightDirection;
+			eye += moveSpeed * 0.016f * rightDirection;
 		}
 		if (Input::Get()->CheckKeyState(DIK_A))
 		{
-			eye -= moveSpeed * deltaTime * rightDirection;
+			eye -= moveSpeed * 0.016f * rightDirection;
 		}
 		if (Input::Get()->CheckKeyState(DIK_SPACE))
 		{
-			eye += moveSpeed * deltaTime * up;
+			eye += moveSpeed * 0.016f * up;
 		}
 		if (Input::Get()->CheckKeyState(DIK_LCONTROL))
 		{
-			eye -= moveSpeed * deltaTime * up;
+			eye -= moveSpeed * 0.016f * up;
 		}
-		//if ((Input::Get()->GetCurrState().lX != Input::Get()->GetLastState().lX) ||
-		//	(Input::Get()->GetCurrState().lY != Input::Get()->GetLastState().lY))
-		//{
-		//	camYaw += Input::Get()->GetLastState().lX * 0.001f;
-		//
-		//	camPitch += Input::Get()->GetCurrState().lY * 0.001f;
-		//
-		//	Input::Get()->EndDetectInput();
-		//}
-		if (Input::Get()->CheckKeyState(DIK_LEFT))
+		if ((Input::Get()->GetCurrState().lX != Input::Get()->GetLastState().lX) ||
+			(Input::Get()->GetCurrState().lY != Input::Get()->GetLastState().lY))
 		{
-			camYaw -= 0.03f;
-		}
-		if (Input::Get()->CheckKeyState(DIK_RIGHT))
-		{
-			camYaw += 0.03f;
-		}
-		if (Input::Get()->CheckKeyState(DIK_UP))
-		{
-			camPitch -= 0.03f;
-		}
-		if (Input::Get()->CheckKeyState(DIK_DOWN))
-		{
-			camPitch += 0.03f;
+			camYaw += Input::Get()->GetLastState().lX * sensitivity;
+		
+			camPitch += Input::Get()->GetCurrState().lY * sensitivity;
+		
+			Input::Get()->EndDetectInput();
 		}
 
 		UpdateCamera();
@@ -115,6 +117,10 @@ namespace BJEngine {
 		viewMatrix = XMMatrixLookAtLH(eye, at, up);
 	}
 
+	void Camera::SetViewMatrix(dx::XMMATRIX view)
+	{
+		viewMatrix = view;
+	}
 
 	dx::CXMMATRIX Camera::GetViewMatrix()
 	{

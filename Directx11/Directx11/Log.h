@@ -14,13 +14,6 @@ namespace BJEngine {
 		void Debug(const char* message, ...);
 		void Err(const char* message, ...);
 
-		enum
-		{
-			WNDCLASSERRORS = -1101,
-			DIERROR = -1102,
-
-		};
-
 	private:
 		static Log* m_instance;
 

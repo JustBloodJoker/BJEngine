@@ -12,12 +12,7 @@ namespace BJEngine {
 	{
 	private:
 
-		friend class Cube;
-		friend class Map;
-		friend class BackGround;
-		friend class StaticModelOBJ;
-		friend class Model;
-
+		
 	public:
 
 		Object();
@@ -28,6 +23,8 @@ namespace BJEngine {
 
 		virtual void Draw();
 		virtual bool Init();
+
+		virtual void MinDraw(dx::XMMATRIX matrix, dx::XMMATRIX mat2);
 
 		struct Vertex
 		{
@@ -47,6 +44,10 @@ namespace BJEngine {
 			dx::XMMATRIX WVP;
 			dx::XMMATRIX World;
 			dx::XMMATRIX ViewMatrix;
+			dx::XMMATRIX projectionMatrix;
+			dx::XMFLOAT4 pos;
+			dx::XMMATRIX lView[5];
+			dx::XMMATRIX lProj[5];
 		};
 
 		template <typename ConstantBufferType>
@@ -59,14 +60,14 @@ namespace BJEngine {
 		static ID3D11Buffer* InitIndicesBuffer(ID3D11Device* pd3dDevice, int sizeInBytes, IndicesType* tindices);
 
 		void SetCamera(Camera*& cam);
-		void SetRastVal(bool choose);
 		void SetShader(Shader*& shader);
 		void SetTexture(Textures*& texture);
-		void SetTransparency(bool choose, float* blendFactor);
 		void SetDevice(ID3D11Device*& pd3dDevice);
 		void SetDeviceContext(ID3D11DeviceContext*& pImmediateContext);
 		void SetViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projection);
-		
+
+		void SetLightViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projecion, int index);
+
 		virtual bool HasTexture() final { return hastext; };
 
 		void SetObjectMatrixPos(float x, float y, float z);
@@ -75,10 +76,13 @@ namespace BJEngine {
 		void SetObjectMatrixRotationY(float angle);
 		void SetObjectMatrixRotationX(float angle);
 		void SetObjectMatrixRotationZ(float angle);
+		void SetTexturesPrefixPath(std::wstring prefPath);
 
 		bool IsInited() { return isInited; }
 
-	private:
+		dx::XMMATRIX GetObjectMatrix();
+
+	protected:
 		bool isInited = false;
 
 		Camera* cam;
@@ -93,35 +97,25 @@ namespace BJEngine {
 		dx::XMMATRIX view;
 		dx::XMMATRIX projection;
 
+		
 		dx::XMMATRIX rotation;
 		dx::XMMATRIX scale;
 		dx::XMMATRIX pos;
+
+		//////////////
+		dx::XMMATRIX lView[5];
+		dx::XMMATRIX lProjection[5];
 
 		bool hastext = false;
 
 		ID3D11Device* pd3dDevice;
 		ID3D11DeviceContext* pImmediateContext;
 
-		bool isRasterized = false;
-		ID3D11RasterizerState* wireFrame;
-		D3D11_RASTERIZER_DESC wfdesc;
-		HRESULT IsRasterizedObj();
-		void DrawRasterized();
-
-		ID3D11BlendState* transparency;
-		float* blendFactor;
-		bool isTransparency = false;
-		HRESULT IsTransparencyObj();
-		void DrawTransparency();
-
-
-		D3D11_RASTERIZER_DESC cmdesc;
-
-		ID3D11RasterizerState* renStateCullNone;
-
 		std::vector<Materials*> materials;
 
 		dx::BoundingBox objectBox;
+
+		std::wstring texturePrefixPath = L"";
 	};
 
 	template<typename ConstantBufferType>

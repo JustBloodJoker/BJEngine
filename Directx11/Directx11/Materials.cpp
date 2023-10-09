@@ -11,7 +11,7 @@ namespace BJEngine
 	}
 
 	void BJEngine::Materials::Draw(ID3D11DeviceContext* pImmediateContext, int registerMaterialPos, 
-		int registerTexturePos, int registerNormalTexturePos)
+		int registerTexturePos, int registerNormalTexturePos, int registerRoughnessTexturePos)
 	{
 		if (isInit)
 		{
@@ -19,16 +19,30 @@ namespace BJEngine
 			pImmediateContext->UpdateSubresource(pMaterialBuffer, 0, NULL, &cmbDesc, 0, 0);
 			pImmediateContext->PSSetConstantBuffers(registerMaterialPos, 1, &pMaterialBuffer);
 
+			if (cmbDesc.matDesc.ishavealphablend)
+				Blend::Get()->DrawAlphaBlend(pImmediateContext);
+			else
+				Blend::Get()->DrawNoBlend(pImmediateContext);
+
 			if (cmbDesc.matDesc.isTexture)
 			{
+				pImmediateContext->GenerateMips(texture->GetTexture());
 				pImmediateContext->PSSetShaderResources(registerTexturePos, 1, &texture->GetTexture());
-				pImmediateContext->PSSetSamplers(registerTexturePos, 1, &texture->GetTexSamplerState());
+				pImmediateContext->PSSetSamplers(registerTexturePos, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isNormalTexture)
 			{
+				pImmediateContext->GenerateMips(normalTexture->GetTexture());
 				pImmediateContext->PSSetShaderResources(registerNormalTexturePos, 1, &normalTexture->GetTexture());
-				pImmediateContext->PSSetSamplers(registerTexturePos, 1, &normalTexture->GetTexSamplerState());
+				pImmediateContext->PSSetSamplers(registerTexturePos, 1, Textures::GetWrapState());
+			}
+
+			if (cmbDesc.matDesc.isRoughnessTexture)
+			{
+				pImmediateContext->GenerateMips(roughnessTexture->GetTexture());
+				pImmediateContext->PSSetShaderResources(registerRoughnessTexturePos, 1, &roughnessTexture->GetTexture());
+				pImmediateContext->PSSetSamplers(registerTexturePos, 1, Textures::GetWrapState());
 			}
 
 		}
@@ -45,6 +59,28 @@ namespace BJEngine
 			return;
 		}
 		isInit = true;
+	}
+
+	void Materials::HasAlphaChannel(ID3D11ShaderResourceView* textureSRV)
+	{
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		textureSRV->GetDesc(&srvDesc);
+
+		switch (srvDesc.Format)
+		{
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+		case DXGI_FORMAT_R8G8B8A8_SNORM:
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+		case DXGI_FORMAT_R16G16B16A16_FLOAT:
+		case DXGI_FORMAT_R16G16B16A16_UNORM:
+		case DXGI_FORMAT_R16G16B16A16_SNORM:
+		case DXGI_FORMAT_R32G32B32A32_FLOAT:
+		case DXGI_FORMAT_R32G32B32A32_UINT:
+		case DXGI_FORMAT_R32G32B32A32_SINT:
+			cmbDesc.matDesc.ishavealphablend = true;
+		default:
+			cmbDesc.matDesc.ishavealphablend = false;
+		}
 	}
 
 	void Materials::SetParam(short paramType, dx::XMFLOAT4 param)
@@ -98,6 +134,8 @@ namespace BJEngine
 			texture->InitTextures(pd3dDevice);
 			cmbDesc.matDesc.isTexture = true;
 
+			HasAlphaChannel(texture->GetTexture());
+
 			break;
 		case HAS_NORMAL_TEXTURE:
 
@@ -106,6 +144,15 @@ namespace BJEngine
 			cmbDesc.matDesc.isNormalTexture = true;
 		
 			break;
+
+		case HAS_ROUGHNESS_TEXTURE:
+
+			roughnessTexture = new Textures(textureName.c_str());
+			roughnessTexture->InitTextures(pd3dDevice);
+			cmbDesc.matDesc.isRoughnessTexture = true;
+			
+			break;
+
 		default:
 			
 			Log::Get()->Err("incorrect texture input type");

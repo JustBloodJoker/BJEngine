@@ -13,21 +13,18 @@ public:
 private:
 
 	BJEngine::Shader* shader;
-	BJEngine::Shader* shader2;
-	BJEngine::Shader* shader3;
-	BJEngine::Shader* shader4;
-	BJEngine::Textures* texture2;
-	BJEngine::Textures* texture3;
+	
+	BJEngine::Model* model;
+
+	BJEngine::Textures* textureCubeMap;
 
 	BJEngine::LightDesc* pld;
 	BJEngine::LightDesc* sld;
-	BJEngine::Map* map;
+	BJEngine::LightDesc* ld;
+	BJEngine::LightDesc* sld2;
+	BJEngine::LightDesc* pld2;
 	BJEngine::BackGround* bg;
-	BJEngine::Model* obj;
 	BJEngine::Model* fbx;
-
-
-	std::vector<BJEngine::Object*> objects;
-
+	BJEngine::Model* fbx1;
 };
 

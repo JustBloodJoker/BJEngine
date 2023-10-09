@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Object.h"
-
+#include "Animation.h"
 
 namespace BJEngine {
  
@@ -17,6 +17,7 @@ namespace BJEngine {
         bool Init() override;
         void Draw() override;
         void Close() override;
+        void MinDraw(dx::XMMATRIX matrix, dx::XMMATRIX mat2) override;
     private:
 
 
@@ -45,12 +46,16 @@ namespace BJEngine {
 
         const char* filename;
 
-        std::vector<aiAnimation*> animation;
+        std::vector<Animation> animation;
+        aiNode* nodd;
         bool isAnimation = false;
         bool InitAnimation();
 
         std::vector<dx::XMVECTOR> minExtentLocal;
         std::vector<dx::XMVECTOR> maxExtentLocal;
+
+        const aiScene* scene = nullptr;
+        Assimp::Importer importer;
     };
 
 

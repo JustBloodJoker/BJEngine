@@ -29,6 +29,10 @@ namespace BJEngine {
 			{ "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
 			{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
+		if (shader == nullptr)
+		{
+			shader = new BJEngine::Shader(L"shaders\\ObjectShaderPS.hlsl", L"shaders\\ObjectShaderVS.hlsl", "VS", "PS");
+		}
 
 		shader->SetInputLayout(layout, ARRAYSIZE(layout));
 		shader->Init(pd3dDevice);
@@ -42,21 +46,16 @@ namespace BJEngine {
 		}
 
 		pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
-		
-		ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-		cmdesc.FillMode = D3D11_FILL_SOLID;
-		cmdesc.FrontCounterClockwise = true;
-		cmdesc.CullMode = D3D11_CULL_NONE;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullNone);
-		if (FAILED(hr))
-		{
-			Log::Get()->Err("Create rast state error");
-			return false;
-		}
+
+
+
+
 
 		rotation = dx::XMMatrixRotationY(0.0f);
 		scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
 		pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+
+		world = rotation * scale * pos;
 
 		Log::Get()->Debug("Model is inited");
 		isInited = true;
@@ -68,6 +67,23 @@ namespace BJEngine {
 	{
 		world = rotation * scale * pos;
 		
+		for (auto& el : animation)
+		{
+			el.SetObjectMatrix(&world);
+		}
+		if (animation.size())
+		{
+			
+			animation[0].DrawAnimation();
+			
+		}
+
+		dx::XMMATRIX projectionL;
+		dx::XMMATRIX viewL;
+
+		
+
+
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		pImmediateContext->IASetInputLayout(shader->GetInputLayout());
@@ -87,24 +103,32 @@ namespace BJEngine {
 
 				ConstantBuffer cb;
 				cb.WVP = XMMatrixTranspose(world * view * projection);
-				cb.World = world;
+				//cb.World = XMMatrixTranspose(world);
+				cb.World = XMMatrixTranspose(world);
 				cb.ViewMatrix = cam->GetViewMatrix();
+				cb.projectionMatrix = cam->GetProjectionMatrix();
 
+				for (int i = 0; i < sizeof(lView) / sizeof(dx::XMMATRIX); i++)
+				{
+					cb.lView[i] = XMMatrixTranspose(lView[i]);
+					cb.lProj[i] = XMMatrixTranspose(lProjection[i]);
+				}
+				
 				pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
-				pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
-				;
+				pImmediateContext->VSSetConstantBuffers(1, 1, &pConstantBuffer);
+				
+				materials[packMaterials[i]]->Draw(pImmediateContext, 2, 0, 1, 100);
 
-				materials[packMaterials[i]]->Draw(pImmediateContext, 2, 0, 1);
+				Blend::Get()->DrawCullState(pImmediateContext);
 
-				pImmediateContext->RSSetState(renStateCullNone);
 				pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 				pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
 				pImmediateContext->DrawIndexed(packindices[i].size(), 0, 0);
 			}
 		}
-		
-			
-		
+
+
+
 	}
 
 	void Model::Close()
@@ -118,17 +142,41 @@ namespace BJEngine {
 		materials.clear();
 	}
 
+	void Model::MinDraw(dx::XMMATRIX matrix, dx::XMMATRIX mat2)
+	{
+		world = rotation * scale * pos;
+
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+
+		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		for (int i = 0; i < packpVertexBuffer.size(); i++)
+		{
+			
+			pImmediateContext->IASetVertexBuffers(0, 1, &packpVertexBuffer[i], &stride, &offset);
+			pImmediateContext->IASetIndexBuffer(packpIndexBuffer[i], DXGI_FORMAT_R16_UINT, 0);			
+
+			
+
+			pImmediateContext->DrawIndexed(packindices[i].size(), 0, 0);
+			
+		}
+	}
+
 	bool Model::LoadModel()
 	{
-		Assimp::Importer importer;
+		
 
-		const aiScene* scene = importer.ReadFile(filename,
+		scene = importer.ReadFile(filename,
 			aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 		if (scene->mNumAnimations != 0)
-		{
+		{ 
 			for (int i = 0; i < scene->mNumAnimations; i++)
 			{
-				animation.push_back(scene->mAnimations[i]);
+				animation.push_back({});
+				animation[i].SetAnimationParam(scene->mAnimations[i], scene->mRootNode);
+				nodd = scene->mRootNode;
 			}
 		}
 
@@ -161,7 +209,6 @@ namespace BJEngine {
 
 			materials[i]->SetParam(AMBIENT, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
 
-			
 			materials[i]->SetParam(SPECULAR_POWER, tp);
 
 			aiString pathname;
@@ -169,14 +216,22 @@ namespace BJEngine {
 
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_TEXTURE, BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
 			}
 			pathname.Clear();
 
-			scene->mMaterials[i]->GetTexture(aiTextureType_HEIGHT, 0, &pathname);
+			scene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &pathname);
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_NORMAL_TEXTURE, BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_NORMAL_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
+			}
+			pathname.Clear();
+
+
+			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS, 0, &pathname);
+			if (pathname.length != 0)
+			{
+				materials[i]->SetTexture(HAS_ROUGHNESS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
 			}
 			pathname.Clear();
 		}
@@ -217,8 +272,11 @@ namespace BJEngine {
 				maxExtent.y = std::max(maxExtent.y, mesh->mVertices[j].y);
 				maxExtent.z = std::max(maxExtent.z, mesh->mVertices[j].z);
 
-				packVertices[i][j].texCoord.x = mesh->mTextureCoords[0][j].x;
-				packVertices[i][j].texCoord.y = mesh->mTextureCoords[0][j].y;				
+				if (mesh->HasTextureCoords(0))
+				{
+					packVertices[i][j].texCoord.x = mesh->mTextureCoords[0][j].x;
+					packVertices[i][j].texCoord.y = mesh->mTextureCoords[0][j].y;
+				}
 
 				packVertices[i][j].normal.x = mesh->mNormals[j].x;
 				packVertices[i][j].normal.y = mesh->mNormals[j].y;
@@ -304,11 +362,7 @@ namespace BJEngine {
 
 	bool Model::InitAnimation()
 	{
-		for (int i = 0; i < animation.size(); i++)
-		{
-			
-		}
-
+		
 
 
 

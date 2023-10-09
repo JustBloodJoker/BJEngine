@@ -23,6 +23,10 @@ namespace BJFrameWork {
 
 	bool FWork::Init(const wchar_t* tittleName, const wchar_t* windowName, int width, int height, bool FullScreen)
 	{
+		SetWindowWidth(width);
+		SetWindowHeight(height);
+		SetFullScreenState(FullScreen);
+
 		wnd = new Window(tittleName, windowName, width, height, FullScreen);
 
 		if (!wnd)
@@ -46,11 +50,14 @@ namespace BJFrameWork {
 
 		init = true;
 
+		
+
 		return true;
 	}
 
 	bool FWork::m_frame()
 	{
+		SetIsResizedState(false);
 		wnd->MainLoop();
 
 		if (!Window::GetRunState())

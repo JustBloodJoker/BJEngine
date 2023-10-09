@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Window.h"
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace BJEngine {
 
 
@@ -27,9 +29,11 @@ namespace BJEngine {
 
 	void Window::MainLoop()
 	{
+		FullScreening();
+
 		MSG msg;
 		ZeroMemory(&msg, sizeof(MSG));
-
+		
 		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -57,7 +61,6 @@ namespace BJEngine {
 		if (!RegisterClassEx(&this->wc))
 		{
 			Log::Get()->Err("Register wnd class error");
-			exit(Log::WNDCLASSERRORS);
 		}
 
 		this->hwnd = CreateWindowEx(NULL,
@@ -65,7 +68,7 @@ namespace BJEngine {
 			this->tittleName,
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT, CW_USEDEFAULT,
-			this->width, this->height,
+			BJEUtils::GetWindowWidth(), BJEUtils::GetWindowHeight(),
 			NULL,
 			NULL,
 			NULL,
@@ -74,7 +77,6 @@ namespace BJEngine {
 		if (!this->hwnd)
 		{
 			Log::Get()->Err("Create wnd error");
-			exit(Log::WNDCLASSERRORS);
 		}
 
 		ShowWindow(this->hwnd, 1);
@@ -86,15 +88,23 @@ namespace BJEngine {
 
 	void Window::FullScreening()
 	{
-		if (this->fullScreen)
+		static bool alreadyUsed = false;
+		if (BJEUtils::GetFullScreenState() && !alreadyUsed)
 		{
+			
+			BJEUtils::SetIsResizedState(true);
 			HMONITOR hmon = MonitorFromWindow(hwnd,
 				MONITOR_DEFAULTTONEAREST);
 			MONITORINFO mi = { sizeof(mi) };
 			GetMonitorInfo(hmon, &mi);
-
-			this->width = mi.rcMonitor.right - mi.rcMonitor.left;
-			this->height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+			BJEUtils::SetWindowWidth(mi.rcMonitor.right - mi.rcMonitor.left);
+			BJEUtils::SetWindowHeight(mi.rcMonitor.bottom - mi.rcMonitor.top);
+			alreadyUsed = true;
+		}
+		else if(!BJEUtils::GetFullScreenState() && alreadyUsed)
+		{
+			BJEUtils::SetIsResizedState(true);
+			alreadyUsed = false;
 		}
 	}
 
@@ -105,6 +115,10 @@ namespace BJEngine {
 
 	LRESULT Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+			return true;
+
+		
 		switch (msg)
 		{
 			break;
@@ -125,6 +139,15 @@ namespace BJEngine {
 			RunRender = false;
 			PostQuitMessage(0);
 			return 0;
+		case WM_SIZE:
+		{
+			BJEUtils::SetIsResizedState(true);
+			BJEUtils::SetWindowHeight(HIWORD(lParam));
+			BJEUtils::SetWindowWidth(LOWORD(lParam));
+			SetWindowPos(hWnd, hWnd, CW_USEDEFAULT, CW_USEDEFAULT, BJEUtils::GetWindowWidth(), BJEUtils::GetWindowHeight(), WS_OVERLAPPEDWINDOW);
+			return 0;
+		}
+
 		}
 		return DefWindowProc(hWnd,
 			msg,
@@ -142,6 +165,5 @@ namespace BJEngine {
 		hwnd = nullptr;
 		
 	}
-
 
 }

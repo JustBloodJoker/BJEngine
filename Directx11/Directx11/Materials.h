@@ -12,7 +12,8 @@ namespace BJEngine
 		EMISSIVE,
 		SPECULAR_POWER,
 		HAS_TEXTURE,
-		HAS_NORMAL_TEXTURE
+		HAS_NORMAL_TEXTURE,
+		HAS_ROUGHNESS_TEXTURE
 	};
 
 
@@ -32,7 +33,7 @@ namespace BJEngine
 		void SetTexture(short textureType, Textures* texture, ID3D11Device* pd3dDevice);
 
 		void Draw(ID3D11DeviceContext* pImmediateContext, int registerMaterialPos,
-			int registerTexturePos, int registerNormalTexturePos);
+			int registerTexturePos, int registerNormalTexturePos, int registerRoughnessTexturePos);
 
 		void Close();
 	private:
@@ -41,6 +42,7 @@ namespace BJEngine
 
 		Textures* texture;
 		Textures* normalTexture;
+		Textures* roughnessTexture;
 
 		struct MaterialDesc
 		{
@@ -58,8 +60,13 @@ namespace BJEngine
 
 			int isTexture;
 			int isNormalTexture;
+			int isRoughnessTexture;
+
+			int ishavealphablend;
 
 			int pad;
+			int pad1;
+			int pad2;
 		};
 
 		ID3D11Buffer* pMaterialBuffer;
@@ -72,6 +79,8 @@ namespace BJEngine
 		ConstantMaterialBuffer cmbDesc;
 
 		bool isInit;
+	
+		void HasAlphaChannel(ID3D11ShaderResourceView* textureSRV);
 	};
 
 

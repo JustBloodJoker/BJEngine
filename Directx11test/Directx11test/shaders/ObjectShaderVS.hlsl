@@ -1,8 +1,14 @@
-cbuffer WorldMatrixBuffer : register(b0)
+#define MAX_LIGHT_NUM 5
+
+cbuffer WorldMatrixBuffer : register(b1)
 {
-    float4x4 WVP;
-    float4x4 world;
-    float4x4 cam;
+    matrix WVP;
+    matrix world;
+    matrix cam;
+    matrix projection;
+    float4 lightpos;
+    matrix lview[MAX_LIGHT_NUM];
+    matrix lproj[MAX_LIGHT_NUM];
 };
 
 struct VS_INPUT
@@ -21,19 +27,25 @@ struct VS_OUTPUT
     float2 texCoord : TEXCOORD;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
+
+   float4 lightViewPosition[MAX_LIGHT_NUM] : TEXCOORD1;
 };
 
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
-
     output.pos = mul(input.pos, WVP);
     output.worldPos = mul(input.pos, world);
     output.eyePos = mul(input.pos, cam);
     output.normal = mul(input.normal, world);
-    output.normal = normalize(output.normal);
     output.tangent = mul(input.tangent, world);
     output.texCoord = input.texCoord;
 
+    for(int i = 0; i < MAX_LIGHT_NUM; i++)
+    {
+        output.lightViewPosition[i] = mul(input.pos, world);
+        output.lightViewPosition[i] = mul(output.lightViewPosition[i], lview[i]);
+        output.lightViewPosition[i] = mul(output.lightViewPosition[i], lproj[i]);
+    }
     return output;
 }
