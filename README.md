@@ -48,3 +48,7 @@ Recreated objects shaders. Added additional modifications to the models.
 
 version 1.4 
 Added shadows from directional, spot and point light. ImGui was also integrated. Reshaping was added. Pixel shader was recreated. Added roughness texture map support
+
+version 2.0
+Mini engine =)
+
