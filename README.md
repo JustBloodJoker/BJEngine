@@ -45,3 +45,6 @@ Added Frustum for models. Added the ability to create terrain from heightmap bit
 
 version 1.3.4
 Recreated objects shaders. Added additional modifications to the models. 
+
+version 1.4 
+Added shadows from directional, spot and point light. ImGui was also integrated. Reshaping was added. Pixel shader was recreated. Added roughness texture map support
