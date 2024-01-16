@@ -40,6 +40,9 @@
     <Filter Include="Packs">
       <UniqueIdentifier>{161d40b9-2ff7-458c-b148-e08beb9aaec3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{630fa017-9c3f-4065-97d5-daf3d3683c50}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -99,9 +102,6 @@
     <ClInclude Include="Render.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="DirectxFramework.h">
-      <Filter>EngineHeaders</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>EngineHeaders</Filter>
     </ClInclude>
@@ -119,6 +119,33 @@
     </ClInclude>
     <ClInclude Include="PackageUtilites.h">
       <Filter>Packs</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="MainCamera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Script.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="LightMananger.h">
+      <Filter>Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper.h">
+      <Filter>EngineHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraCone.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Element.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Structures.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthStencil.h">
+      <Filter>Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +214,30 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>EngineHeaders</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="MainCamera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Script.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="LightMananger.cpp">
+      <Filter>Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper.cpp">
+      <Filter>EngineHeaders</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraCone.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Element.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthStencil.cpp">
+      <Filter>Shaders</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

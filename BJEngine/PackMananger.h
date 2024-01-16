@@ -1,15 +1,14 @@
 #pragma once
 #include "pch.h"
-#include "PackageUtilites.h"
 
 namespace BJEngine
 {
 
 
-	
-
 	class PackMananger
 	{
+		friend class UnpackMananger;
+
 	public:
 		PackMananger();
 		~PackMananger();
@@ -20,18 +19,20 @@ namespace BJEngine
 		void AddCamera(CameraType element);
 		void AddObject(ObjectType element);
 		void AddSound(SoundType element);
-		
-		void SetSavingStatus(bool cc);
+	
 		bool GetSavingStatus();
-		void Init(char* path);
+		void Init(std::string path = "");
+		
+		bool IsPath();
 	private:
+
+		void SetPath(std::string path);
 		static PackMananger* instance;
 
 		static std::ofstream file;
 
 		static bool save;
-		static bool isInit;
-		std::string tpath;
+		static std::string tpath;
 	};
 
 

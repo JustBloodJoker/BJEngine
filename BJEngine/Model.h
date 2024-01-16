@@ -1,7 +1,7 @@
 #pragma once
-#include "pch.h"
 #include "Object.h"
 #include "Animation.h"
+#include "Element.h"
 
 namespace BJEngine {
 
@@ -9,6 +9,9 @@ namespace BJEngine {
     class Model :
         public Object
     {
+
+        friend class UI;
+
     public:
         Model();
         Model(const char* FileName);
@@ -17,45 +20,37 @@ namespace BJEngine {
         bool Init() override;
         void Draw() override;
         void Close() override;
-        void MinDraw(dx::XMMATRIX matrix, dx::XMMATRIX mat2) override;
+        void MinDraw() override;
+
+        void SetScript(std::string data);
     private:
 
+        std::vector<Element*> elements;
 
-        struct Vertex
-        {
-            Vertex() {}
-            Vertex(float x, float y, float z,
-                float u, float v,
-                float nx, float ny, float nz)
-                : pos(x, y, z), texCoord(u, v), normal(nx, ny, nz) {}
-
-            dx::XMFLOAT3 pos;
-            dx::XMFLOAT2 texCoord;
-            dx::XMFLOAT3 normal;
-            dx::XMFLOAT3 tangent;
-        };
+        dx::XMMATRIX bworld;
+        dx::XMMATRIX outLine;
 
         bool LoadModel();
 
-        std::vector<std::vector<Vertex>> packVertices;
-        std::vector<std::vector<WORD>> packindices;
-        std::vector<int> packMaterials;
+        std::vector<BJEStruct::ModelVertex> ver;
+        std::vector<WORD> ind;
+        Materials* material;
+        dx::XMVECTOR min;
+        dx::XMVECTOR max;
 
-        std::vector<ID3D11Buffer*> packpVertexBuffer;
-        std::vector<ID3D11Buffer*> packpIndexBuffer;
+        std::string filename;
 
-        const char* filename;
-
-        std::vector<Animation> animation;
         aiNode* nodd;
         bool isAnimation = false;
         bool InitAnimation();
 
-        std::vector<dx::XMVECTOR> minExtentLocal;
-        std::vector<dx::XMVECTOR> maxExtentLocal;
+        
 
         const aiScene* scene = nullptr;
         Assimp::Importer importer;
+
+        char buffer[100];
+        bool isSimulate = false, returned = false;
     };
 
 

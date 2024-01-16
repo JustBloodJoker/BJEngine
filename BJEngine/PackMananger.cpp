@@ -1,20 +1,16 @@
 #include "PackMananger.h"
 
-
 namespace BJEngine
 {
 
 	PackMananger* PackMananger::instance = nullptr;
 	std::ofstream PackMananger::file;
 	bool PackMananger::save = false;
-	bool PackMananger::isInit = false;
+	std::string PackMananger::tpath = "";
 
 	PackMananger::PackMananger()
 	{
-		if (!PackMananger::instance)
-		{
-			PackMananger::instance = this;
-		}
+		
 	}
 
 	PackMananger::~PackMananger()
@@ -24,10 +20,10 @@ namespace BJEngine
 
 	void PackMananger::Close()
 	{
-		if (isInit)
+		if (save)
 		{
 
-			isInit = false;	
+			save = false;	
 		}
 	}
 
@@ -67,10 +63,16 @@ namespace BJEngine
 	void PackMananger::AddObject(ObjectType element)
 	{
 		file.open(std::string(tpath + std::string(OBJECTNAME)), std::ios::app);
+		
+		if (element.prepath == "")
+			element.prepath = NONE;
+		
+		if (element.script == "")
+			element.script = NONE;
 
 		if (file.is_open())
 		{
-			file << element.path << " " << element.prepath << "\n";
+			file << element.path << " " << element.prepath << " " << element.script << "\n";
 			file.close();
 		}
 	}
@@ -86,24 +88,26 @@ namespace BJEngine
 		}
 	}
 
-	void PackMananger::SetSavingStatus(bool cc)
-	{
-		PackMananger::save = cc;
-	}
-
 	bool PackMananger::GetSavingStatus()
 	{
 		return PackMananger::save;
 	}
 
-	void PackMananger::Init(char* path)
+	void PackMananger::Init(std::string path)
 	{
 
-		if (!PackMananger::isInit)
+		if (!PackMananger::instance)
+		{
+			PackMananger::instance = new PackMananger();
+			save = false;
+		}
+
+		if (path != "")
+			tpath = path;
+
+		if (!save)
 		{
 			bool i = true;
-
-			tpath = std::string(path);
 
 			std::experimental::filesystem::create_directories(path);
 			
@@ -139,8 +143,26 @@ namespace BJEngine
 			}
 			if (file.is_open()) file.close();
 
-			PackMananger::isInit = i;
+			save = i;
+
 		}
+	}
+
+	bool PackMananger::IsPath()
+	{
+		return tpath != "" ? true : false;
+	}
+
+	void PackMananger::SetPath(std::string path)
+	{
+
+		if (!PackMananger::instance)
+		{
+			PackMananger::instance = new PackMananger();
+			save = false;
+		}
+		tpath = path;
+
 	}
 
 

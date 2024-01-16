@@ -1,5 +1,7 @@
+
 #include "pch.h"
 #include "Window.h"
+
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -123,6 +125,7 @@ namespace BJEngine {
 		{
 			break;
 		case WM_KEYDOWN:
+
 			if (wParam == VK_ESCAPE) {
 				if (MessageBox(0, L"Are you sure you want to exit?",
 					L"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
@@ -141,10 +144,12 @@ namespace BJEngine {
 			return 0;
 		case WM_SIZE:
 		{
-			BJEUtils::SetIsResizedState(true);
+
+			BJEUtils::SetIsResizedState(false);
 			BJEUtils::SetWindowHeight(HIWORD(lParam));
 			BJEUtils::SetWindowWidth(LOWORD(lParam));
 			SetWindowPos(hWnd, hWnd, CW_USEDEFAULT, CW_USEDEFAULT, BJEUtils::GetWindowWidth(), BJEUtils::GetWindowHeight(), WS_OVERLAPPEDWINDOW);
+			
 			return 0;
 		}
 
@@ -157,6 +162,7 @@ namespace BJEngine {
 
 	void Window::Close()
 	{
+		
 		if (hwnd)
 		{
 			DestroyWindow(hwnd);

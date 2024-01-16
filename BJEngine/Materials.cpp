@@ -1,7 +1,6 @@
-#include "pch.h"
 #include "Materials.h"
+#include "Blend.h"
 
-#include "Object.h"
 namespace BJEngine
 {
 
@@ -10,8 +9,7 @@ namespace BJEngine
 		Init(pd3dDevice);
 	}
 
-	void BJEngine::Materials::Draw(ID3D11DeviceContext* pImmediateContext, int registerMaterialPos,
-		int registerTexturePos, int registerNormalTexturePos, int registerRoughnessTexturePos)
+	void BJEngine::Materials::Draw(ID3D11DeviceContext* pImmediateContext, int registerMaterialPos)
 	{
 		if (isInit)
 		{
@@ -19,7 +17,10 @@ namespace BJEngine
 			pImmediateContext->UpdateSubresource(pMaterialBuffer, 0, NULL, &cmbDesc, 0, 0);
 			pImmediateContext->PSSetConstantBuffers(registerMaterialPos, 1, &pMaterialBuffer);
 
-			if (cmbDesc.matDesc.ishavealphablend)
+			if (cmbDesc.matDesc.ishaveTransparency)
+				Blend::Get()->DrawTransparencyBlend(pImmediateContext);
+
+			else if (cmbDesc.matDesc.ishavealphablend)
 				Blend::Get()->DrawAlphaBlend(pImmediateContext);
 			else
 				Blend::Get()->DrawNoBlend(pImmediateContext);
@@ -27,22 +28,36 @@ namespace BJEngine
 			if (cmbDesc.matDesc.isTexture)
 			{
 				pImmediateContext->GenerateMips(texture->GetTexture());
-				pImmediateContext->PSSetShaderResources(registerTexturePos, 1, &texture->GetTexture());
-				pImmediateContext->PSSetSamplers(registerTexturePos, 1, Textures::GetWrapState());
+				pImmediateContext->PSSetShaderResources(DIFFUSE_TEXTURE_POS, 1, &texture->GetTexture());
+				pImmediateContext->PSSetSamplers(DIFFUSE_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isNormalTexture)
 			{
 				pImmediateContext->GenerateMips(normalTexture->GetTexture());
-				pImmediateContext->PSSetShaderResources(registerNormalTexturePos, 1, &normalTexture->GetTexture());
-				pImmediateContext->PSSetSamplers(registerTexturePos, 1, Textures::GetWrapState());
+				pImmediateContext->PSSetShaderResources(NORMAL_TEXTURE_POS, 1, &normalTexture->GetTexture());
+				pImmediateContext->PSSetSamplers(NORMAL_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isRoughnessTexture)
 			{
 				pImmediateContext->GenerateMips(roughnessTexture->GetTexture());
-				pImmediateContext->PSSetShaderResources(registerRoughnessTexturePos, 1, &roughnessTexture->GetTexture());
-				pImmediateContext->PSSetSamplers(registerTexturePos, 1, Textures::GetWrapState());
+				pImmediateContext->PSSetShaderResources(ROUGHNESS_TEXTURE_POS, 1, &roughnessTexture->GetTexture());
+				pImmediateContext->PSSetSamplers(ROUGHNESS_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
+			}
+
+			if (cmbDesc.matDesc.isEmissionTexture)
+			{
+				pImmediateContext->GenerateMips(emissionTexture->GetTexture());
+				pImmediateContext->PSSetShaderResources(EMISSION_TEXTURE_POS, 1, &emissionTexture->GetTexture());
+				pImmediateContext->PSSetSamplers(EMISSION_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
+			}
+
+			if (cmbDesc.matDesc.isSpecularTexture)
+			{
+				pImmediateContext->GenerateMips(specularTexture->GetTexture());
+				pImmediateContext->PSSetShaderResources(SPECULAR_TEXTURE_POS, 1, &specularTexture->GetTexture());
+				pImmediateContext->PSSetSamplers(SPECULAR_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 		}
@@ -50,7 +65,7 @@ namespace BJEngine
 
 	void BJEngine::Materials::Init(ID3D11Device* pd3dDevice)
 	{
-		pMaterialBuffer = Object::InitConstantBuffer<ConstantMaterialBuffer>(pd3dDevice);
+		pMaterialBuffer = Helper::InitConstantBuffer<ConstantMaterialBuffer>(pd3dDevice);
 
 		if (!pMaterialBuffer)
 		{
@@ -63,24 +78,32 @@ namespace BJEngine
 
 	void Materials::HasAlphaChannel(ID3D11ShaderResourceView* textureSRV)
 	{
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-		textureSRV->GetDesc(&srvDesc);
-
-		switch (srvDesc.Format)
+		if (textureSRV)
 		{
-		case DXGI_FORMAT_R8G8B8A8_UNORM:
-		case DXGI_FORMAT_R8G8B8A8_SNORM:
-		case DXGI_FORMAT_B8G8R8A8_UNORM:
-		case DXGI_FORMAT_R16G16B16A16_FLOAT:
-		case DXGI_FORMAT_R16G16B16A16_UNORM:
-		case DXGI_FORMAT_R16G16B16A16_SNORM:
-		case DXGI_FORMAT_R32G32B32A32_FLOAT:
-		case DXGI_FORMAT_R32G32B32A32_UINT:
-		case DXGI_FORMAT_R32G32B32A32_SINT:
-			cmbDesc.matDesc.ishavealphablend = true;
-		default:
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+			textureSRV->GetDesc(&srvDesc);
+
+			switch (srvDesc.Format)
+			{
+			case DXGI_FORMAT_R8G8B8A8_UNORM:
+			case DXGI_FORMAT_R8G8B8A8_SNORM:
+			case DXGI_FORMAT_B8G8R8A8_UNORM:
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+			case DXGI_FORMAT_R16G16B16A16_UNORM:
+			case DXGI_FORMAT_R16G16B16A16_SNORM:
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			case DXGI_FORMAT_R32G32B32A32_UINT:
+			case DXGI_FORMAT_R32G32B32A32_SINT:
+				cmbDesc.matDesc.ishavealphablend = true;
+			default:
+				cmbDesc.matDesc.ishavealphablend = false;
+			}
+		}
+		else
+		{
 			cmbDesc.matDesc.ishavealphablend = false;
 		}
+
 	}
 
 	void Materials::SetParam(short paramType, dx::XMFLOAT4 param)
@@ -105,6 +128,12 @@ namespace BJEngine
 				Log::Get()->Err("Incorrect param type");
 				break;
 			}
+
+			if (param.w < 1.0f)
+			{
+				cmbDesc.matDesc.ishaveTransparency = true;
+			}
+
 		}
 	}
 
@@ -153,6 +182,22 @@ namespace BJEngine
 
 			break;
 
+		case HAS_EMISSION_TEXTURE:
+			
+			emissionTexture = new Textures(textureName.c_str());
+			emissionTexture->InitTextures(pd3dDevice);
+			cmbDesc.matDesc.isEmissionTexture = true;
+
+			break;
+
+		case HAS_SPECULAR_TEXTURE:
+
+			specularTexture = new Textures(textureName.c_str());
+			specularTexture->InitTextures(pd3dDevice);
+			cmbDesc.matDesc.isSpecularTexture = true;
+
+			break;
+
 		default:
 
 			Log::Get()->Err("incorrect texture input type");
@@ -191,6 +236,8 @@ namespace BJEngine
 		CLOSE(texture);
 		CLOSE(normalTexture);
 		CLOSE(roughnessTexture);
+		CLOSE(emissionTexture);
+		CLOSE(specularTexture);
 		RELEASE(pMaterialBuffer);
 	}
 

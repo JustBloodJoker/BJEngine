@@ -1,8 +1,7 @@
 #pragma once
 #include "pch.h"
-#include "PackageUtilites.h"
-
 #undef GetObject
+
 namespace BJEngine
 {
 

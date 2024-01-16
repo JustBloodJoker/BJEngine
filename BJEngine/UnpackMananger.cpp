@@ -1,6 +1,5 @@
 #include "UnpackMananger.h"
 
-
 namespace BJEngine
 {
 
@@ -10,10 +9,7 @@ namespace BJEngine
 
 	UnpackMananger::UnpackMananger()
 	{
-		if (!UnpackMananger::instance)
-		{
-			UnpackMananger::instance = this;
-		}
+		
 	}
 
 	UnpackMananger::~UnpackMananger()
@@ -98,12 +94,18 @@ namespace BJEngine
 			{
 				data.push_back({});
 
-				file >> data[index].path >> data[index].prepath;
+				file >> data[index].path >> data[index].prepath >> data[index].script;
+
+				if (data[index].prepath == NONE)
+					data[index].prepath = "";
+
+				if (data[index].script == NONE)
+					data[index].script = "";
+
 
 				file.get();
 				index++;
 			}
-			data.pop_back();
 			file.close();
 		}
 
@@ -117,7 +119,13 @@ namespace BJEngine
 
 	void UnpackMananger::Init(char* path)
 	{
+		if (!UnpackMananger::instance)
+		{
+			UnpackMananger::instance = new UnpackMananger();
+		}
+
 		UnpackMananger::path = std::string(path);
+		PackMananger::Get()->SetPath(UnpackMananger::path);
 		UnpackMananger::opening = true;
 	}
 

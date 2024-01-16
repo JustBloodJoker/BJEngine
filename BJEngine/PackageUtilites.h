@@ -1,10 +1,9 @@
-#include "pch.h"
-
 #pragma once
 #define CAMERANAME "\\Camera.txt"
 #define SOUNDNAME "\\Sound.txt"
 #define OBJECTNAME "\\Objects.txt"
 #define LIGHTNAME "\\Lights.txt"
+#define NONE "none"
 
 enum
 {
@@ -26,6 +25,7 @@ struct ObjectType
 {
 	std::string path;
 	std::string prepath;
+	std::string script;
 };
 
 struct LightType

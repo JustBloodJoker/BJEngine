@@ -1,7 +1,6 @@
 #pragma once
-#include "pch.h"
-#include "DirectxFramework.h"
-
+#include "Render.h"
+#include "Window.h"
 
 namespace BJFrameWork {
 

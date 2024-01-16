@@ -1,13 +1,9 @@
-#pragma once
-
+#pragma once 
 #include "pch.h"
-
 #include "Light.h"
-#include "Input.h"
-#include "Camera.h"
-#include "Object.h"
 #include "Sound.h"
-#include "Shadow.h"
+#include "MainCamera.h"
+#include "Object.h"
 #include "BackGround.h"
 
 namespace BJEngine {
@@ -25,7 +21,6 @@ namespace BJEngine {
 			pImmediateContext = nullptr;
 			pSwapChain = nullptr;
 			pRenderTargetView = nullptr;
-			ld = new LightDesc();
 		}
 		~Render() {  };
 
@@ -36,9 +31,9 @@ namespace BJEngine {
 		bool Init();
 		bool DrawWnd();
 		Object* InitObjs(Object* object);
+		void AddSkyBox(std::string texturePath);
 		void ResizeWindow();
 
-		virtual bool DrawActions();
 		void Close();
 		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
 
@@ -54,37 +49,26 @@ namespace BJEngine {
 
 		ID3D11Device* GetDevice() { return pd3dDevice; }
 		ID3D11DeviceContext* GetContext() { return pImmediateContext; }
-		Camera* GetCamera() { return cam; }
 
-		void SetLightPos(float x, float y, float z, int indexOfLight);
-		dx::XMFLOAT3 GetLightPos(int index);
-
+		
 		void SetObjectsVector(std::vector<Object*> obj) { this->objects = obj; }
 
-		void InitImGui();
-		void DrawImGui();
-		void CreateLight();
-		void CreateSound();
+		void CreateSound(std::string path);
 
 		void UnpackProject();
-		void SaveProject();
 
-		void SetLight(LightDesc* ld, int typeOfLight);
+		void SetLight(LightDesc ld);
 
-		Light* GetLight() { return light; }
 	private:
 
 		std::vector<Object*> objects;
+		std::vector<BJAudio::Sound*> sound;
+		std::vector<Camera*> cams;
 
 		bool islight = false;
 		bool isInitlight = false;
-		std::vector<BJAudio::Sound*> sound;
-		Camera* cam;
 
-		BackGround* skyBox;
-
-		ID3D11DepthStencilView* depthStencilView;
-		ID3D11Texture2D* depthStencilBuffer;
+		BackGround* skyBox = nullptr;
 
 		ID3D11Device* pd3dDevice;
 		ID3D11DeviceContext* pImmediateContext;
@@ -97,12 +81,9 @@ namespace BJEngine {
 		IDXGISwapChain* pSwapChain;
 		ID3D11RenderTargetView* pRenderTargetView;
 
-		Light* light = nullptr;
-		std::vector<Shadow*> shadows;
-
 		D3D11_VIEWPORT vp;
 
-		LightDesc* ld;
+		LightDesc ld;
 	};
 
 

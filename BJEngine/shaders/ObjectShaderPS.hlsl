@@ -3,10 +3,12 @@ float4 GlobalAmbient = {1.0f,1.0f,1.0f,1.0f};
 
 Texture2D Texture : register(t0);
 Texture2D NormalTexture : register(t1);
-Texture2D RougnessTexture : register(t100);
+Texture2D RougnessTexture : register(t2);
+Texture2D EmissionTexture : register(t3);
+Texture2D SpecularTexture : register(t4);
 
-Texture2D shadowLight1[5] : register(t7);
-TextureCube shadowCubeLight1[5] : register(t2);
+Texture2D shadowLight1[5] : register(t10);
+TextureCube shadowCubeLight1[5] : register(t5);
 
 SamplerState SamplerStateWrap : register(s0);
 SamplerState SamplerStateClamp : register(s1);
@@ -45,6 +47,9 @@ struct Materials
 	bool isTexture;
 	bool isNormalTexture;
 	bool isRoughnessTexture;
+	bool isEmissionTexture;
+	bool isSpecularTexture;
+	bool ishaveTransparency;
 };
 
 cbuffer MaterialBuffer : register(b2)
@@ -66,6 +71,8 @@ struct VS_OUTPUT
     float2 texCoord : TEXCOORD;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
+	float3 bitangent : BITANGENT; 
+
  	float4 lightViewPosition[MAX_LIGHT_NUM] : TEXCOORD1;
 };
 
@@ -104,27 +111,31 @@ float4 CalculateDiffuse(Light lightT, float3 normals, float3 L)
 	return lightT.color * max( 0, dot( normals, L ) );
 }
 
-float4 CalculateSpecular(Light lightT, float3 normals, float3 eye, float3 L, float roughness)
+float4 CalculateSpecular(Light lightT, float3 normals, float3 eye, float3 L)
 {
-	float RdotV = max( 0, dot( normalize( reflect( -L, normals ) ), eye ) );
-	RdotV *= exp(-(roughness * roughness));
-	return lightT.color * pow( RdotV, material.specularPower );
+	//idk is this working?)
+
+	float3 V = normalize(eye);
+	float3 R = reflect(L, normals);
+	return pow(dot(V,R), material.specularPower );
+
+	//nah not working
 }
 
 
-LightStructure DoDirectionalLight(Light DirLight, float3 inputNormals, float4 inputEyePos, float depth, float roughness)
+LightStructure DoDirectionalLight(Light DirLight, float3 inputNormals, float4 inputEyePos, float depth)
 {
 	LightStructure result;
 
     float3 L = DirLight.dir.xyz;
 
     result.diffuse = CalculateDiffuse(DirLight, inputNormals, L) * depth;
-    result.specular = CalculateSpecular(DirLight, inputNormals, inputEyePos, L, roughness) * depth;
+  //  result.specular = CalculateSpecular(DirLight, inputNormals, inputEyePos, L) * depth;
 
     return result;
 }
 
-LightStructure DoPointLight(Light PointLight, float3 inputNormals, float4 inputWorldPos, float4 inputEyePos, float depth, float roughness)
+LightStructure DoPointLight(Light PointLight, float3 inputNormals, float4 inputWorldPos, float4 inputEyePos, float depth)
 {
 	LightStructure result;
 
@@ -138,12 +149,12 @@ LightStructure DoPointLight(Light PointLight, float3 inputNormals, float4 inputW
 	float attenuation = 1.0f / ( PointLight.att.x + PointLight.att.y * distance + PointLight.att.z * distance * distance );
 
     result.diffuse = CalculateDiffuse(PointLight, inputNormals, L) * attenuation * shadow;
-    result.specular = CalculateSpecular(PointLight, inputNormals, inputEyePos, L, roughness) * attenuation * shadow;
+    result.specular = CalculateSpecular(PointLight, inputNormals, inputEyePos.xyz, L)  * attenuation * shadow;
 
     return result;
 }
 
-LightStructure DoSpotLight(Light SpotLight, float3 inputNormals, float4 inputWorldPos, float4 inputEyePos, float depth, float roughness)
+LightStructure DoSpotLight(Light SpotLight, float3 inputNormals, float4 inputWorldPos, float4 inputEyePos, float depth)
 {
 	LightStructure result;
 
@@ -159,12 +170,12 @@ LightStructure DoSpotLight(Light SpotLight, float3 inputNormals, float4 inputWor
 	float spotIntensity = smoothstep( minCos, maxCos, cosAngle );
 
     result.diffuse = CalculateDiffuse(SpotLight, inputNormals, L) * attenuation * spotIntensity * depth;  
-    result.specular = CalculateSpecular(SpotLight, inputNormals, inputEyePos, L, roughness) * attenuation * spotIntensity * depth;
+    result.specular = CalculateSpecular(SpotLight, inputNormals, inputEyePos.xyz, L) * attenuation * spotIntensity * depth;
 
     return result;
 }
 
-LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4 inputEyePos, float4 lightviewpos[MAX_LIGHT_NUM], float roughness)
+LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4 inputEyePos, float4 lightviewpos[MAX_LIGHT_NUM])
 {
 	float binaryShadowValues[MAX_LIGHT_NUM];
 	for(int index = 0; index < MAX_LIGHT_NUM; index++)
@@ -190,15 +201,15 @@ LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4
 
 		if(light[i].lightType == 0)
 		{
-    		tcolLight = DoSpotLight(light[i], inputNormals, inputWorldPos, inputEyePos, binaryShadowValues[i], roughness);
+    		tcolLight = DoSpotLight(light[i], inputNormals, inputWorldPos, inputEyePos, binaryShadowValues[i]);
 		}	
 		else if (light[i].lightType == 2)
     	{
-			tcolLight = DoDirectionalLight(light[i], inputNormals, inputEyePos, binaryShadowValues[i], roughness);
+			tcolLight = DoDirectionalLight(light[i], inputNormals, inputEyePos, binaryShadowValues[i]);
 		} 
 		else if (light[i].lightType == 1)
 		{
-			tcolLight = DoPointLight(light[i], inputNormals, inputWorldPos, inputEyePos, binaryShadowValues[i], roughness);
+			tcolLight = DoPointLight(light[i], inputNormals, inputWorldPos, inputEyePos, binaryShadowValues[i]);
     	} 
 		lightFinalColor.diffuse = saturate(lightFinalColor.diffuse + tcolLight.diffuse); 
 		lightFinalColor.specular = saturate(lightFinalColor.specular + tcolLight.specular);
@@ -217,36 +228,57 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 	{
 		ObjectTexture = Texture.Sample( SamplerStateWrap, input.texCoord );
 	}
-    clip(ObjectTexture.a < 0.1f ? -1 : 1);
 
+	
+		clip(ObjectTexture.a < 0.1f ? -1 : 1);
+	
  	input.normal = normalize(input.normal);
 
-	if(material.isNormalTexture)
+	if(material.isNormalTexture )
     {
         float4 normalMap = NormalTexture.Sample( SamplerStateWrap, input.texCoord );
         normalMap = (2.0f * normalMap) - 1.0f;
-        input.tangent = normalize(input.tangent - dot(input.tangent, input.normal) * input.normal);
-        float3 biTangent = cross(input.normal, input.tangent);
-        float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
-        input.normal = normalize(mul(normalMap, texSpace));
-    }
+		float3x3 texSpace = float3x3(input.tangent, input.bitangent, input.normal);
+		input.normal = normalize(mul(normalMap, texSpace));
+	}
+	float roughness = 0.0f;
+	if(material.isRoughnessTexture)
+	{
+		roughness = RougnessTexture.Sample( SamplerStateWrap, input.texCoord ).r;
+	}
 	
-	float roughness = RougnessTexture.Sample( SamplerStateWrap, input.texCoord ).r;
+	float4 emTex = {1.0f, 1.0f,1.0f,1.0f};
+	if(material.isEmissionTexture && pad)
+	{
+		emTex = EmissionTexture.Sample( SamplerStateWrap, input.texCoord );
+	}
+	float4 specTex = {0.0f, 0.0f, 0.0f, 1.0f};
+	if(material.isSpecularTexture && pad)
+	{
+		specTex = SpecularTexture.Sample( SamplerStateWrap, input.texCoord );
+	}
 
 	LightStructure LightColor = { {1,1,1,1}, {1,1,1,1} };
-	
+
+
+
 	if(countOfLights)
 	{
-		LightColor = CalculateLights(input.normal, input.worldPos, input.eyePos, input.lightViewPosition, roughness);
+		LightColor = CalculateLights(input.normal, input.worldPos, input.eyePos, input.lightViewPosition);
 	}
 
 	float4 ObjectColor = material.diffuse * LightColor.diffuse;
 	float4 ObjectAmbient = material.ambient * GlobalAmbient;
-	float4 ObjectEmissive = material.emissive;
-    float4 ObjectSpecular = material.specular * LightColor.specular;
+	float4 ObjectEmissive = emTex * material.emissive;
+    float4 ObjectSpecular = specTex  * LightColor.specular;
 
-	finalColor = (ObjectColor + ObjectAmbient + ObjectEmissive + ObjectSpecular) * ObjectTexture;
-	finalColor.w = ObjectTexture.a;
+	finalColor = saturate(ObjectEmissive +  ObjectAmbient + ObjectColor + ObjectSpecular) * ObjectTexture;
+	finalColor.w = ObjectTexture.a; 
+	if(material.ishaveTransparency)
+	{
+		finalColor.w *= material.diffuse.w;
+	}
+
 	
 	return finalColor;
 }

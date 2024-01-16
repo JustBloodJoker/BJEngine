@@ -18,7 +18,7 @@ namespace BJEngine {
 
 		void StartDetectInput();
 		void EndDetectInput();
-		bool CheckKeyState(int key) { return keyboardState[key] & 0x80; }
+		bool CheckKeyState(int key, bool isonce = false);
 
 		DIMOUSESTATE GetCurrState() { return mouseCurrentState; }
 		DIMOUSESTATE GetLastState() { return mouseLastState; }
@@ -31,6 +31,7 @@ namespace BJEngine {
 		static IDirectInputDevice8* mouseInput;
 
 		static BYTE keyboardState[256];
+		static bool keyboardBoolState[256];
 		static DIMOUSESTATE mouseCurrentState;
 		static DIMOUSESTATE mouseLastState;
 		static LPDIRECTINPUT8 directInput;

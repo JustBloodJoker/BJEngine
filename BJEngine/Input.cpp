@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Input.h"
 
 namespace BJEngine {
@@ -9,6 +8,7 @@ namespace BJEngine {
     IDirectInputDevice8* Input::mouseInput = nullptr;
 
     BYTE Input::keyboardState[256] = {};
+    bool Input::keyboardBoolState[256] = {false};
     DIMOUSESTATE Input::mouseCurrentState = {};
     DIMOUSESTATE Input::mouseLastState = {};
     LPDIRECTINPUT8 Input::directInput = NULL;
@@ -105,6 +105,11 @@ namespace BJEngine {
     void Input::EndDetectInput()
     {
         mouseLastState = mouseCurrentState;
+    }
+
+    bool Input::CheckKeyState(int key, bool isonce)
+    {
+        return keyboardState[key] & 0x80;
     }
 
 

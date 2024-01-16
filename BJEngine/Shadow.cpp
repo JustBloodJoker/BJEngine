@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Shadow.h"
 
 namespace BJEngine
@@ -46,7 +45,7 @@ namespace BJEngine
 	{
 		HRESULT hr;
 
-		pDepthConstantBuffer = Object::InitConstantBuffer<ConstantDepthBuffer>(pd3dDevice);
+		pDepthConstantBuffer = Helper::InitConstantBuffer<ConstantDepthBuffer>(pd3dDevice);
 
 		D3D11_TEXTURE2D_DESC textDesc = {};
 		ID3D11Texture2D* textureSRV;
@@ -166,7 +165,7 @@ namespace BJEngine
 				depthBuffer.WVP = dx::XMMatrixTranspose(el->GetObjectMatrix() * view[x] * projection);
 				pImmediateContext->UpdateSubresource(pDepthConstantBuffer, 0, NULL, &depthBuffer, 0, 0);
 				pImmediateContext->VSSetConstantBuffers(1, 1, &pDepthConstantBuffer);
-				el->MinDraw(view[x], projection);
+				el->MinDraw();
 			}
 		}
 	}
@@ -176,7 +175,7 @@ namespace BJEngine
 	{
 		HRESULT hr;
 
-		pDepthConstantBuffer = Object::InitConstantBuffer<ConstantDepthBuffer>(pd3dDevice);
+		pDepthConstantBuffer = Helper::InitConstantBuffer<ConstantDepthBuffer>(pd3dDevice);
 
 		D3D11_TEXTURE2D_DESC textDesc = {};
 		ID3D11Texture2D* textureSRV;
@@ -247,7 +246,7 @@ namespace BJEngine
 			depthBuffer.WVP = dx::XMMatrixTranspose(el->GetObjectMatrix() * vw * prj);
 			pImmediateContext->UpdateSubresource(pDepthConstantBuffer, 0, NULL, &depthBuffer, 0, 0);
 			pImmediateContext->VSSetConstantBuffers(1, 1, &pDepthConstantBuffer);
-			el->MinDraw(vw, prj);
+			el->MinDraw();
 		}
 
 	}

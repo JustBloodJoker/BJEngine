@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Textures.h"
 
 namespace BJEngine {
@@ -131,7 +130,7 @@ namespace BJEngine {
 		sampDesc.BorderColor[3] = 1.0f;
 		sampDesc.MinLOD = 0.f;
 		sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-		sampDesc.MipLODBias = 0.f;
+		sampDesc.MipLODBias = 0.f; 
 		sampDesc.MaxAnisotropy = D3D11_DEFAULT_MAX_ANISOTROPY;
 		sampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 		sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;

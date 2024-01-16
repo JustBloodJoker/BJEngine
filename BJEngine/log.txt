@@ -1,14 +1,19 @@
-Log is create: 11/28/23 18:34:44.
+Log is create: 01/16/24 21:37:03.
 ---------------------------------------
 
-18:34:44::87: *DEBUG:  wnd was created
-18:34:45::114: *DEBUG:  input was created
-18:34:45::327: *DEBUG:  Camera was created
-18:34:45::330: *DEBUG:  render was created
-18:34:46::1539: *DEBUG:  Camera was closed
-18:34:46::1539: *DEBUG:  Render was closed
-18:34:46::1540: *DEBUG:  Close input
-18:34:46::1540: *DEBUG:  Destroing wnd
+21:37:03::96: *DEBUG:  wnd was created
+21:37:04::195: *DEBUG:  input was created
+21:37:04::417: *DEBUG:  Camera created
+21:37:04::563: *DEBUG:  ImGui was inited!
+21:37:04::564: *DEBUG:  LightMananger inited!
+21:37:04::564: *DEBUG:  render was created
+21:37:12::8468: *DEBUG:  Created light!
+21:37:14::10869: *DEBUG:  Model was inited
+21:37:45::41834: *DEBUG:  Shader was closed
+21:37:45::41834: *DEBUG:  Camera was closed
+21:37:45::41834: *DEBUG:  Render was closed
+21:37:45::41834: *DEBUG:  Close input
+21:37:45::41834: *DEBUG:  Destroing wnd
 
 ---------------------------------------
-Logs end: 11/28/23 18:34:46.
+Logs end: 01/16/24 21:37:45.

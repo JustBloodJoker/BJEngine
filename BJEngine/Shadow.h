@@ -1,7 +1,8 @@
 #pragma once
 #include "pch.h"
-#include "Shader.h"
 #include "Light.h"
+#include "Shader.h"
+#include "Object.h"
 
 namespace BJEngine
 {

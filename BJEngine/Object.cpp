@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Object.h"
 
 namespace BJEngine {
@@ -28,6 +27,7 @@ namespace BJEngine {
 	{
 		if (isInited)
 		{
+			CLOSE(script);
 			CLOSE(shader);
 			RELEASE(pVertexBuffer);
 			RELEASE(pIndexBuffer);
@@ -52,7 +52,7 @@ namespace BJEngine {
 		return true;
 	}
 
-	void Object::MinDraw(dx::XMMATRIX matrix, dx::XMMATRIX mat2)
+	void Object::MinDraw()
 	{
 	}
 
@@ -66,7 +66,7 @@ namespace BJEngine {
 		this->shader = shader;
 	}
 
-	void Object::SetTexture(Textures*& texture)
+	void Object::SetTexture(Textures* texture)
 	{
 		this->texture = texture; hastext = true;
 	}
@@ -79,12 +79,6 @@ namespace BJEngine {
 	void Object::SetDeviceContext(ID3D11DeviceContext*& pImmediateContext)
 	{
 		this->pImmediateContext = pImmediateContext;
-	}
-
-	void Object::SetViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projection)
-	{
-		this->view = view;
-		this->projection = projection;
 	}
 
 	void Object::SetLightViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projecion, int index)

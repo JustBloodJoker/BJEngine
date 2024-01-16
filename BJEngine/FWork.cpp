@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "FWork.h"
 
 namespace BJFrameWork {
@@ -49,8 +48,6 @@ namespace BJFrameWork {
 		Log::Get()->Debug("render was created");
 
 		init = true;
-
-
 
 		return true;
 	}

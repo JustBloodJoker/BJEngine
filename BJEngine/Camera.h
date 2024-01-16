@@ -1,59 +1,63 @@
 #pragma once
 #include "pch.h"
-#include "Input.h"
+#include "CameraCone.h"
 
 namespace BJEngine {
 
 
 	class Camera
 	{
-	public:
-		Camera(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
-		~Camera();
 
-		void Close();
+		friend class UI;
+
+	public:
+
+		Camera(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
+		Camera();
+		Camera(ID3D11Device* pd3dDevice);
+
+		virtual ~Camera();
+
+		virtual void Close();
+
+		virtual void DrawCameraObject(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX proj);
+		virtual void DrawCameraObject();
+		
+		void SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
+		void SetPosition(float x, float y, float z);
+		void SetViewMatrix(dx::XMMATRIX view);
+
+		dx::CXMMATRIX GetViewMatrix() const;
+		dx::CXMMATRIX GetProjectionMatrix() const;
+		dx::BoundingFrustum GetFrustum() const;
+		dx::XMVECTOR GetEyeVector() const;
+
+	protected:
+
 		void CameraMove();
 
 		void UpdateCamera();
 
-		void SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
-		void SetViewMatrix(dx::XMMATRIX view);
-
-		dx::CXMMATRIX GetViewMatrix();
-		dx::CXMMATRIX GetProjectionMatrix();
-		dx::BoundingFrustum GetFrustum();
-		dx::XMVECTOR GetEyeVector();
-
-	private:
-		void CloneCamera();
-		void CreateCamera();
-
 		dx::XMMATRIX viewMatrix;
 		dx::XMMATRIX projectionMatrix;
 
-		int cameraNumbers = 0;
-		int cameraInputNum = 0;
+		dx::XMVECTOR eye;
+		dx::XMVECTOR at;
+		dx::XMVECTOR up;
 
-		std::vector <dx::XMVECTOR>	eye;
-		std::vector < dx::XMVECTOR> at;
-		std::vector < dx::XMVECTOR> up;
-
-		std::vector<float> camYaw;
-		std::vector<float> camPitch;
-
-		float moveSpeed = 500.0f;
-		float sensitivity = 0.001f;
-		bool isButton = false;
-		float FoV = M_PI / 2;
-
-
-		float x1, y1, z1, w1;
-		float x2, y2, z2, w2;
-		float x3, y3, z3, w3;
-
-		bool isB = false;
+		float camYaw;
+		float camPitch;
+		float FoV;
+		float moveSpeed;
+		float sensitivity;
+		bool moveCamera;
 
 		dx::BoundingFrustum frustum;
+	private:
+
+		CameraCone* cone;
+
+		
 	};
 
 

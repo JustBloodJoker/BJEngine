@@ -104,6 +104,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -118,6 +120,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,12 +135,17 @@
     <ClInclude Include="BackGround.h" />
     <ClInclude Include="Blend.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="DirectxFramework.h" />
+    <ClInclude Include="CameraCone.h" />
+    <ClInclude Include="DepthStencil.h" />
+    <ClInclude Include="Element.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FWork.h" />
+    <ClInclude Include="Helper.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="LightMananger.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="MainCamera.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Materials.h" />
     <ClInclude Include="Model.h" />
@@ -145,11 +154,14 @@
     <ClInclude Include="PackageUtilites.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Render.h" />
+    <ClInclude Include="Script.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shadow.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="SoundUtilits.h" />
+    <ClInclude Include="Structures.h" />
     <ClInclude Include="Textures.h" />
+    <ClInclude Include="UI.h" />
     <ClInclude Include="UnpackMananger.h" />
     <ClInclude Include="Utilites.h" />
     <ClInclude Include="Window.h" />
@@ -159,11 +171,17 @@
     <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="Blend.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraCone.cpp" />
+    <ClCompile Include="DepthStencil.cpp" />
+    <ClCompile Include="Element.cpp" />
     <ClCompile Include="FWork.cpp" />
+    <ClCompile Include="Helper.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="LightMananger.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MainCamera.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Materials.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -171,10 +189,12 @@
     <ClCompile Include="PackMananger.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="Script.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shadow.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Textures.cpp" />
+    <ClCompile Include="UI.cpp" />
     <ClCompile Include="UnpackMananger.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>

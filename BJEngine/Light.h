@@ -1,14 +1,20 @@
 #pragma once
 #include "pch.h"
-#include "Object.h"
 
 namespace BJEngine {
 
-	struct LightDesc {
+	struct LightDesc 
+	{
+		
 		LightDesc()
 		{
 			ZeroMemory(this, sizeof(LightDesc));
 			color = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+			dir = dx::XMFLOAT4(-1.0f, 0.0f, -1.0f, 1.0f);
+			pos = dx::XMFLOAT4(0.0f, 500.0f, 0.0f, 1.0f);
+			att = dx::XMFLOAT3(0.01f, 0.02f, 0.0f);
+			angle = M_PI / 8;
+			enabled = 1;
 		}
 
 		dx::XMFLOAT4 pos;
@@ -20,57 +26,12 @@ namespace BJEngine {
 
 		int lightType;
 		int enabled;
-		int pad;
+		int pad = 1;
 		int pad1;
 
 	};
 
-
-	class Light
-	{
-	private:
-
-		struct ConstantBufferLight
-		{
-			LightDesc light[5];
-			int lightsCount;
-			int pad;
-			int pad1;
-			int pad2;
-		};
-
-	public:
-
-		Light();
-		Light(LightDesc* tld);
-		~Light();
-
-		void Close();
-
-		ID3D11Buffer* GetConstantBuffer();
-
-		bool InitLight(ID3D11Device* pd3dDevice);
-		void DrawLight(ID3D11DeviceContext* pImmediateContext);
-		void PackLight();
-
-		bool SetLightDesc(LightDesc* tld);
-		void SetPos(float x, float y, float z, int index);
-
-		dx::XMFLOAT3 GetPos(int index);
-		dx::XMFLOAT3 GetDir(int index);
-
-		void InitShadowMap();
-
-		LightDesc GetDesc(int index);
-
-	private:
-		ID3D11Buffer* lightBuffer;
-		ConstantBufferLight bufferdesclight;
-
-		dx::XMMATRIX viewSM;
-		dx::XMMATRIX projectionSM;
-
-	};
+	
 
 
 }

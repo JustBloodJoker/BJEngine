@@ -17,6 +17,7 @@ struct VS_INPUT
     float2 texCoord : TEXCOORD; 
     float3 normal : NORMAL; 
     float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 };
 
 struct VS_OUTPUT
@@ -27,6 +28,7 @@ struct VS_OUTPUT
     float2 texCoord : TEXCOORD;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 
    float4 lightViewPosition[MAX_LIGHT_NUM] : TEXCOORD1;
 };
@@ -39,6 +41,7 @@ VS_OUTPUT VS(VS_INPUT input)
     output.eyePos = mul(input.pos, cam);
     output.normal = mul(input.normal, world);
     output.tangent = mul(input.tangent, world);
+    output.bitangent = mul(input.bitangent, world);
     output.texCoord = input.texCoord;
 
     for(int i = 0; i < MAX_LIGHT_NUM; i++)

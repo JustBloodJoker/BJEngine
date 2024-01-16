@@ -1,9 +1,5 @@
-#include "pch.h"
 #include "Map.h"
 
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
 
 namespace BJEngine {
@@ -41,9 +37,9 @@ namespace BJEngine {
 		shader->SetInputLayout(layout, ARRAYSIZE(layout));
 		shader->Init(pd3dDevice);
 
-		pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * vertices.size(), &vertices[0]);
-		pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * indices.size(), &indices[0]);
-		pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
+		pVertexBuffer = Helper::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * vertices.size(), &vertices[0]);
+		pIndexBuffer = Helper::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * indices.size(), &indices[0]);
+		pConstantBuffer = Helper::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
 
 		materials.push_back(new Materials(pd3dDevice));
 		materials[0]->SetParam(DIFFUSE, dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -75,17 +71,17 @@ namespace BJEngine {
 
 		world = rotation * scale * pos;
 
-		materials[0]->Draw(pImmediateContext, 2, 0, 1, 100);
+		materials[0]->Draw(pImmediateContext, 2);
 
 		ConstantBuffer cb;
-		cb.WVP = XMMatrixTranspose(world * view * projection);
+		cb.WVP = dx::XMMatrixTranspose(world * cam->GetViewMatrix() * cam->GetProjectionMatrix());
 		cb.World = world;
 		cb.ViewMatrix = cam->GetViewMatrix();
 		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 		pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
 
 		Blend::Get()->DrawNoBlend(pImmediateContext);
-		Blend::Get()->DrawCullState(pImmediateContext);
+		Blend::Get()->DrawCullNoneState(pImmediateContext);
 		pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
 		pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
 		pImmediateContext->DrawIndexed(indices.size(), 0, 0);

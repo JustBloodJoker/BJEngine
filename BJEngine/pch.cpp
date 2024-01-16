@@ -1,4 +1,4 @@
-#include "pch.h"
+#include"Utilites.h"
 
 namespace BJEUtils 
 {
@@ -62,6 +62,18 @@ namespace BJEUtils
 		std::wstring wsTmp(s.begin(), s.end());
 		std::wstring ws = wsTmp;
 		return ws;
+	}
+
+	std::string ParseLightTypeToStr(int type)
+	{
+		if (type == POINTLIGHT)
+			return "point light";
+		else if (type == SPOTLIGHT)
+			return "spot light";
+		else if (type == DIRECTIONALLIGHT)
+			return "directional light";
+		else
+			return "";
 	}
 
 

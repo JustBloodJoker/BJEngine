@@ -1,6 +1,4 @@
-#include "pch.h"
 #include "BackGround.h"
-#include "Object.h"
 
 namespace BJEngine {
 
@@ -19,13 +17,12 @@ namespace BJEngine {
         D3D11_BUFFER_DESC bd;
         D3D11_SUBRESOURCE_DATA pSystem;
 
-        pVertexBuffer = Object::InitVertexBuffer(pd3dDevice, sizeof(Vertex) * numSphereVertices, &vertices[0]);
-        pIndexBuffer = Object::InitIndicesBuffer(pd3dDevice, sizeof(DWORD) * numSphereFaces * 3, &indices[0]);
+        pVertexBuffer = Helper::InitVertexBuffer(pd3dDevice, sizeof(BJEStruct::VertexBackGround) * numSphereVertices, &vertices[0]);
+        pIndexBuffer = Helper::InitIndicesBuffer(pd3dDevice, sizeof(DWORD) * numSphereFaces * 3, &indices[0]);
 
-        D3D11_INPUT_ELEMENT_DESC layout[3] = {
+        D3D11_INPUT_ELEMENT_DESC layout[2] = {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
         };
 
         if (shader == nullptr)
@@ -53,10 +50,12 @@ namespace BJEngine {
         }
 
 
-        pConstantBuffer = Object::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
+        pConstantBuffer = Helper::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
 
         Log::Get()->Debug("CubeMap is inited");
         isInited = true;
+
+        
 
         return true;
     }
@@ -69,50 +68,16 @@ namespace BJEngine {
 
         world = dx::XMMatrixIdentity();
         
+        world = dx::XMMatrixScaling(5.0f, 5.0f, 5.0f) *
+            dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
         
-        static bool rotationEnable = false;
-        static float deltaTimeX = 0.000001f;
-        static float deltaTimeY = 0.000001f;
-        static float deltaTimeZ = 0.000001f;
-        static float rotationX = 0.0f;
-        static float rotationY = 0.0f;
-        static float rotationZ = 0.0f;
-       
-
-        ImGui::Begin("SkyBox");
-        ImGui::Checkbox("Rotation", &rotationEnable);
-        ImGui::Text("Rotation speed");
-
-        ImGui::SliderFloat("X", &deltaTimeX, 0.0f, 0.01f, "%.7f");
-        ImGui::SliderFloat("Y", &deltaTimeY, 0.0f, 0.01f, "%.7f");
-        ImGui::SliderFloat("Z", &deltaTimeZ, 0.0f, 0.01f, "%.7f");
-        ImGui::End();
-
-        if (!rotationEnable)
-        {
-            deltaTimeX = 0.0f;
-            deltaTimeY = 0.0f;
-            deltaTimeZ = 0.0f;
-        }
-        rotationX += deltaTimeX;
-        if (rotationX >= 6.28f) rotationX = 0.0f;
-
-        rotationY += deltaTimeY;
-        if (rotationY >= 6.28f) rotationY = 0.0f;
-
-        rotationZ += deltaTimeZ;
-        if (rotationZ >= 6.28f) rotationZ = 0.0f;
-
-        world = dx::XMMatrixRotationX(rotationX) * dx::XMMatrixRotationY(rotationY)
-            * dx::XMMatrixRotationZ(rotationZ) * dx::XMMatrixScaling(5.0f, 5.0f, 5.0f) * dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
-
-        UINT stride = sizeof(Vertex);
+        UINT stride = sizeof(BJEStruct::VertexBackGround);
         UINT offset = 0;
 
         pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
         pImmediateContext->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
 
-        dx::XMMATRIX WVP = world * cam->GetViewMatrix() * projection;
+        dx::XMMATRIX WVP = world * cam->GetViewMatrix() * cam->GetProjectionMatrix();
         ConstantBuffer cb;
         cb.WVP = XMMatrixTranspose(WVP);
         cb.World = XMMatrixTranspose(world);

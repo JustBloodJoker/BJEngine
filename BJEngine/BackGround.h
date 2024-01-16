@@ -1,6 +1,5 @@
 #pragma once
 #include "Object.h"
-#include "Camera.h"
 
 namespace BJEngine {
 
@@ -25,7 +24,7 @@ namespace BJEngine {
 		int numSphereVertices = ((latLines - 2) * longLines) + 2;
 		int numSphereFaces = ((latLines - 3) * (longLines) * 2) + (longLines * 2);
 
-		std::vector<Vertex> vertices;
+		std::vector<BJEStruct::VertexBackGround> vertices;
 		std::vector<DWORD> indices;
 
 		void CreateSphere();

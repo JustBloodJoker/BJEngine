@@ -1,0 +1,6 @@
+reg ggs 
+reg jk 0.01
+# jk + 0.01 
+# equ ggs tan jk loop
+op loop rotate x jk
+ends

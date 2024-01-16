@@ -1,7 +1,9 @@
-#include "pch.h"
-
 #include "Render.h"
+#include "UI.h"
+#include "LightMananger.h"
 #include "Model.h"
+
+
 namespace BJEngine {
 
 
@@ -91,22 +93,14 @@ namespace BJEngine {
 		float ClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		pImmediateContext->RSSetViewports(1, &vp);
 		pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);
-		pImmediateContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		pImmediateContext->OMSetRenderTargets(1, &pRenderTargetView, depthStencilView);
+		pImmediateContext->OMSetRenderTargets(1, &pRenderTargetView, DepthStencil::ClearDepthStencil());
 
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-
-		ImGui::NewFrame();
-		static bool isBtoF = GetFullScreenState();
-		ImGui::Checkbox("FullScreen", &isBtoF);
-		SetFullScreenState(isBtoF);
+		UI::Begin();
 	}
 
 	void Render::EndFrame()
 	{
-		ImGui::Render();
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		UI::End();
 
 		pSwapChain->Present(0, 0);
 	}
@@ -121,45 +115,25 @@ namespace BJEngine {
 
 		Blend* blend = new Blend(pd3dDevice);
 
-		D3D11_TEXTURE2D_DESC depthStencilDesc;
-		depthStencilDesc.Width = BJEUtils::GetWindowWidth();
-		depthStencilDesc.Height = BJEUtils::GetWindowHeight();
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.ArraySize = 1;
-		depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthStencilDesc.CPUAccessFlags = 0;
-		depthStencilDesc.MiscFlags = 0;
+		DepthStencil::InitStencils(pRenderTargetView, pd3dDevice, pImmediateContext);
 
-		hr = pd3dDevice->CreateTexture2D(&depthStencilDesc, NULL, &depthStencilBuffer);
-		if (FAILED(hr)) {
-			Log::Get()->Err("Create Depth buffer error");
-			return false;
+		cams.push_back(new MainCamera());
+		if (!UI::Init(hwnd, pd3dDevice, pImmediateContext, cams, this))
+		{
+			Log::Get()->Err("Incorrect ImGui init!");
+		}
+		else
+		{
+			Log::Get()->Debug("ImGui was inited!");
 		}
 
-		hr = pd3dDevice->CreateDepthStencilView(depthStencilBuffer, NULL, &depthStencilView);
-		if (FAILED(hr)) {
-			Log::Get()->Err("Create DepthStencil buffer error");
-			return false;
+		if (!LightMananger::IsInited())
+		{
+			LightMananger::Init(pd3dDevice);
 		}
-
-		cam = new Camera(dx::XMVectorSet(0.0f, 100.0f, -8.0f, 0.0f),
-			dx::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
-			dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-
-
-		PackMananger* mananger = new PackMananger();
-		UnpackMananger* unmanager = new UnpackMananger();
-
-		InitImGui();
 
 		return true;
 	}
-
-	int o = 1;
 
 	bool Render::DrawWnd()
 	{
@@ -171,49 +145,34 @@ namespace BJEngine {
 		float ClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);
 
-
-		for (size_t index = 0; index < shadows.size(); index++)
-		{
-			shadows[index]->Render(pImmediateContext, light->GetDesc(index), objects);
-		}
+		LightMananger::DrawShadows(pImmediateContext, objects);
 
 		BeginFrame();
-		UnpackProject();
-		SaveProject();
-		DrawImGui();
-		CreateLight();
-		CreateSound();
-
 		
+		UnpackProject();
+		
+		cams[0]->DrawCameraObject();
 
-		GetCamera()->CameraMove();
+		for (auto& el : cams)
+		{
+			el->DrawCameraObject(pImmediateContext, cams[UI::FocusedCamera()]->GetViewMatrix(), cams[UI::FocusedCamera()]->GetProjectionMatrix());
+		}
 
 		for (auto& tSound : sound)
 		{
 			tSound->Play();
 		}
-		
-		light->PackLight();
-
-		if (islight)
-			light->DrawLight(pImmediateContext);
+	
+		if (LightMananger::IsInited())
+			LightMananger::Draw(pImmediateContext);
 
 		for (auto& object : objects)
 		{
-			for (int index = 0; index < shadows.size(); index++)
-			{
-				object->SetLightViewAndProjectionMatrix(shadows[index]->GetView(), shadows[index]->GetProjection(), index);
-			}
-			object->SetViewAndProjectionMatrix(GetCamera()->GetViewMatrix(), GetCamera()->GetProjectionMatrix());
+			object->SetCamera(cams[UI::FocusedCamera()]);
+			LightMananger::SetMatrix(object);
 		}
 
-		for (int index = 0; index < shadows.size(); index++)
-		{
-			if (light->GetDesc(index).lightType == POINTLIGHT)
-				pImmediateContext->PSSetShaderResources(2 + index, 1, shadows[index]->GetTexture());
-			else
-				pImmediateContext->PSSetShaderResources(2 + index + 5, 1, shadows[index]->GetTexture());
-		}
+		
 		pImmediateContext->PSSetSamplers(0, 1, Textures::GetBorderState());
 
 		for (auto& object : objects)
@@ -221,13 +180,36 @@ namespace BJEngine {
 			object->Draw();
 		}
 
-		//DrawActions();
+		if (skyBox && skyBox->IsInited())
+		{
+			skyBox->SetCamera(cams[UI::FocusedCamera()]);
+			skyBox->Draw();
+		}
+
+	//	if (Input::Get()->CheckKeyState(DIK_8))
+	//	{
+	//		ID3D11Texture2D* pBuffer;
+	//
+	//		pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBuffer);
+	//
+	//		ID3D11Texture2D* texture_to_save = nullptr;
+	//		if (texture_to_save == nullptr)
+	//		{
+	//			D3D11_TEXTURE2D_DESC td;
+	//			pBuffer->GetDesc(&td);
+	//			pd3dDevice->CreateTexture2D(&td, NULL, &texture_to_save);
+	//		}
+	//
+	//		pImmediateContext->CopyResource(texture_to_save, pBuffer);
+	//
+	//		D3DX11SaveTextureToFile(pImmediateContext, texture_to_save, D3DX11_IFF_PNG, L"ffddss.png");
+	//	}
+
 
 		EndFrame();
 
 		if (PackMananger::Get()->GetSavingStatus())
 		{
-			PackMananger::Get()->SetSavingStatus(false);
 			PackMananger::Get()->Close();
 		}
 		
@@ -244,7 +226,6 @@ namespace BJEngine {
 
 		if (!object->IsInited())
 		{
-			object->SetCamera(cam);
 			object->SetDevice(pd3dDevice);
 			object->SetDeviceContext(pImmediateContext);
 
@@ -257,167 +238,43 @@ namespace BJEngine {
 		return object;
 	}
 
+	void Render::AddSkyBox(std::string texturePath)
+	{
+		if (skyBox)
+		{
+			CLOSE(skyBox);
+		}
+		skyBox = new BackGround();
+		skyBox->SetTexture(new Textures(std::wstring(texturePath.begin(), texturePath.end())));
+		if (!skyBox->IsInited())
+		{
+			skyBox->SetDevice(pd3dDevice);
+			skyBox->SetDeviceContext(pImmediateContext);
+			if (!skyBox->Init())
+			{
+				Log::Get()->Err("SkyBox didn't inited!");
+			}
+		}
+
+	}
+
 	void Render::ResizeWindow()
 	{
-
 		pSwapChain->SetFullscreenState(GetFullScreenState(), nullptr);
 
 		vp.Width = GetWindowWidth();
 		vp.Height = GetWindowHeight();
 	}
 
-	bool Render::DrawActions()
+	void Render::CreateSound(std::string path)
 	{
-
-		return true;
-	}
-
-	void Render::SetLightPos(float x, float y, float z, int indexOfLight)
-	{
-		light->SetPos(x, y, z, indexOfLight);
-	}
-
-	dx::XMFLOAT3 Render::GetLightPos(int index)
-	{
-		return light->GetPos(index);
-	}
-
-	void Render::InitImGui()
-	{
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO io = ImGui::GetIO();
-		ImGui_ImplWin32_Init(hwnd);
-		ImGui_ImplDX11_Init(pd3dDevice, pImmediateContext);
-		ImGui::StyleColorsDark();
-	}
-
-	void Render::DrawImGui()
-	{
-		static char path[150] = { 0 };
-		static char path1[150] = { 0 };
-		static char pathPrefix[50] = { 0 };
-		ImGui::InputText("Path to scene", path, 150);
-		ImGui::InputText("Texture Prefix", pathPrefix, 50);
-		ImGui::SameLine();
-		if (ImGui::Button("Add Model")) {
-			Model* temp = new Model(path);
-			temp->SetTexturesPrefixPath(charToWString(pathPrefix));
-			InitObjs(temp);
-		} 
-
-		ImGui::InputText("Path to SkyBox", path1, 150);
-
-		ImGui::SameLine();
-		if (ImGui::Button("Create Sky")) {
-			skyBox = new BackGround();
-			Textures *tx = new Textures(charToWString(path1));
-			skyBox->SetTexture(tx);
-			InitObjs(skyBox);
-		} 
-	}
-
-	void Render::CreateLight()
-	{
-		static bool isB = false;
-		const char* items[] = { "SpotLight", "PointLight" };
-		static const char* cItem = "SpotLight";
-
-		if (!isB)
-			isB = ImGui::Button("Add light");
-
-		if (isB)
-		{
-			ImGui::Begin("Add light");
-			if (ImGui::BeginCombo("Light type", cItem))
-			{
-				for (size_t n = 0; n < IM_ARRAYSIZE(items); n++)
-				{
-					bool is_selected = (cItem == items[n]);
-					if (ImGui::Selectable(items[n], is_selected))
-						cItem = items[n];
-					if (is_selected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
-			}
-
-			if (ImGui::Button("Add Light"))
-			{
-				ld = new BJEngine::LightDesc();
-				ld->pos = dx::XMFLOAT4(50.0f, 500.0f, 0.0f, 1.0f);
-				ld->dir = dx::XMFLOAT4(-1.0f, 0.0f, -1.0f, 1.0f);
-				ld->angle = M_PI / 8;
-				ld->att = dx::XMFLOAT3(0.0f, 0.0005f, 0.0f);
-				ld->color = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-				ld->enabled = true;
-
-				if (cItem == "SpotLight")
-					this->SetLight(ld, BJEUtils::SPOTLIGHT);
-				else
-					this->SetLight(ld, BJEUtils::POINTLIGHT);
-
-				isB = false;
-			}
-			ImGui::End();
-		}
-
-	}
-
-	void Render::CreateSound()
-	{
-		static bool isB = false;
-		static char cItem[100];
-		if (!isB)
-			isB = ImGui::Button("Add sound");
-
-		if (isB)
-		{
-			ImGui::Begin("Add sound");
-			ImGui::InputText("Path to the sound", cItem, 100);
-
-			if (ImGui::Button("Add Sound"))
-			{
-				sound.push_back(new BJAudio::Sound(charToWString(cItem)));
-				sound[sound.size() - 1]->Init();
-				isB = false;
-			}
-			ImGui::End();
-		}
-
+		sound.push_back(new BJAudio::Sound(std::wstring(path.begin(), path.end())));
+		sound[sound.size() - 1]->Init();
 	}
 
 	void Render::UnpackProject()
 	{
-		static bool isB = false;
-
-		if (!isB)
-			isB = ImGui::Button("Open Project");
-
-		if (isB)
-		{
-			ImGui::Begin("Opening Project");
-			static char pathto[100] = "C:\\";
-
-			ImGui::InputText("Input path", pathto, 100);
-
-			ImGui::Text("Are you sure?");
-
-			if (ImGui::Button("Yes"))
-			{
-				UnpackMananger::Get()->Init(pathto);
-				isB = false;
-			}
-
-			ImGui::SameLine();
-
-			if (ImGui::Button("No"))
-			{
-				isB = false;
-			}
-
-			ImGui::End();
-		}
+		
 
 		if (UnpackMananger::Get()->GetOpeningStatus())
 		{
@@ -425,15 +282,14 @@ namespace BJEngine {
 
 			for (auto& el : unp)
 			{
-				ld = new BJEngine::LightDesc(); 
-				ld->pos = el.pos;
-				ld->dir = el.dir;
-				ld->angle = el.angle;
-				ld->att = el.att;
-				ld->color = el.color;
-				ld->enabled = el.enabled;
-				ld->lightType = el.lightType;
-				SetLight(ld, el.lightType);
+				ld.pos = el.pos;
+				ld.dir = el.dir;
+				ld.angle = el.angle;
+				ld.att = el.att;
+				ld.color = el.color;
+				ld.enabled = el.enabled;
+				ld.lightType = el.lightType;
+				SetLight(ld);
 			}
 
 			unp.clear();
@@ -444,6 +300,7 @@ namespace BJEngine {
 			{
 				md = new Model(el.path.c_str());
 				md->SetTexturesPrefixPath(std::wstring(el.prepath.begin(), el.prepath.end()));
+				md->SetScript(el.script);
 				InitObjs(md);
 			}
 		}
@@ -451,69 +308,16 @@ namespace BJEngine {
 
 	}
 
-	void Render::SaveProject()
+	void Render::SetLight(LightDesc ld)
 	{
-		static bool isB = false;
-		
-		if (!isB)
-			isB = ImGui::Button("Save Project");
-
-		if (isB)
+		if (LightMananger::AddLight(ld))
 		{
-			ImGui::Begin("Saving Project");
-			static char pathto[100] = "C:\\";
-
-			ImGui::InputText("Input path", pathto, 100);
-
-			ImGui::Text("Are you sure?");
 			
-			if (ImGui::Button("Yes"))
-			{
-				PackMananger::Get()->Init(pathto);
-				PackMananger::Get()->SetSavingStatus(true);
-				isB = false;
-			}
-
-			ImGui::SameLine();
-			
-			if (ImGui::Button("No"))
-			{
-				isB = false;
-			}
-
-			ImGui::End();
-		}
-
-
-	}
-
-	void Render::SetLight(LightDesc* ld, int typeOfLight)
-	{
-		
-		ld->lightType = typeOfLight;
-		if (light == nullptr)
-		{
-			light = new Light(ld);
-			shadows.push_back(new Shadow());
-			shadows[shadows.size() - 1]->InitShadow(pd3dDevice, ld->lightType);
-		}
-		else
-		{
-			if (light->SetLightDesc(ld))
-			{
-				shadows.push_back(new Shadow());
-				shadows[shadows.size() - 1]->InitShadow(pd3dDevice, ld->lightType);
-			};
-		}
+		};
 		islight = true;
 
-		if (!isInitlight)
-		{
-			light->InitLight(pd3dDevice);
-			isInitlight = true;
-		}
-		
 
+		
 	}
 
 	void Render::Close()
@@ -523,10 +327,13 @@ namespace BJEngine {
 		}
 		objects.clear();
 
-		CLOSE(cam);
-		LCLOSE(light);
-		RELEASE(depthStencilView);
-		RELEASE(depthStencilBuffer);
+		for (auto& el : cams)
+		{
+			CLOSE(el);
+		}
+		cams.clear();
+
+		
 		RELEASE(pd3dDevice);
 		if (pImmediateContext)
 			pImmediateContext->ClearState();
@@ -537,6 +344,7 @@ namespace BJEngine {
 		Log::Get()->Debug("Render was closed");
 		PackMananger::Get()->Close();
 		UnpackMananger::Get()->Close();
+		LightMananger::Close();
 	}
 
 

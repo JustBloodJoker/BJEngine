@@ -1,6 +1,4 @@
-#include "pch.h"
 #include "Sound.h"
-#include "SoundUtilits.h"
 
 namespace BJAudio
 {

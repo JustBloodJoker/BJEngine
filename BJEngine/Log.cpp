@@ -1,5 +1,5 @@
-#include "pch.h"
 #include "Log.h"
+#include "UI.h"
 
 namespace BJEngine {
 
@@ -66,7 +66,7 @@ namespace BJEngine {
 		vsprintf_s(buffer, len, message, args);
 		m_print("", buffer);
 		va_end(args);
-		free(buffer);
+		
 	}
 
 	void Log::Debug(const char* message, ...)
@@ -79,7 +79,7 @@ namespace BJEngine {
 		vsprintf_s(buffer, len, message, args);
 		m_print("*DEBUG: ", buffer);
 		va_end(args);
-		free(buffer);
+		
 #endif
 	}
 	void Log::Err(const char* message, ...)
@@ -91,7 +91,7 @@ namespace BJEngine {
 		vsprintf_s(buffer, len, message, args);
 		m_print("*ERROR: ", buffer);
 		va_end(args);
-		free(buffer);
+
 	}
 
 	void Log::m_print(const char* levtext, const char* text)
@@ -101,6 +101,7 @@ namespace BJEngine {
 		clock_t cl = clock();
 
 		printf("%s::%d: %s%s\n", timer, cl, levtext, text);
+		UI::AddLog(levtext , text);
 		if (!file.is_open()) {
 			m_init();
 		}

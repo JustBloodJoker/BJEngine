@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Camera.h"
 
 
@@ -8,17 +7,43 @@ namespace BJEngine
 
 	Camera::Camera(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up)
 	{
-		this->eye.push_back(eye);
-		this->up.push_back(up);
-		this->at.push_back(at);
-		this->camPitch.push_back(0.0f);
-		this->camYaw.push_back(0.0f);
-		cameraNumbers++;
+		this->eye = eye;
+		this->up  = up;
+		this->at  = at;
+		this->camPitch = 0.0f;
+		this->camYaw = 0.0f;
 
 		viewMatrix = dx::XMMatrixLookAtLH(eye, at, up);
 		projectionMatrix = dx::XMMatrixPerspectiveFovLH(M_PI / 2.0f, BJEUtils::GetWindowWidth() / BJEUtils::GetWindowHeight(), 1.0f, 10000.0f);
 
 		Log::Get()->Debug("Camera was created");
+	}
+
+	Camera::Camera() : eye(dx::XMVectorSet(0.0f, 100.0f,  118.0f, 0.0f)), 
+					   at(dx::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f)),
+					   up(up = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)),
+					   camPitch (0.0f), camYaw(0.0f), 
+			           projectionMatrix(dx::XMMatrixPerspectiveFovLH(M_PI / 2.0f, BJEUtils::GetWindowWidth() / BJEUtils::GetWindowHeight(), 1.0f, 10000.0f)),
+		               FoV(M_PI / 2), cone(nullptr), moveSpeed(1.0f), sensitivity(0.001f)
+	{
+		viewMatrix = dx::XMMatrixLookAtLH(eye, at, up);
+
+
+		Log::Get()->Debug("Camera created");
+	}
+
+	Camera::Camera(ID3D11Device* pd3dDevice) : eye(dx::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)),
+											   at(dx::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f)),
+											   up(up = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)),
+											   camPitch(0.0f), camYaw(0.0f),
+											   projectionMatrix(dx::XMMatrixPerspectiveFovLH(M_PI / 2.0f, BJEUtils::GetWindowWidth() / BJEUtils::GetWindowHeight(), 1.0f, 10000.0f)),
+											   FoV(M_PI / 2), cone(nullptr), moveSpeed(1.0f), sensitivity(0.001f)
+	{
+		cone = new CameraCone(pd3dDevice);
+
+		viewMatrix = dx::XMMatrixLookAtLH(eye, at, up);
+
+		Log::Get()->Debug("Camera created");
 	}
 
 	Camera::~Camera()
@@ -28,168 +53,98 @@ namespace BJEngine
 
 	void Camera::Close()
 	{
-		eye.clear();
-		at.clear();
-		up.clear();
-		camYaw.clear();
-		camPitch.clear();
-
+		CLOSE(cone);
 		Log::Get()->Debug("Camera was closed");
 	}
 
 	void Camera::CameraMove()
 	{
-		Input::Get()->StartDetectInput();
-
-		if (!isButton)
-		{
-			isButton = ImGui::Button("camera");
-		}
-		if (isButton)
-		{
-			ImGui::Begin("Camera");
-			ImGui::SliderFloat("CameraSpeed", &moveSpeed, 10.0f, 1000.0f);
-			ImGui::SliderFloat("Sensitivity", &sensitivity, 0.00001f, 0.01f);
-			ImGui::SliderFloat("FoV", &FoV, 0.5f, 2.4f);
-
-			static char forcombo = '1';
-			static char tempCameraInput = '1';
-			static char tFor = '-1';
-			if (ImGui::BeginCombo("Camera number", &tempCameraInput))
-			{
-
-				for (int n = 0; n < cameraNumbers; n++)
-				{
-					tFor = forcombo + n;
-					bool is_selected = (tempCameraInput == tFor);
-					if (ImGui::Selectable(&tFor, is_selected)) { tempCameraInput = tFor; }
-
-					if (is_selected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
-			}
-			cameraInputNum = tempCameraInput - 49;
-
-			if (ImGui::Button("CloneCamera"))
-			{
-				CloneCamera();
-			};
-
-			if (!isB)
-				isB = ImGui::Button("Create Camera");
-
-			if (isB)
-			{
-				CreateCamera();
-			}
-
-			isButton = !ImGui::Button("CloseCameraWindow");
-			ImGui::End();
-		}
-
 		projectionMatrix = dx::XMMatrixPerspectiveFovLH(FoV, BJEUtils::GetWindowWidth() / BJEUtils::GetWindowHeight(), 1.0f, 10000.0f);
+		
+		if (moveCamera)
+		{
+			Input::Get()->StartDetectInput();
 
-		DirectX::XMVECTOR cameraDirection = DirectX::XMVector3Normalize(at[cameraInputNum] - eye[cameraInputNum]);
-		DirectX::XMVECTOR rightDirection = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), cameraDirection));
+			DirectX::XMVECTOR cameraDirection = DirectX::XMVector3Normalize(at - eye);
+			DirectX::XMVECTOR rightDirection = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), cameraDirection));
 
-		if (Input::Get()->CheckKeyState(DIK_W))
-		{
-			eye[cameraInputNum] += moveSpeed * 0.016f * cameraDirection;
-		}
-		if (Input::Get()->CheckKeyState(DIK_S))
-		{
-			eye[cameraInputNum] -= moveSpeed * 0.016f * cameraDirection;
-		}
-		if (Input::Get()->CheckKeyState(DIK_D))
-		{
-			eye[cameraInputNum] += moveSpeed * 0.016f * rightDirection;
-		}
-		if (Input::Get()->CheckKeyState(DIK_A))
-		{
-			eye[cameraInputNum] -= moveSpeed * 0.016f * rightDirection;
-		}
-		if (Input::Get()->CheckKeyState(DIK_SPACE))
-		{
-			eye[cameraInputNum] += moveSpeed * 0.016f * up[cameraInputNum];
-		}
-		if (Input::Get()->CheckKeyState(DIK_LCONTROL))
-		{
-			eye[cameraInputNum] -= moveSpeed * 0.016f * up[cameraInputNum];
-		}
-		if ((Input::Get()->GetCurrState().lX != Input::Get()->GetLastState().lX) ||
-			(Input::Get()->GetCurrState().lY != Input::Get()->GetLastState().lY))
-		{
-			camYaw[cameraInputNum] += Input::Get()->GetLastState().lX * sensitivity;
+			if (Input::Get()->CheckKeyState(DIK_W))
+			{
+				eye += moveSpeed * 0.016f * cameraDirection;
+			}
+			if (Input::Get()->CheckKeyState(DIK_S))
+			{
+				eye -= moveSpeed * 0.016f * cameraDirection;
+			}
+			if (Input::Get()->CheckKeyState(DIK_D))
+			{
+				eye += moveSpeed * 0.016f * rightDirection;
+			}
+			if (Input::Get()->CheckKeyState(DIK_A))
+			{
+				eye -= moveSpeed * 0.016f * rightDirection;
+			}
+			if (((Input::Get()->GetCurrState().lX != Input::Get()->GetLastState().lX) ||
+				(Input::Get()->GetCurrState().lY != Input::Get()->GetLastState().lY)) &&
+				Input::Get()->GetCurrState().rgbButtons[1] & 0x80)
+			{
 
-			camPitch[cameraInputNum] += Input::Get()->GetCurrState().lY * sensitivity;
+				camYaw += Input::Get()->GetLastState().lX * sensitivity;
+
+				camPitch += Input::Get()->GetCurrState().lY * sensitivity;
+
+				Input::Get()->EndDetectInput();
+			}
 
 			Input::Get()->EndDetectInput();
 		}
 
+
 		UpdateCamera();
 
-		if (PackMananger::Get()->GetSavingStatus())
-		{
-			CameraType* templt = new CameraType();
-			for (size_t iter = 0; iter < eye.size(); iter++)
-			{
-				templt->camPitch = camPitch[iter];
-				templt->camYaw = camYaw[iter];
-				templt->FoV = FoV;
-				templt->sensitivity = sensitivity;
-				templt->moveSpeed = moveSpeed;
-				templt->at = at[iter];
-				templt->eye = eye[iter];
-				templt->up = eye[iter];
-				PackMananger::Get()->AddCamera(*templt);
-			}
-
-			delete templt;
-		};
-
-		if (UnpackMananger::Get()->GetOpeningStatus())
-		{
-			std::vector<CameraType> unp = UnpackMananger::Get()->GetCamera();
-
-			
-
-			for (auto& el : unp)
-			{
-				camPitch.push_back(el.camPitch);
-				camYaw.push_back(el.camYaw);
-				FoV = el.FoV;
-				sensitivity = el.sensitivity;
-				moveSpeed = el.moveSpeed;
-				at.push_back(el.at);
-				eye.push_back(el.eye);
-				up.push_back(el.up);
-				cameraNumbers++;
-			}
-
-		}
 	}
 
 	void Camera::UpdateCamera()
 	{
-		at[cameraInputNum] = dx::XMVector3TransformCoord(dx::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
-			dx::XMMatrixRotationRollPitchYaw(camPitch[cameraInputNum], camYaw[cameraInputNum], 0));
-		at[cameraInputNum] = dx::XMVector3Normalize(at[cameraInputNum]);
-		up[cameraInputNum] = dx::XMVector3TransformCoord(up[cameraInputNum], dx::XMMatrixRotationY(camYaw[cameraInputNum]));
-		at[cameraInputNum] += eye[cameraInputNum];
-		viewMatrix = XMMatrixLookAtLH(eye[cameraInputNum], at[cameraInputNum], up[cameraInputNum]);
+		at = dx::XMVector3TransformCoord(dx::XMVectorSet(0.0f, 0.0f, 0.01f, 0.0f),
+			dx::XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0));
+		at = dx::XMVector3Normalize(at);
+		up = dx::XMVector3TransformCoord(up, dx::XMMatrixRotationY(camYaw));
+		at += eye;
+		viewMatrix = XMMatrixLookAtLH(eye, at, up);
 
 		frustum.CreateFromMatrix(frustum, projectionMatrix);
 		frustum.Transform(frustum, DirectX::XMMatrixInverse(nullptr, viewMatrix));
 	}
 
+	void Camera::DrawCameraObject(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX proj)
+	{
+		if (moveCamera)
+		{
+			CameraMove();
+		}
+		else
+		{
+			cone->Draw(pImmediateContext, view, proj, eye.vector4_f32[0], eye.vector4_f32[1], eye.vector4_f32[2], camYaw, camPitch, FoV);
+		}
+	}
+
+	void Camera::DrawCameraObject()
+	{
+	}
+
 	void Camera::SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up)
 	{
-		this->eye[cameraInputNum] = eye;
-		this->up[cameraInputNum] = up;
-		this->at[cameraInputNum] = at;
+		this->eye = eye;
+		this->up = up;
+		this->at = at;
 
 		viewMatrix = XMMatrixLookAtLH(eye, at, up);
+	}
+
+	void Camera::SetPosition(float x, float y, float z)
+	{
+		this->eye = dx::XMVectorSet(x, y, z, 0.0f);		
 	}
 
 	void Camera::SetViewMatrix(dx::XMMATRIX view)
@@ -197,84 +152,25 @@ namespace BJEngine
 		viewMatrix = view;
 	}
 
-	dx::CXMMATRIX Camera::GetViewMatrix()
+	dx::CXMMATRIX Camera::GetViewMatrix() const
 	{
 		return viewMatrix;
 	}
 
-	dx::CXMMATRIX Camera::GetProjectionMatrix()
+	dx::CXMMATRIX Camera::GetProjectionMatrix() const
 	{
 		return projectionMatrix;
 	}
 
-	dx::BoundingFrustum Camera::GetFrustum()
+	dx::BoundingFrustum Camera::GetFrustum() const
 	{
 		return frustum;
 	}
 
-	dx::XMVECTOR Camera::GetEyeVector()
+	dx::XMVECTOR Camera::GetEyeVector() const
 	{
-		return eye[cameraInputNum];
+		return eye;
 	}
 
-	void Camera::CloneCamera()
-	{
-		this->eye.push_back(eye[cameraInputNum]);
-		this->up.push_back(up[cameraInputNum]);
-		this->at.push_back(at[cameraInputNum]);
-		this->camPitch.push_back(camPitch[cameraInputNum]);
-		this->camYaw.push_back(camYaw[cameraInputNum]);
-		cameraNumbers++;
-	}
-
-	void Camera::CreateCamera()
-	{
-		ImGui::Begin("Camera Creator");
-
-
-		if (ImGui::Button("Cancel creating"))
-		{
-			isB = false;
-		}
-
-
-		dx::XMVECTOR eye, up, at;
-
-		ImGui::Text("Eye vector");
-		ImGui::InputFloat("x", &x1);
-		ImGui::InputFloat("y", &y1);
-		ImGui::InputFloat("z", &z1);
-		ImGui::InputFloat("w", &w1);
-		eye = dx::XMVectorSet(x1, y1, z1, w1);
-
-		ImGui::Text("Up vector");
-		ImGui::InputFloat("x", &x2);
-		ImGui::InputFloat("y", &y2);
-		ImGui::InputFloat("z", &z2);
-		ImGui::InputFloat("w", &w2);
-		up = dx::XMVectorSet(x2, y2, z2, w2);
-
-		ImGui::Text("Up vector");
-		ImGui::InputFloat("x", &x3);
-		ImGui::InputFloat("y", &y3);
-		ImGui::InputFloat("z", &z3);
-		ImGui::InputFloat("w", &w3);
-		at = dx::XMVectorSet(x3, y3, z3, w3);
-
-		if (ImGui::Button("Create camera"))
-		{
-			this->eye.push_back(eye);
-			this->up.push_back(up);
-			this->at.push_back(at);
-			this->camPitch.push_back(0.0f);
-			this->camYaw.push_back(0.0f);
-			cameraNumbers++;
-			isB = false;
-		}
-
-
-		ImGui::End();
-
-	}
 
 }
