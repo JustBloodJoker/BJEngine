@@ -52,3 +52,6 @@ Added shadows from directional, spot and point light. ImGui was also integrated.
 version 2.0
 Mini engine =)
 
+version 2.1
+GUI and something new
+
