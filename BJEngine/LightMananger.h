@@ -13,12 +13,12 @@ namespace BJEngine
 
 	public:
 
-		static bool Init(ID3D11Device* pd3dDevice);
+		static bool Init();
 		static bool AddLight(LightDesc desc);
-		static bool Draw(ID3D11DeviceContext* pImmediateContext);
+		static bool Draw();
 		
 		//SHADOWS
-		static bool DrawShadows(ID3D11DeviceContext* pImmediateContext, std::vector<Object*> objects);
+		static bool DrawShadows(std::vector<Object*> objects);
 		static bool SetMatrix(Object* object);
 
 		//SHADOWS
@@ -53,7 +53,7 @@ namespace BJEngine
 		{
 			LightDesc light[MAX_LIGHT_NUM];
 			int lightsCount = 0;
-			int pad;
+			float gamma = 1.0f;
 			int pad1;
 			int pad2;
 		};
@@ -61,7 +61,6 @@ namespace BJEngine
 		static ID3D11Buffer* lightBuffer;
 		static ConstantBufferLight lightDescBuffer;
 
-		static ID3D11Device* pd3dDevice;
 	};
 
 

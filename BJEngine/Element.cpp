@@ -2,20 +2,23 @@
 #include "Helper.h"
 #include "Blend.h"
 #include "Object.h"
+#include "UI.h"
 
 namespace BJEngine
 {
 	int Element::count = 0;
-	Shader* Element::glowShader = nullptr;
-
+	
 	Element::Element()
 	{
 
 
 	}
 
-	Element::Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material, dx::XMVECTOR min, dx::XMVECTOR max, ID3D11Device* pd3dDevice)
+	Element::Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material,
+		dx::XMVECTOR min, dx::XMVECTOR max)
 	{
+		world = dx::XMMatrixIdentity();
+
 		vertices = std::move(v);
 		indices = std::move(i);
 		this->pMaterial = material; material = nullptr;
@@ -24,15 +27,6 @@ namespace BJEngine
 		name = std::string("Element ") + std::to_string(Element::count);
 		count++;
 
-		if (!Element::glowShader)
-		{
-			Element::glowShader = new BJEngine::Shader(L"shaders\\GlowPS.hlsl", L"shaders\\GlowVS.hlsl", "VS", "PS");
-			static D3D11_INPUT_ELEMENT_DESC layout[] = {
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,  0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 }
-			};
-			Element::glowShader->SetInputLayout(layout, ARRAYSIZE(layout));
-			Element::glowShader->Init(pd3dDevice);
-		}
 	}
 
 	Element::~Element()
@@ -50,81 +44,96 @@ namespace BJEngine
 		name.clear();
 	}
 
-	void Element::Init(ID3D11Device* pd3dDevice, ID3D11Buffer* pConstantBuffer)
+	void Element::Init(std::vector<ID3D11Buffer*>* ConstantBuffers)
 	{
-		pVertexBuffer = Helper::InitVertexBuffer(pd3dDevice, sizeof(BJEStruct::ModelVertex) * vertices.size(), &vertices[0]);
-		pIndexBuffer =  Helper::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * indices.size(), &indices[0]);
-		this->pConstantBuffer = pConstantBuffer;
-		pGlowConstantBuffer = Helper::InitConstantBuffer<CBuf>(pd3dDevice);
+		pVertexBuffer = Helper::InitVertexBuffer(GP::GetDevice(), sizeof(BJEStruct::ModelVertex) * vertices.size(), &vertices[0]);
+		pIndexBuffer =  Helper::InitIndicesBuffer(GP::GetDevice(), sizeof(WORD) * indices.size(), &indices[0]);
+		this->ConstantBuffers = ConstantBuffers;
+		
+		drawing = false;
 	}
 
-	void Element::Draw(ID3D11DeviceContext* pImmediateContext, UINT* stride, UINT* offset, dx::XMMATRIX mainWorldMatrix, dx::XMMATRIX outLine, dx::XMMATRIX viewMatrix, dx::XMMATRIX projectionMatrix, dx::XMMATRIX* lView, dx::XMMATRIX* lProjection)
+	void Element::Draw(CameraDesc cam, dx::XMMATRIX* lView, dx::XMMATRIX* lProjection)
 	{	
-		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pImmediateContext->IASetVertexBuffers(0, 1, &pVertexBuffer, stride, offset);
-		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-
-		pMaterial->Draw(pImmediateContext, 2);
-
-		Object::ConstantBuffer cb;
-		cb.WVP = dx::XMMatrixTranspose(mainWorldMatrix * viewMatrix * projectionMatrix);
-		cb.World = XMMatrixTranspose(mainWorldMatrix);
-		cb.ViewMatrix = viewMatrix;
-		cb.projectionMatrix = projectionMatrix;
-
-		for (int j = 0; j < MAX_LIGHT_NUM; j++)
+		objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(maxLocal, world),
+			dx::XMVector3Transform(minLocal, world)
+		);
+		
+		if (!drawing && ((cam.frustum.Intersects(objectBox) || cam.frustum.Contains(objectBox))))
 		{
-			cb.lView[j] = dx::XMMatrixTranspose(lView[j]);
-			cb.lProj[j] = dx::XMMatrixTranspose(lProjection[j]);
-		}
+			UINT stride = sizeof(BJEStruct::ModelVertex);
+			UINT offset = 0;
+			drawing = true;
 
-		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
-		pImmediateContext->VSSetConstantBuffers(1, 1, &pConstantBuffer);
+			GP::BindShader(GP::MODEL_SHADER);
+			GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			GP::GetDeviceContext()->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
+			GP::GetDeviceContext()->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 
-		if (focusedState)
-		{
-			Blend::Get()->DrawCullNoneState(pImmediateContext);
+			pMaterial->Draw(2);
 
-			DepthStencil::GetWritedDepthStencilState();
-			pImmediateContext->DrawIndexed(indices.size(), 0, 0);
+			BJEStruct::VertexConstantBuffer cb;
+			cb.WVP = dx::XMMatrixTranspose(world * cam.viewMatrix * cam.projectionMatrix);
+			cb.World = XMMatrixTranspose(world);
+			cb.ViewMatrix = cam.viewMatrix;
+			cb.projectionMatrix = cam.projectionMatrix;
+
+			for (int j = 0; j < MAX_LIGHT_NUM; j++)
+			{
+				cb.lView[j] = dx::XMMatrixTranspose(lView[j]);
+				cb.lProj[j] = dx::XMMatrixTranspose(lProjection[j]);
+			}
 			
-			pImmediateContext->IASetInputLayout(Element::glowShader->GetInputLayout());
-			pImmediateContext->VSSetShader(Element::glowShader->GetVertexShader(), NULL, 0);
-			pImmediateContext->PSSetShader(Element::glowShader->GetPixelShader(), NULL, 0);
+			GP::GetDeviceContext()->VSSetConstantBuffers(1, 1, &(*ConstantBuffers)[0]);
+			GP::GetDeviceContext()->UpdateSubresource((*ConstantBuffers)[0], 0, NULL, &cb, 0, 0);
+			
 
-			CBuf dd;
-			dd.WVP =  dx::XMMatrixTranspose(outLine * viewMatrix * projectionMatrix);
 
-			pImmediateContext->UpdateSubresource(pGlowConstantBuffer, 0, NULL, &dd, 0, 0);
-			pImmediateContext->VSSetConstantBuffers(0, 1, &pGlowConstantBuffer);
+			if (focusedState)
+			{
+				Blend::Get()->DrawCullNoneState();
 
-			DepthStencil::GetMaskedDepthStencilState();
-			pImmediateContext->DrawIndexed(indices.size(), 0, 0);	
+				DepthStencil::SetDepthStencilState(WRITE);
+				GP::GetDeviceContext()->DrawIndexed(indices.size(), 0, 0);
+
+				GP::BindShader(GP::GLOW_MODEL_SHADER);
+
+				BJEStruct::WVPConstantBuffer dd;
+				dd.WVP = dx::XMMatrixTranspose((dx::XMMatrixScaling(1.05f, 1.05f, 1.05f) + world) * cam.viewMatrix * cam.projectionMatrix);
+
+				GP::GetDeviceContext()->UpdateSubresource((*ConstantBuffers)[1], 0, NULL, &dd, 0, 0);
+				GP::GetDeviceContext()->VSSetConstantBuffers(0, 1, &(*ConstantBuffers)[1]);
+
+				DepthStencil::SetDepthStencilState(MASK);
+
+			}
+			else
+			{
+				Blend::Get()->DrawCullNoneState();			
+				DepthStencil::SetDepthStencilState(NON);
+			}
+
+
+			GP::GetDeviceContext()->DrawIndexed(indices.size(), 0, 0);
+			
+			drawing = false;
+
 		}
-		else
+	}
+
+	void Element::MinDraw(dx::BoundingFrustum frustum)
+	{
+		if (!drawing && ((frustum.Intersects(objectBox) || frustum.Contains(objectBox))))
 		{
-			Blend::Get()->DrawCullFrontState(pImmediateContext);
-			DepthStencil::ResetDepthStencilState();
-			pImmediateContext->DrawIndexed(indices.size(), 0, 0);
-
+			UINT stride = sizeof(BJEStruct::ModelVertex);
+			UINT offset = 0;
+			drawing = true;
+			GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			GP::GetDeviceContext()->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
+			GP::GetDeviceContext()->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+			GP::GetDeviceContext()->DrawIndexed(indices.size(), 0, 0);
+			drawing = false;
 		}
-	}
-
-	void Element::MinDraw(ID3D11DeviceContext* pImmediateContext, UINT* stride, UINT* offset)
-	{
-		pImmediateContext->IASetVertexBuffers(0, 1, &pVertexBuffer, stride, offset);
-		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-		pImmediateContext->DrawIndexed(indices.size(), 0, 0);
-	}
-
-	dx::XMVECTOR Element::GetMinLocal()
-	{
-		return minLocal;
-	}
-
-	dx::XMVECTOR Element::GetMaxLocal()
-	{
-		return maxLocal;
 	}
 
 	std::string Element::GetName() const
@@ -135,6 +144,16 @@ namespace BJEngine
 	void Element::SetFocusState(bool state)
 	{
 		focusedState = state;
+	}
+
+	dx::XMFLOAT3 Element::GetWorldPosition() const
+	{
+		dx::XMVECTOR scale , rotate, transpose;
+		dx::XMMatrixDecompose(&scale, &rotate, &transpose, world);
+
+		transpose *= scale;
+
+		return dx::XMFLOAT3(transpose.vector4_f32[0], transpose.vector4_f32[1], transpose.vector4_f32[2]);
 	}
 
 

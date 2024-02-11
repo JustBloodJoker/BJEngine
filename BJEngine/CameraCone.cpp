@@ -5,12 +5,12 @@ namespace BJEngine
 {
 
 
-	CameraCone::CameraCone(ID3D11Device* pd3dDevice)
+	CameraCone::CameraCone()
 	{
-		Init(pd3dDevice);
+		Init();
 	}
-
-	bool CameraCone::Init(ID3D11Device* pd3dDevice)
+	
+	bool CameraCone::Init()
 	{
 		D3D11_INPUT_ELEMENT_DESC layout[1] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
 
@@ -22,13 +22,13 @@ namespace BJEngine
 		shader = new Shader(L"shaders\\SimpleVSPS.hlsl", L"shaders\\SimpleVSPS.hlsl", "VS", "PS");
 		
 		shader->SetInputLayout(layout, ARRAYSIZE(layout));
-		shader->Init(pd3dDevice);
+		shader->Init();
 
 		world = dx::XMMatrixIdentity() * dx::XMMatrixScaling(100.0f, 100.0f, 100.0f);
 
-		pVertexBuffer = Helper::InitVertexBuffer(pd3dDevice, sizeof(CVertex) * vertices.size(), &vertices[0]);
-		pIndexBuffer = Helper::InitIndicesBuffer(pd3dDevice, sizeof(WORD) * indices.size(), &indices[0]);
-		pConstantBuffer = Helper::InitConstantBuffer<CameraCone::ConstantBuffer>(pd3dDevice);
+		pVertexBuffer = Helper::InitVertexBuffer(GP::GetDevice(), sizeof(CVertex) * vertices.size(), &vertices[0]);
+		pIndexBuffer = Helper::InitIndicesBuffer(GP::GetDevice(), sizeof(WORD) * indices.size(), &indices[0]);
+		pConstantBuffer = Helper::InitConstantBuffer<CameraCone::ConstantBuffer>(GP::GetDevice());
 
 		//vertices.clear();
 		//indices.clear();
@@ -38,15 +38,15 @@ namespace BJEngine
 		return true;
 	}
 
-	void CameraCone::Draw(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX projection,
+	void CameraCone::Draw(dx::XMMATRIX view, dx::XMMATRIX projection,
 																 float x , float y , float z, float ya, float pit, float FoV)
 	{
 		UINT stride = sizeof(CVertex);
 		UINT offset = 0;
-		pImmediateContext->IASetInputLayout(shader->GetInputLayout());
-		pImmediateContext->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
-		pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		GP::GetDeviceContext()->IASetInputLayout(shader->GetInputLayout());
+		GP::GetDeviceContext()->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
+		GP::GetDeviceContext()->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+		GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		world = dx::XMMatrixIdentity()  * dx::XMMatrixScaling(FoV, FoV, 1.0f)  * dx::XMMatrixRotationX(pit) * dx::XMMatrixRotationY(ya) * dx::XMMatrixTranslation(x, y, z);
 
@@ -54,16 +54,16 @@ namespace BJEngine
 		ConstantBuffer cb;
 		cb.WVP = dx::XMMatrixTranspose(world * view * projection);
 
-		pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
-		pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
+		GP::GetDeviceContext()->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
+		GP::GetDeviceContext()->VSSetConstantBuffers(0, 1, &pConstantBuffer);
 
-		Blend::Get()->DrawWireFrameCullState(pImmediateContext);
+		Blend::Get()->DrawWireFrameCullState();
 
-		pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
-		pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
-		pImmediateContext->DrawIndexed(indices.size(), 0, 0);
+		GP::GetDeviceContext()->VSSetShader(shader->GetVertexShader(), NULL, 0);
+		GP::GetDeviceContext()->PSSetShader(shader->GetPixelShader(), NULL, 0);
+		GP::GetDeviceContext()->DrawIndexed(indices.size(), 0, 0);
 
-		Blend::Get()->DrawCullNoneState(pImmediateContext);
+		Blend::Get()->DrawCullNoneState();
 	}
 
 	void CameraCone::Close()

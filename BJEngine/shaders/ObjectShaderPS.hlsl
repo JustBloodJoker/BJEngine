@@ -32,7 +32,7 @@ cbuffer Light : register(b0)
 {
     Light light[MAX_LIGHT_NUM];
     int countOfLights;
-	int pad;
+	float gamma;
 	int pad1;
 	int pad2;
 };
@@ -50,6 +50,17 @@ struct Materials
 	bool isEmissionTexture;
 	bool isSpecularTexture;
 	bool ishaveTransparency;
+};
+
+cbuffer WorldMatrixBuffer : register(b1)
+{
+    matrix WVP;
+    matrix world;
+    matrix cam;
+    matrix projection;
+    float4 lightpos;
+    matrix lview[MAX_LIGHT_NUM];
+    matrix lproj[MAX_LIGHT_NUM];
 };
 
 cbuffer MaterialBuffer : register(b2)
@@ -86,24 +97,27 @@ float CalculateShadowDepth(int index, float4 lightViewPosition)
 	
 	float lightDepthValue = lightViewPosition.z / lightViewPosition.w;
 
-	float shadow = (lightDepthValue - 0.0001 < shadowdepth) ? 1.0f : 0.0f;
+	float shadow = (lightDepthValue - 0.000001 < shadowdepth) ? 1.0f : 0.0f;
 	return shadow;
 }
 
 float CalculateCubeShadowDepth(int index, float4 lightpos, float4 inputWorldPos)
 {
+	
 	float3 lightDirection = lightpos.xyz - inputWorldPos.xyz;
-    float shadowdepth = shadowCubeLight1[index].Sample(SamplerStateClamp, -lightDirection ).r;
-
 	float depth = length(lightDirection);
+   
+	float shadowdepth = shadowCubeLight1[index].Sample(SamplerStateClamp, -lightDirection ).r;
+
 	float d = 1 - shadowdepth;
 	float le = 1 / d;
 
-	float shadow = (le > depth) ? 1.0f : 0.0f;
-
-	shadow = (d < 1/depth + 1 / depth - 0.00072) ? 1.0f : 0.0f;
+	float shadow = (d < 1 / depth + 1 / depth - 0.00072) ? 1.0f : 0.0f;
+	
+	return shadow;
 
 	return shadow;
+	
 }
 
 float4 CalculateDiffuse(Light lightT, float3 normals, float3 L)
@@ -113,13 +127,18 @@ float4 CalculateDiffuse(Light lightT, float3 normals, float3 L)
 
 float4 CalculateSpecular(Light lightT, float3 normals, float3 eye, float3 L)
 {
-	//idk is this working?)
 
-	float3 V = normalize(eye);
-	float3 R = reflect(L, normals);
-	return pow(dot(V,R), material.specularPower );
+	//BLINN PHONG
 
-	//nah not working
+	float3 halfwayDir = normalize(L + eye);  
+ 	float spec = pow(max(dot(normals, halfwayDir), 0.0), 16.0);
+
+	
+	// PHONG
+	//float3 reflectDir = reflect(-L, normals);
+    //float   spec = pow(max(dot(eye, reflectDir), 0.0), 8.0);
+
+	return float4(spec, spec, spec, spec);
 }
 
 
@@ -130,7 +149,7 @@ LightStructure DoDirectionalLight(Light DirLight, float3 inputNormals, float4 in
     float3 L = DirLight.dir.xyz;
 
     result.diffuse = CalculateDiffuse(DirLight, inputNormals, L) * depth;
-  //  result.specular = CalculateSpecular(DirLight, inputNormals, inputEyePos, L) * depth;
+    result.specular = CalculateSpecular(DirLight, inputNormals, inputEyePos, L) * depth;
 
     return result;
 }
@@ -221,6 +240,8 @@ LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
+
+
 	float4 finalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	float4 ObjectTexture = float4(1,1,1,1);	
 
@@ -228,9 +249,11 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 	{
 		ObjectTexture = Texture.Sample( SamplerStateWrap, input.texCoord );
 	}
-
 	
-		clip(ObjectTexture.a < 0.1f ? -1 : 1);
+	
+
+
+	clip(ObjectTexture.a < 0.1f ? -1 : 1);
 	
  	input.normal = normalize(input.normal);
 
@@ -241,6 +264,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 		float3x3 texSpace = float3x3(input.tangent, input.bitangent, input.normal);
 		input.normal = normalize(mul(normalMap, texSpace));
 	}
+
 	float roughness = 0.0f;
 	if(material.isRoughnessTexture)
 	{
@@ -248,12 +272,12 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 	}
 	
 	float4 emTex = {1.0f, 1.0f,1.0f,1.0f};
-	if(material.isEmissionTexture && pad)
+	if(material.isEmissionTexture)
 	{
 		emTex = EmissionTexture.Sample( SamplerStateWrap, input.texCoord );
 	}
 	float4 specTex = {0.0f, 0.0f, 0.0f, 1.0f};
-	if(material.isSpecularTexture && pad)
+	if(material.isSpecularTexture)
 	{
 		specTex = SpecularTexture.Sample( SamplerStateWrap, input.texCoord );
 	}
@@ -270,7 +294,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 	float4 ObjectColor = material.diffuse * LightColor.diffuse;
 	float4 ObjectAmbient = material.ambient * GlobalAmbient;
 	float4 ObjectEmissive = emTex * material.emissive;
-    float4 ObjectSpecular = specTex  * LightColor.specular;
+    float4 ObjectSpecular = LightColor.specular;
 
 	finalColor = saturate(ObjectEmissive +  ObjectAmbient + ObjectColor + ObjectSpecular) * ObjectTexture;
 	finalColor.w = ObjectTexture.a; 
@@ -279,6 +303,11 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 		finalColor.w *= material.diffuse.w;
 	}
 
+	/// FIX GAMMA
+
+		finalColor.xyz = pow(finalColor.xyz, float3(1.0/gamma,1.0/gamma,1.0/gamma));
 	
+	/////
+
 	return finalColor;
 }

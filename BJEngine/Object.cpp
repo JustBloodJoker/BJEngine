@@ -8,14 +8,12 @@ namespace BJEngine {
 
 		pVertexBuffer = nullptr;
 		pIndexBuffer = nullptr;
-		pConstantBuffer = nullptr;
 	}
 
 	Object::Object(float x, float y, float z)
 	{
 		pVertexBuffer = nullptr;
 		pIndexBuffer = nullptr;
-		pConstantBuffer = nullptr;
 	}
 
 	Object::~Object()
@@ -28,10 +26,12 @@ namespace BJEngine {
 		if (isInited)
 		{
 			CLOSE(script);
-			CLOSE(shader);
 			RELEASE(pVertexBuffer);
 			RELEASE(pIndexBuffer);
-			RELEASE(pConstantBuffer);
+			
+			for (auto& el : ConstantBuffers)
+				RELEASE(el);
+
 			isInited = false;
 
 			for (auto& material : materials)
@@ -42,44 +42,22 @@ namespace BJEngine {
 		}
 	}
 
-	void Object::Draw()
+	void Object::Draw(const CameraDesc cam)
 	{
-
 	}
+
 
 	bool Object::Init()
 	{
 		return true;
 	}
 
-	void Object::MinDraw()
+	void Object::MinDraw(dx::BoundingFrustum frustum)
 	{
 	}
 
-	void Object::SetCamera(Camera*& cam)
-	{
-		this->cam = cam;
-	}
 
-	void Object::SetShader(Shader*& shader)
-	{
-		this->shader = shader;
-	}
-
-	void Object::SetTexture(Textures* texture)
-	{
-		this->texture = texture; hastext = true;
-	}
-
-	void Object::SetDevice(ID3D11Device*& pd3dDevice)
-	{
-		this->pd3dDevice = pd3dDevice;
-	}
-
-	void Object::SetDeviceContext(ID3D11DeviceContext*& pImmediateContext)
-	{
-		this->pImmediateContext = pImmediateContext;
-	}
+	
 
 	void Object::SetLightViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projecion, int index)
 	{

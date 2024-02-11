@@ -1,10 +1,12 @@
 #pragma once 
 #include "pch.h"
 #include "Textures.h"
+#include "RenderTarget.h"
+#include "Object.h"
 
 namespace BJEngine
 {
-	enum
+	enum MATERIAL_TYPE
 	{
 		AMBIENT,
 		DIFFUSE,
@@ -15,37 +17,55 @@ namespace BJEngine
 		HAS_NORMAL_TEXTURE,
 		HAS_ROUGHNESS_TEXTURE,
 		HAS_EMISSION_TEXTURE,
-		HAS_SPECULAR_TEXTURE
+		HAS_SPECULAR_TEXTURE,
+		HAS_REFLECTION
 	};
 
-
+	class Object;
+	class Element;
 
 	class Materials
 	{
 
+		static std::vector<BJEngine::Object*>* objects;
 
 	public:
 
-		Materials(ID3D11Device* pd3dDevice);
+		static void SetObjectPtr(std::vector<BJEngine::Object*>* obj)
+		{
+			Materials::objects = obj;
+		};
 
-		void SetParam(short paramType, dx::XMFLOAT4 param);
-		void SetParam(short paramType, float param);
+		Materials();
 
-		void SetTexture(short textureType, std::wstring textureName, ID3D11Device* pd3dDevice);
-		void SetTexture(short textureType, Textures* texture, ID3D11Device* pd3dDevice);
+		void SetParam(MATERIAL_TYPE paramType, dx::XMFLOAT4 param);
+		void SetParam(MATERIAL_TYPE paramType, float param);
 
-		void Draw(ID3D11DeviceContext* pImmediateContext, int registerMaterialPos);
+		void SetTexture(MATERIAL_TYPE textureType, std::wstring textureName);
+		void SetTexture(MATERIAL_TYPE textureType, Textures* texture);
+
+		void Draw(int registerMaterialPos);
+		void Draw(int registerMaterialPos, Element* elem);
 
 		void Close();
+
 	private:
 
-		void Init(ID3D11Device* pd3dDevice);
+		UINT sizeViewPorts = 1;
+		CD3D11_VIEWPORT curr_vp;
+		static CD3D11_VIEWPORT reflect_vp;
+
+		void Init();
+
+		void GenerateReflectionTexture(dx::XMFLOAT3 pos);
 
 		Textures* texture;
 		Textures* normalTexture;
 		Textures* roughnessTexture;
 		Textures* emissionTexture;
 		Textures* specularTexture;
+		
+		bool isReflect;
 
 		struct MaterialDesc
 		{

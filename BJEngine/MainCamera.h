@@ -12,10 +12,9 @@ namespace BJEngine
     public:
 
         MainCamera();
-       // void Close() override;
 
 
-        void DrawCameraObject(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX proj) override;
+        void DrawCameraObject(dx::XMMATRIX view, dx::XMMATRIX proj) override;
         void DrawCameraObject() override;
 
     protected:

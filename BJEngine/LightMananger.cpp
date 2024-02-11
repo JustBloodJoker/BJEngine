@@ -8,15 +8,12 @@ namespace BJEngine
 	LightMananger::ConstantBufferLight LightMananger::lightDescBuffer;
 	Shadow* LightMananger::shadows[MAX_LIGHT_NUM] = { nullptr };
 
-	ID3D11Device* LightMananger::pd3dDevice = nullptr;
-
-	bool LightMananger::Init(ID3D11Device* pd3dDevice)
+	bool LightMananger::Init()
 	{
 		
 		if (!isInited)
 		{
-			LightMananger::pd3dDevice = pd3dDevice;
-			lightBuffer = Helper::InitConstantBuffer<ConstantBufferLight>(pd3dDevice);
+			lightBuffer = Helper::InitConstantBuffer<ConstantBufferLight>(GP::GetDevice());
 			if (lightBuffer == nullptr) {
 				Log::Get()->Err("light create error");
 				return FAILED(E_FAIL);
@@ -37,7 +34,7 @@ namespace BJEngine
 		}
 		lightDescBuffer.light[lightDescBuffer.lightsCount] = desc;
 		shadows[lightDescBuffer.lightsCount] = new Shadow();
-		shadows[lightDescBuffer.lightsCount]->InitShadow(pd3dDevice, desc.lightType);
+		shadows[lightDescBuffer.lightsCount]->InitShadow(desc.lightType);
 
 
 		lightDescBuffer.lightsCount++;
@@ -47,25 +44,17 @@ namespace BJEngine
 		return true;
 	}
 	
-	bool LightMananger::Draw(ID3D11DeviceContext* pImmediateContext)
+	bool LightMananger::Draw()
 	{
-		ImGui::Begin("ddd");
-
-		static bool fd = true;
-		ImGui::Checkbox("ddd", &fd);
-		lightDescBuffer.pad = fd;
-
-		ImGui::End();
-
-		pImmediateContext->UpdateSubresource(lightBuffer, 0, NULL, &lightDescBuffer, 0, 0);
-		pImmediateContext->PSSetConstantBuffers(0, 1, &lightBuffer); 
+		GP::GetDeviceContext()->UpdateSubresource(lightBuffer, 0, NULL, &lightDescBuffer, 0, 0);
+		GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &lightBuffer); 
 
 		for (int index = 0; index < lightDescBuffer.lightsCount; index++)
 		{
 			if (LightMananger::GetType(index) == BJEUtils::POINTLIGHT)
-				pImmediateContext->PSSetShaderResources(5 + index, 1, shadows[index]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(5 + index, 1, shadows[index]->GetTexture());
 			else
-				pImmediateContext->PSSetShaderResources(5 + index + MAX_LIGHT_NUM, 1, shadows[index]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(5 + index + MAX_LIGHT_NUM, 1, shadows[index]->GetTexture());
 		}
 
 		if (PackMananger::Get()->GetSavingStatus())
@@ -76,12 +65,12 @@ namespace BJEngine
 		return true;
 	}
 
-	bool LightMananger::DrawShadows(ID3D11DeviceContext* pImmediateContext, std::vector<Object*> objects)
+	bool LightMananger::DrawShadows(std::vector<Object*> objects)
 	{
 
 		for (size_t index = 0; index < lightDescBuffer.lightsCount; index++)
 		{
-			shadows[index]->Render(pImmediateContext, LightMananger::GetDesc(index), objects);
+			shadows[index]->Render(LightMananger::GetDesc(index), objects);
 		}
 
 
@@ -111,6 +100,10 @@ namespace BJEngine
 	void LightMananger::Close()
 	{
 		RELEASE(lightBuffer);
+		for (size_t index = 0; index < MAX_LIGHT_NUM; index++)
+		{
+			CLOSE(shadows[index]);
+		}
 	}
 
 	bool LightMananger::PackLights()

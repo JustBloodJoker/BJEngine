@@ -4,6 +4,9 @@
 
 namespace BJEUtils 
 {
+
+
+
 #define DIFFUSE_TEXTURE_POS      0
 #define NORMAL_TEXTURE_POS       1
 #define ROUGHNESS_TEXTURE_POS    2
@@ -105,6 +108,29 @@ namespace BJEUtils
 #define UI_TEXTURES_ADDSPHEREBUTTON     4
 #define UI_TEXTURES_ADDCONEBUTTON       5
 #define UI_TEXTURES_ADDCUBEBUTTON       6 
+
+	enum POST_PROCESSING
+	{
+		SCENE,
+		INVERSION,
+		GREY,
+		SHARPNESS,
+		SIMPLE_BLUR,
+		BOUNDARY_DELINEATION,
+
+	};
+
+
+#define RTV_VS_SHADER L"shaders\\mainrtvVS.hlsl"
+#define MAIN_RTV_SHADER L"shaders\\mainrtvPS.hlsl"
+#define SCENE_RTV_SHADER L""
+
+#define INVERSE_RTV_SHADER L"shaders\\inversertvPS.hlsl"
+#define GREY_RTV_SHADER L"shaders\\greyrtvPS.hlsl"
+#define SHARPNESS_RTV_SHADER L"shaders\\sharpnessrtvPS.hlsl"
+#define SIMPLE_BLUR_RTV_SHADER L"shaders\\simpleblurrtvPS.hlsl"
+#define BOUNDARY_DELINEATION_RTV_SHADER L"shaders\\boundarydelineationrtvPS.hlsl"
+	
 
 }
 

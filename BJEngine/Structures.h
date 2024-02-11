@@ -44,5 +44,30 @@ namespace BJEStruct
         dx::XMFLOAT2 texCoord;
     };
 
+
+    struct WVPConstantBuffer
+    {
+        dx::XMMATRIX WVP;
+    };
+
+    struct VertexConstantBuffer
+    {
+        dx::XMMATRIX WVP;
+        dx::XMMATRIX World;
+        dx::XMMATRIX ViewMatrix;
+        dx::XMMATRIX projectionMatrix;
+        dx::XMFLOAT4 pos;
+        dx::XMMATRIX lView[5];
+        dx::XMMATRIX lProj[5];
+    };
+
+    struct GeometryConstantBuffer
+    {
+        float time;
+        int explode;
+        int pad;
+        int pad2;
+    };
+
 }
 

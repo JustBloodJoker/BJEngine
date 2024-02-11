@@ -6,7 +6,7 @@ BJEngine::MainCamera::MainCamera()
 	moveCamera = true;
 }
 
-void BJEngine::MainCamera::DrawCameraObject(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX proj)
+void BJEngine::MainCamera::DrawCameraObject(dx::XMMATRIX view, dx::XMMATRIX proj)
 {
 
 }

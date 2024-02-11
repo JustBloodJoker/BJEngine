@@ -9,23 +9,23 @@ namespace BJEngine
 	{
 	public:
 
-		Blend(ID3D11Device* pd3dDevice);
+		Blend();
 		~Blend();
 
 		static Blend* Get() { return instance; };
 
-		void InitBlendStates(ID3D11Device* pd3dDevice);
+		void InitBlendStates();
 
-		void DrawCullNoneState(ID3D11DeviceContext* pImmediateContext);
-		void DrawCullFrontState(ID3D11DeviceContext* pImmediateContext);
-		void DrawCullBackState(ID3D11DeviceContext* pImmediateContext);
-		void DrawWireFrameCullState(ID3D11DeviceContext* pImmediateContext);
-		void DrawCullStateFront(ID3D11DeviceContext* pImmediateContext);
-		void DrawCullStateClockFalse(ID3D11DeviceContext* pImmediateContext);
+		void DrawCullNoneState();
+		void DrawCullFrontState();
+		void DrawCullBackState();
+		void DrawWireFrameCullState();
+		void DrawCullStateFront();
+		void DrawCullStateClockFalse();
 
-		void DrawAlphaBlend(ID3D11DeviceContext* pImmediateContext);
-		void DrawNoBlend(ID3D11DeviceContext* pImmediateContext);
-		void DrawTransparencyBlend(ID3D11DeviceContext* pImmediateContext);
+		void DrawAlphaBlend();
+		void DrawNoBlend();
+		void DrawTransparencyBlend();
 
 
 		void Close();

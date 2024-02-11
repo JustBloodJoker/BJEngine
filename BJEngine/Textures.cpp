@@ -36,11 +36,11 @@ namespace BJEngine {
 		RELEASE(Texture);
 	}
 
-	bool Textures::InitTextures(ID3D11Device* device)
+	bool Textures::InitTextures()
 	{
 		HRESULT hr = S_OK;
 
-		hr = D3DX11CreateShaderResourceViewFromFile(device, TextureName.c_str(),
+		hr = D3DX11CreateShaderResourceViewFromFile(GP::GetDevice(), TextureName.c_str(),
 			NULL, NULL, &Texture, NULL);
 
 		if (FAILED(hr)) {
@@ -50,7 +50,7 @@ namespace BJEngine {
 
 		if (deletedStatic)
 		{
-			Textures::InitStates(device);
+			Textures::InitStates();
 		}
 
 		return false;
@@ -58,13 +58,13 @@ namespace BJEngine {
 
 	}
 
-	bool Textures::InitCubeMap(ID3D11Device* device)
+	bool Textures::InitCubeMap()
 	{
 		D3DX11_IMAGE_LOAD_INFO loadInfo;
 		loadInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
 		ID3D11Texture2D* TTexture = 0;
-		HRESULT hr = D3DX11CreateTextureFromFile(device, TextureName.c_str(),
+		HRESULT hr = D3DX11CreateTextureFromFile(GP::GetDevice(), TextureName.c_str(),
 			&loadInfo, 0, (ID3D11Resource**)&TTexture, 0);
 
 		if (FAILED(hr)) {
@@ -81,7 +81,7 @@ namespace BJEngine {
 		SMViewDesc.TextureCube.MipLevels = TextureDesc.MipLevels;
 		SMViewDesc.TextureCube.MostDetailedMip = 0;
 
-		hr = device->CreateShaderResourceView(TTexture, &SMViewDesc, &Texture);
+		hr = GP::GetDevice()->CreateShaderResourceView(TTexture, &SMViewDesc, &Texture);
 		if (FAILED(hr)) {
 			Log::Get()->Err("CreateShaderResourseView error");
 			return true;
@@ -89,17 +89,18 @@ namespace BJEngine {
 
 		if (deletedStatic)
 		{
-			Textures::InitStates(device);
+			Textures::InitStates();
 		}
 
 		return false;
 	}
 
-	bool Textures::InitStates(ID3D11Device* pd3dDevice)
+	bool Textures::InitStates()
 	{
 		HRESULT hr = S_OK;
 
-
+		RELEASE(BorderState);
+		RELEASE(WrapState);
 
 		D3D11_SAMPLER_DESC sampDesc;
 		ZeroMemory(&sampDesc, sizeof(sampDesc));
@@ -113,7 +114,7 @@ namespace BJEngine {
 		sampDesc.MinLOD = 0;
 		sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-		hr = pd3dDevice->CreateSamplerState(&sampDesc, &WrapState);
+		hr = GP::GetDevice()->CreateSamplerState(&sampDesc, &WrapState);
 		if (FAILED(hr)) {
 			Log::Get()->Err("CreateSamplerState error");
 			return true;
@@ -134,7 +135,7 @@ namespace BJEngine {
 		sampDesc.MaxAnisotropy = D3D11_DEFAULT_MAX_ANISOTROPY;
 		sampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 		sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-		pd3dDevice->CreateSamplerState(
+		GP::GetDevice()->CreateSamplerState(
 			&sampDesc,
 			&BorderState
 		);

@@ -1,7 +1,9 @@
 #include "Model.h"
 #include "UI.h"
 
-namespace BJEngine {
+namespace BJEngine 
+{
+
 
 	Model::Model()
 	{
@@ -26,26 +28,13 @@ namespace BJEngine {
 
 		HRESULT hr = S_OK;
 
-		D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,  0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,     0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,  0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{ "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT,  0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{ "BITANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT,  0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0}
-		};
-		if (shader == nullptr)
-		{
-			shader = new BJEngine::Shader(L"shaders\\ObjectShaderPS.hlsl", L"shaders\\ObjectShaderVS.hlsl", "VS", "PS");
-		}
-
-		shader->SetInputLayout(layout, ARRAYSIZE(layout));
-		shader->Init(pd3dDevice);
-
-		pConstantBuffer = Helper::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
+		
+		ConstantBuffers.push_back(Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice()));
+		ConstantBuffers.push_back(Helper::InitConstantBuffer<BJEStruct::WVPConstantBuffer>(GP::GetDevice()));
 
 		for (auto& el : elements)
 		{
-			el->Init(pd3dDevice, pConstantBuffer);
+			el->Init(&ConstantBuffers);
 		}
 
 		
@@ -54,7 +43,6 @@ namespace BJEngine {
 		pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
 
 		world = rotation * scale * pos;
-		outLine = dx::XMMatrixScaling(1.05f, 1.05f, 1.05f) + rotation * scale * pos ;
 
 		Log::Get()->Debug("Model was inited");
 		isInited = true;
@@ -64,59 +52,47 @@ namespace BJEngine {
 
 		UI::AddModelToList(this);
 
+
+		
 		return true;
 	}
 
-	void Model::Draw()
+	void Model::Draw(const CameraDesc cam)
 	{
-		UINT stride = sizeof(BJEStruct::ModelVertex);
-		UINT offset = 0;
-
-		ImGui::Begin(filename.c_str());
-
-		ImGui::Text("Set script");
-		ImGui::InputText(" ", buffer, 100);
-		if (ImGui::Button("Set"))
-		{
-			script->ParseScript(buffer);
-		};
 		
-		if(!isSimulate)
-			isSimulate = ImGui::Button("Start Script");
 
-		if (isSimulate)
-		{
-			if (!returned)
-			{
-				bworld = world;
-				returned = true;
-			}
-			world *= script->DrawScript();
-			
-			isSimulate = !ImGui::Button("Stop Script");
-		}
-		else if(returned)
-		{
-			returned = false;
-			world = bworld;
-			script->ResetParameters();
-		}
-
-		ImGui::End();
+		//ImGui::Begin(filename.c_str());
+		//ImGui::Text("Set script");
+		//ImGui::InputText(" ", buffer, 100);
+		//if (ImGui::Button("Set"))
+		//{
+		//	script->ParseScript(buffer);
+		//};
+		//
+		//if(!isSimulate)
+		//	isSimulate = ImGui::Button("Start Script");
+		//if (isSimulate)
+		//{
+		//	if (!returned)
+		//	{
+		//		bworld = world;
+		//		returned = true;
+		//	}
+		//	world *= script->DrawScript();
+		//	
+		//	isSimulate = !ImGui::Button("Stop Script");
+		//}
+		//else if(returned)
+		//{
+		//	returned = false;
+		//	world = bworld;
+		//	script->ResetParameters();
+		//}
+		//ImGui::End();
 
 		for (auto& el : elements)
-		{
-			objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(el->GetMaxLocal(), world),
-				dx::XMVector3Transform(el->GetMinLocal(), world)
-			);
-			
-			if (cam->GetFrustum().Intersects(objectBox) || cam->GetFrustum().Contains(objectBox))
-			{
-				pImmediateContext->IASetInputLayout(shader->GetInputLayout());
-				pImmediateContext->VSSetShader(shader->GetVertexShader(), NULL, 0);
-				pImmediateContext->PSSetShader(shader->GetPixelShader(), NULL, 0);
-				el->Draw(pImmediateContext, &stride, &offset, world, outLine, cam->GetViewMatrix(), cam->GetProjectionMatrix(), lView, lProjection);
-			}
+		{	
+			el->Draw(cam, lView, lProjection);
 		}
 
 		if (PackMananger::Get()->GetSavingStatus())
@@ -130,7 +106,6 @@ namespace BJEngine {
 
 			delete tpe;
 		}
-
 	}
 
 	void Model::Close()
@@ -139,16 +114,11 @@ namespace BJEngine {
 		materials.clear();
 	}
 
-	void Model::MinDraw()
+	void Model::MinDraw(dx::BoundingFrustum frustum)
 	{
-		UINT stride = sizeof(BJEStruct::ModelVertex);
-		UINT offset = 0;
-
-		pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 		for (auto& el : elements)
 		{
-			el->MinDraw(pImmediateContext, &stride, &offset);
+			el->MinDraw(frustum);
 		}
 	}
 
@@ -160,6 +130,9 @@ namespace BJEngine {
 
 	bool Model::LoadModel()
 	{
+		const aiScene* scene = nullptr;
+		Assimp::Importer importer;
+		
 		scene = importer.ReadFile(filename,
 			aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
 		if (!scene)
@@ -167,7 +140,7 @@ namespace BJEngine {
 
 		for (int i = 0; i < scene->mNumMaterials; i++)
 		{
-			materials.push_back(new Materials(pd3dDevice));
+			materials.push_back(new Materials());
 
 			aiColor3D tColor = { 0.0f,0.0f,0.0f };
 
@@ -200,14 +173,14 @@ namespace BJEngine {
 
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
 
 			scene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &pathname);
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_NORMAL_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_NORMAL_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
 
@@ -215,28 +188,31 @@ namespace BJEngine {
 			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS, 0, &pathname);
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_ROUGHNESS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_ROUGHNESS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
 			
 			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_EMISSIVE, 0, &pathname);
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_EMISSION_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_EMISSION_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
 
 			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_SPECULAR, 0, &pathname);
 			if (pathname.length != 0)
 			{
-				materials[i]->SetTexture(HAS_SPECULAR_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname), pd3dDevice);
+				materials[i]->SetTexture(HAS_SPECULAR_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
+
 
 		}
 
 		dx::XMFLOAT3 minExtent;
 		dx::XMFLOAT3 maxExtent;
+
+		int numofIndex = 0;
 
 		for (int i = 0; i < scene->mNumMeshes; i++)
 		{
@@ -296,26 +272,17 @@ namespace BJEngine {
 				ind.push_back(mesh->mFaces[j].mIndices[0]);
 				ind.push_back(mesh->mFaces[j].mIndices[1]);
 				ind.push_back(mesh->mFaces[j].mIndices[2]);
+
+				numofIndex += 3;
 			}
 
-			elements.push_back(new Element(ver, ind, materials[mesh->mMaterialIndex], min, max, pd3dDevice));
+			elements.push_back(new Element(ver, ind, materials[mesh->mMaterialIndex], min, max));
 			ver.clear();
 			ind.clear();
 		}
-		return true;
-	}
-
-
-	bool Model::InitAnimation()
-	{
-
-
-
-
 
 		return true;
 	}
-
 
 
 }

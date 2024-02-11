@@ -5,12 +5,12 @@ namespace BJEngine
 
 	Blend* Blend::instance = nullptr;
 
-	Blend::Blend(ID3D11Device* pd3dDevice)
+	Blend::Blend()
 	{
 		if (!instance)
 		{
 			instance = this;
-			InitBlendStates(pd3dDevice);
+			InitBlendStates();
 		}
 		else
 			Log::Get()->Err("Blends was created");
@@ -21,7 +21,7 @@ namespace BJEngine
 		
 	}
 
-	void Blend::InitBlendStates(ID3D11Device* pd3dDevice)
+	void Blend::InitBlendStates()
 	{
 		HRESULT hr = S_OK;
 
@@ -29,7 +29,7 @@ namespace BJEngine
 		cmdesc.FillMode = D3D11_FILL_SOLID;
 		cmdesc.FrontCounterClockwise = true;
 		cmdesc.CullMode = D3D11_CULL_BACK;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullBack);
+		hr = GP::GetDevice()->CreateRasterizerState(&cmdesc, &renStateCullBack);
 		isInitedCullBackState = true;
 
 		if (FAILED(hr))
@@ -42,7 +42,7 @@ namespace BJEngine
 		cmdesc.FillMode = D3D11_FILL_SOLID;
 		cmdesc.FrontCounterClockwise = true;
 		cmdesc.CullMode = D3D11_CULL_FRONT;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullFront);
+		hr = GP::GetDevice()->CreateRasterizerState(&cmdesc, &renStateCullFront);
 		isInitedCullFrontState = true;
 
 		if (FAILED(hr))
@@ -55,7 +55,7 @@ namespace BJEngine
 		cmdesc.FillMode = D3D11_FILL_SOLID;
 		cmdesc.FrontCounterClockwise = true;
 		cmdesc.CullMode = D3D11_CULL_NONE;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullNone);
+		hr = GP::GetDevice()->CreateRasterizerState(&cmdesc, &renStateCullNone);
 		isInitedCullNoneState = true;
 		
 		if (FAILED(hr))
@@ -65,7 +65,7 @@ namespace BJEngine
 		}
 
 		cmdesc.FillMode = D3D11_FILL_WIREFRAME;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateWireFrameCullNone);
+		hr = GP::GetDevice()->CreateRasterizerState(&cmdesc, &renStateWireFrameCullNone);
 		isInitedCullWireFrameState = true;
 		cmdesc.FillMode = D3D11_FILL_SOLID;
 
@@ -76,7 +76,7 @@ namespace BJEngine
 		}
 
 		cmdesc.FrontCounterClockwise = false;
-		hr = pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullNoneClockFalse);
+		hr = GP::GetDevice()->CreateRasterizerState(&cmdesc, &renStateCullNoneClockFalse);
 		isInitedCullStateClockFalse = true;
 
 		if (FAILED(hr))
@@ -96,7 +96,7 @@ namespace BJEngine
 		omDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 		isInitedAlphaBlending = true;
-		if (FAILED(pd3dDevice->CreateBlendState(&omDesc, &alphaBlendState)))
+		if (FAILED(GP::GetDevice()->CreateBlendState(&omDesc, &alphaBlendState)))
 		{
 			Log::Get()->Err("Blend Create Error");
 			isInitedAlphaBlending = false;
@@ -108,7 +108,7 @@ namespace BJEngine
 		
 
 		isInitedAlphaBlending = true;
-		if (FAILED(pd3dDevice->CreateBlendState(&omDesc, &noBlendState)))
+		if (FAILED(GP::GetDevice()->CreateBlendState(&omDesc, &noBlendState)))
 		{
 			Log::Get()->Err("Blend Create Error");
 			isInitedAlphaBlending = false;
@@ -127,7 +127,7 @@ namespace BJEngine
 		omDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		
 		isInitedTransparencyBlending = true;
-		if (FAILED(pd3dDevice->CreateBlendState(&omDesc, &transparencyBlendState)))
+		if (FAILED(GP::GetDevice()->CreateBlendState(&omDesc, &transparencyBlendState)))
 		{
 			Log::Get()->Err("Blend Create Error");
 			isInitedTransparencyBlending = false;
@@ -139,7 +139,7 @@ namespace BJEngine
 		cmdesc.DepthClipEnable = true;
 
 		isInitedShadowState = true;
-		if (FAILED(pd3dDevice->CreateRasterizerState(&cmdesc, &renStateCullShadow)))
+		if (FAILED(GP::GetDevice()->CreateRasterizerState(&cmdesc, &renStateCullShadow)))
 		{
 			Log::Get()->Err("Blend Create Error");
 			isInitedShadowState = false;
@@ -147,58 +147,58 @@ namespace BJEngine
 
 	}
 
-	void Blend::DrawCullNoneState(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawCullNoneState()
 	{
 		if (isInitedCullNoneState)
-			pImmediateContext->RSSetState(renStateCullNone);
+			GP::GetDeviceContext()->RSSetState(renStateCullNone);
 	}
 
-	void Blend::DrawCullFrontState(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawCullFrontState()
 	{
 		if (isInitedCullFrontState)
-			pImmediateContext->RSSetState(renStateCullFront);
+			GP::GetDeviceContext()->RSSetState(renStateCullFront);
 	}
 
-	void Blend::DrawCullBackState(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawCullBackState()
 	{
 		if (isInitedCullBackState)
-			pImmediateContext->RSSetState(renStateCullBack);
+			GP::GetDeviceContext()->RSSetState(renStateCullBack);
 	}
 
-	void Blend::DrawWireFrameCullState(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawWireFrameCullState( )
 	{
 		if (isInitedCullWireFrameState)
-			pImmediateContext->RSSetState(renStateWireFrameCullNone);
+			GP::GetDeviceContext()->RSSetState(renStateWireFrameCullNone);
 	}
 
-	void Blend::DrawCullStateFront(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawCullStateFront( )
 	{
 		if (isInitedShadowState)
-			pImmediateContext->RSSetState(renStateCullShadow);
+			GP::GetDeviceContext()->RSSetState(renStateCullShadow);
 	}
 
-	void Blend::DrawCullStateClockFalse(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawCullStateClockFalse( )
 	{
 		if (isInitedCullStateClockFalse)
-			pImmediateContext->RSSetState(renStateCullNoneClockFalse);
+			GP::GetDeviceContext()->RSSetState(renStateCullNoneClockFalse);
 	}
 
-	void Blend::DrawAlphaBlend(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawAlphaBlend( )
 	{
 		if (isInitedAlphaBlending)
-			pImmediateContext->OMSetBlendState(alphaBlendState, 0, 0xffffffff);
+			GP::GetDeviceContext()->OMSetBlendState(alphaBlendState, 0, 0xffffffff);
 	}
 
-	void Blend::DrawNoBlend(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawNoBlend( )
 	{
 		if (isInitedAlphaBlending)
-			pImmediateContext->OMSetBlendState(noBlendState, 0, 0xffffffff);
+			GP::GetDeviceContext()->OMSetBlendState(noBlendState, 0, 0xffffffff);
 	}
 
-	void Blend::DrawTransparencyBlend(ID3D11DeviceContext* pImmediateContext)
+	void Blend::DrawTransparencyBlend( )
 	{
 		if (isInitedTransparencyBlending)
-			pImmediateContext->OMSetBlendState(transparencyBlendState, 0, 0xffffffff);
+			GP::GetDeviceContext()->OMSetBlendState(transparencyBlendState, 0, 0xffffffff);
 	}
 
 	void Blend::Close()

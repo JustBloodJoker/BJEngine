@@ -11,10 +11,10 @@ namespace BJEngine
 		struct CVertex;
 		struct ConstantBuffer;
 	public:
-		CameraCone(ID3D11Device* pd3dDevice);
+		CameraCone();
 
-		bool Init(ID3D11Device* pd3dDevice);
-		void Draw(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX projection, float x, float y, float z, float ya, float pit, float FoV);
+		bool Init();
+		void Draw(dx::XMMATRIX view, dx::XMMATRIX projection, float x, float y, float z, float ya, float pit, float FoV);
 		void Close();
 
 	private:
@@ -42,19 +42,11 @@ namespace BJEngine
 		
 		std::vector<CVertex> vertices =
 		{
-			CVertex(-BJEUtils::GetWindowWidth() / (20 * M_PI / 2),  -BJEUtils::GetWindowHeight() / (20 * M_PI / 2),   0.0f),
-			CVertex( BJEUtils::GetWindowWidth() / (20 * M_PI / 2),  -BJEUtils::GetWindowHeight() / (20 * M_PI / 2),   0.0f),
-			CVertex( BJEUtils::GetWindowWidth() / (20 * M_PI / 2),   BJEUtils::GetWindowHeight() / (20 * M_PI / 2),   0.0f),
-			CVertex(-BJEUtils::GetWindowWidth() / (20 * M_PI / 2),   BJEUtils::GetWindowHeight() / (20 * M_PI / 2),   0.0f),
-			CVertex( 0.0f,   0.0f,  -BJEUtils::GetWindowHeight() / 20)
-		
-
-				/*CVertex(-50.0f, -50.0f, 0.0f),
-				CVertex(50.0f, -50.0f, 0.0f),
-				CVertex(50.0f, 50.0f, 0.0f),
-				CVertex(-50.0f, 50.0f, 0.0f),
-				CVertex(0.0f, 0.0f, -50.0f)*/
-
+			CVertex( 1920.0f / (20 * M_PI / 2),  -1080.0f / (20 * M_PI / 2),   0.0f),
+			CVertex( 1920.0f / (20 * M_PI / 2),  -1080.0f / (20 * M_PI / 2),   0.0f),
+			CVertex( 1920.0f / (20 * M_PI / 2),   1080.0f / (20 * M_PI / 2),   0.0f),
+			CVertex(-1920.0f / (20 * M_PI / 2),   1080.0f / (20 * M_PI / 2),   0.0f),
+			CVertex( 0.0f,   0.0f,  -1080.0f / 20)
 		};
 	
 		std::vector<WORD> indices = 

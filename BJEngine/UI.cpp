@@ -5,7 +5,6 @@
 
 namespace BJEngine
 {
-    ID3D11Device* UI::pd3dDevice = nullptr;
     Render* UI::render = nullptr;
 
     bool UI::ISINIT = false;
@@ -33,7 +32,7 @@ namespace BJEngine
     bool  UI::addModel      = false;
     bool  UI::addSkyBox     = false;
     bool  UI::addSound      = false;
-
+    bool  UI::isPostP       = false;
 
     ImVector<int> UI::LineOffsets;
     ImGuiTextBuffer UI::buff;
@@ -57,19 +56,20 @@ namespace BJEngine
     std::vector<Textures*> UI::textures_UI;
     int UI::currLightAddItem = 0;
 
-    bool UI::Init(const HWND& hwnd, ID3D11Device* pd3dDevice,ID3D11DeviceContext* pImmediateContext, 
+    std::unordered_map<BJEUtils::POST_PROCESSING, bool> UI::postProcessingBools;
+
+    bool UI::Init(const HWND& hwnd, 
         std::vector<BJEngine::Camera*>& pCams, Render* render)
     {
-        UI::pd3dDevice = pd3dDevice;
         UI::render = render;
 
-        InitSomeTextureForGUI(pd3dDevice);
+        InitSomeTextureForGUI();
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         io = ImGui::GetIO();
         ImGui_ImplWin32_Init(hwnd);
-        ImGui_ImplDX11_Init(pd3dDevice, pImmediateContext);
+        ImGui_ImplDX11_Init(GP::GetDevice(), GP::GetDeviceContext());
         ImGui::StyleColorsDark();
         
         camera = &pCams;
@@ -141,7 +141,6 @@ namespace BJEngine
         }
         textures_UI.clear();
         render = nullptr;
-        pd3dDevice = nullptr;
     }
 
     bool UI::IsInit()
@@ -169,6 +168,11 @@ namespace BJEngine
         namesModels += models[models.size() - 1]->filename + end;
         
         return true;
+    }
+
+    std::unordered_map<BJEUtils::POST_PROCESSING, bool>& UI::GetPostProcessingStatus() noexcept
+    {
+        return postProcessingBools;
     }
 
     bool UI::ParseBooleans()
@@ -295,27 +299,27 @@ namespace BJEngine
         return true;
     }
 
-    bool UI::InitSomeTextureForGUI(ID3D11Device* pd3dDevice)
+    bool UI::InitSomeTextureForGUI()
     {
         textures_UI.resize(8);
 
         textures_UI[UI_TEXTURES_ADDBUTTON] = new Textures(UI_TEXTURE_ADDELEMENT_PATH);
-        textures_UI[UI_TEXTURES_ADDBUTTON]->InitTextures(pd3dDevice);
+        textures_UI[UI_TEXTURES_ADDBUTTON]->InitTextures();
 
         textures_UI[UI_TEXTURES_ADDLIGHTBUTTON] = new Textures(UI_TEXTURE_LAMP_PATH);
-        textures_UI[UI_TEXTURES_ADDLIGHTBUTTON]->InitTextures(pd3dDevice);
+        textures_UI[UI_TEXTURES_ADDLIGHTBUTTON]->InitTextures();
 
         textures_UI[UI_TEXTURES_ADDCAMERABUTTON] = new Textures(UI_TEXTURE_CAMERA_PATH);
-        textures_UI[UI_TEXTURES_ADDCAMERABUTTON]->InitTextures(pd3dDevice);
+        textures_UI[UI_TEXTURES_ADDCAMERABUTTON]->InitTextures();
 
         textures_UI[UI_TEXTURES_ADDMODELBUTTON] = new Textures(UI_TEXTURE_MODEL_PATH);
-        textures_UI[UI_TEXTURES_ADDMODELBUTTON]->InitTextures(pd3dDevice);
+        textures_UI[UI_TEXTURES_ADDMODELBUTTON]->InitTextures();
 
         textures_UI[UI_TEXTURES_ADDSKYBOXBUTTON] = new Textures(UI_TEXTURE_SKYBOX_PATH);
-        textures_UI[UI_TEXTURES_ADDSKYBOXBUTTON]->InitTextures(pd3dDevice);
+        textures_UI[UI_TEXTURES_ADDSKYBOXBUTTON]->InitTextures();
 
         textures_UI[UI_TEXTURES_ADDSOUNDBUTTON] = new Textures(UI_TEXTURE_SOUND_PATH);
-        textures_UI[UI_TEXTURES_ADDSOUNDBUTTON]->InitTextures(pd3dDevice);
+        textures_UI[UI_TEXTURES_ADDSOUNDBUTTON]->InitTextures();
 
 
         return false;
@@ -465,18 +469,26 @@ namespace BJEngine
                     {
                         islight = false;
                         iscam = false;
+                        isPostP = false;
                     }
                     if (ImGui::MenuItem("Lights", NULL, &islight))
                     {
                         ismodel = false;
                         iscam = false;
+                        isPostP = false;
                     }
                     if (ImGui::MenuItem("Camera", NULL, &iscam))
                     {
                         ismodel = false;
                         islight = false;
+                        isPostP = false;
                     }
-
+                    if (ImGui::MenuItem("Globals", NULL, &isPostP))
+                    {
+                        iscam = false;
+                        ismodel = false;
+                        islight = false;
+                    }
                         
                     
                     ImGui::EndMenuBar();
@@ -492,7 +504,11 @@ namespace BJEngine
                 }
                 else if (islight)
                 {
-                    Light();
+                    UI::Light();
+                }
+                else if (isPostP)
+                {
+                    UI::PostProcessing();
                 }
                 else
                 {
@@ -575,7 +591,7 @@ namespace BJEngine
     {
         if (addCamera)
         {
-            camera->push_back(new BJEngine::Camera(pd3dDevice));
+            camera->push_back(new BJEngine::Camera(GP::GetDevice()));
             UI::namesCams += (std::to_string(camera->size() - 1) + '\0');
             addCamera = false;
         }
@@ -729,9 +745,12 @@ namespace BJEngine
 
             ImGui::SeparatorText("Model settings");
 
+           
+
+
             if (ImGui::TreeNode("Textures"))
             {
-
+                
                 ImGui::TreePop();
             }
 
@@ -788,11 +807,20 @@ namespace BJEngine
             
             ImGui::SliderFloat("FoV", &(*camera)[focusedCamera]->FoV, M_PI / 16, M_PI * 3 / 4, "%.2f");
 
-            float position[3] = { (*camera)[focusedCamera]->eye.vector4_f32[0],(*camera)[focusedCamera]->eye.vector4_f32[1],(*camera)[focusedCamera]->eye.vector4_f32[2] };
+            float position[3] = { 
+                (*camera)[focusedCamera]->camDesc.eye.vector4_f32[0],
+                (*camera)[focusedCamera]->camDesc.eye.vector4_f32[1],
+                (*camera)[focusedCamera]->camDesc.eye.vector4_f32[2] 
+            };
+
             ImGui::InputFloat3("Position", position);
             (*camera)[focusedCamera]->SetPosition(position[0], position[1], position[2]);
 
-            float rotation[2] = { (*camera)[focusedCamera]->camYaw, (*camera)[focusedCamera]->camPitch };
+            float rotation[2] = { 
+                (*camera)[focusedCamera]->camYaw, 
+                (*camera)[focusedCamera]->camPitch 
+            };
+
             ImGui::SliderFloat2("Rotation", rotation, -M_PI, M_PI);
             (*camera)[focusedCamera]->camYaw = rotation[0];
             (*camera)[focusedCamera]->camPitch = rotation[1];
@@ -813,13 +841,17 @@ namespace BJEngine
 
     bool UI::Light()
     {
+        ImGui::SeparatorText("Lights correction");
+
+        ImGui::SliderFloat("Gamma", &LightMananger::lightDescBuffer.gamma, 0.5f, 2.2f);
+
+        ImGui::SeparatorText("Focused light");
+
         if (!LightMananger::IsHaveLights())
         {
             ImGui::Text("Project doesn't have lights!");
             return false;
         }
-
-        ImGui::SeparatorText("Focused light");
 
         for (; indexLight < LightMananger::lightDescBuffer.lightsCount; indexLight++)
         {
@@ -836,8 +868,8 @@ namespace BJEngine
 
         float* variables[3] = { &pArrayLightDesc[focusedLight].pos.x, &pArrayLightDesc[focusedLight].pos.y, &pArrayLightDesc[focusedLight].pos.z };
         ImGui::SeparatorText("Light Position");
-        ImGui::SliderFloat("sfff", &pArrayLightDesc[focusedLight].pos.x, -1000.0f, 1000.0f);
-        ImGui::InputFloat3("Pos", *variables, "%.2f");
+
+        ImGui::SliderFloat3("Pos", *variables, -1000.0f,1000.0f, "%.2f");
 
         if (pArrayLightDesc[focusedLight].lightType == BJEUtils::SPOTLIGHT)
         {
@@ -855,6 +887,23 @@ namespace BJEngine
         ImGui::SliderFloat("Lineral"  , &pArrayLightDesc[focusedLight].att.y, 0.0f, 1.0f);
         ImGui::SliderFloat("Quadratic", &pArrayLightDesc[focusedLight].att.z, 0.0f, 1.0f);
 
+
+        return true;
+    }
+
+    bool UI::PostProcessing()
+    {
+        ImGui::SeparatorText("Post processing");
+
+        ImGui::Checkbox("Inversion", &postProcessingBools[BJEUtils::INVERSION]);
+
+        ImGui::Checkbox("Grey color", &postProcessingBools[BJEUtils::GREY]);
+        
+        ImGui::Checkbox("Sharpness", &postProcessingBools[BJEUtils::SHARPNESS]);
+
+        ImGui::Checkbox("Simple blur", &postProcessingBools[BJEUtils::SIMPLE_BLUR]);
+       
+        ImGui::Checkbox("Boundary delineation", &postProcessingBools[BJEUtils::BOUNDARY_DELINEATION]);
 
         return true;
     }

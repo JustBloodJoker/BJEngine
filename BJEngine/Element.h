@@ -1,36 +1,39 @@
 #pragma once
 #include "pch.h"
 #include "Materials.h"
-#include "Shader.h"
 
 namespace BJEngine
 {
 
+    class Materials;
 
 	class Element
 	{
         static int count;
-
+        
 	public:
         
         Element();
-        Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material, dx::XMVECTOR min, dx::XMVECTOR max, ID3D11Device* pd3dDevice);
+        Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material,
+                    dx::XMVECTOR min, dx::XMVECTOR max);
         ~Element();
 
         void Close();
-        void Init(ID3D11Device* pd3dDevice, ID3D11Buffer* pConstantBuffer);
-        void Draw(ID3D11DeviceContext* pImmediateContext, UINT* stride, UINT* offset,
-                  dx::XMMATRIX mainWorldMatrix, dx::XMMATRIX outLine, dx::XMMATRIX viewMatrix, dx::XMMATRIX projectionMatrix, dx::XMMATRIX* lView, dx::XMMATRIX* lProjection);
-        void MinDraw(ID3D11DeviceContext* pImmediateContext, UINT* stride, UINT* offset);
-
-        dx::XMVECTOR GetMinLocal();
-        dx::XMVECTOR GetMaxLocal();
+        void Init(std::vector<ID3D11Buffer*>* ConstantBuffers);
+        void Draw(CameraDesc cam, dx::XMMATRIX* lView, dx::XMMATRIX* lProjection);
+        void MinDraw(dx::BoundingFrustum frustum);
 
         std::string GetName() const;
 
         void SetFocusState(bool state);
 
+        dx::XMFLOAT3 GetWorldPosition() const;
+
 	private:
+        dx::BoundingBox objectBox;
+        dx::XMMATRIX world;
+
+        bool drawing;
 
         bool focusedState = false;
 
@@ -42,18 +45,10 @@ namespace BJEngine
 
         ID3D11Buffer* pIndexBuffer;
         ID3D11Buffer* pVertexBuffer;
-        ID3D11Buffer* pConstantBuffer;
-        ID3D11Buffer* pGlowConstantBuffer;
+        std::vector<ID3D11Buffer*>* ConstantBuffers;
 
         dx::XMVECTOR minLocal;
         dx::XMVECTOR maxLocal;
-
-        static Shader* glowShader;
-
-        struct CBuf
-        {
-            dx::XMMATRIX WVP;
-        };
 
 	};
 

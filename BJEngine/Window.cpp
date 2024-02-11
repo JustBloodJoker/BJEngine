@@ -127,14 +127,10 @@ namespace BJEngine {
 		case WM_KEYDOWN:
 
 			if (wParam == VK_ESCAPE) {
-				if (MessageBox(0, L"Are you sure you want to exit?",
-					L"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
-				{
-
+			
 					RunRender = false;
 					DestroyWindow(hWnd);
-
-				}
+			
 			}
 			return 0;
 
@@ -145,7 +141,7 @@ namespace BJEngine {
 		case WM_SIZE:
 		{
 
-			BJEUtils::SetIsResizedState(false);
+			BJEUtils::SetIsResizedState(true);
 			BJEUtils::SetWindowHeight(HIWORD(lParam));
 			BJEUtils::SetWindowWidth(LOWORD(lParam));
 			SetWindowPos(hWnd, hWnd, CW_USEDEFAULT, CW_USEDEFAULT, BJEUtils::GetWindowWidth(), BJEUtils::GetWindowHeight(), WS_OVERLAPPEDWINDOW);

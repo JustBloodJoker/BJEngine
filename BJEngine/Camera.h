@@ -4,6 +4,23 @@
 
 namespace BJEngine {
 
+	struct CameraDesc
+	{
+		dx::XMMATRIX viewMatrix;
+		dx::XMMATRIX projectionMatrix;
+		dx::BoundingFrustum frustum;
+
+		dx::XMVECTOR eye;
+		dx::XMVECTOR at;
+		dx::XMVECTOR up;
+
+		void GenFrustum()
+		{
+			frustum.CreateFromMatrix(frustum, projectionMatrix);
+			frustum.Transform(frustum, DirectX::XMMatrixInverse(nullptr, viewMatrix));
+		};
+
+	};
 
 	class Camera
 	{
@@ -12,7 +29,7 @@ namespace BJEngine {
 
 	public:
 
-		Camera(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
+		Camera(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up, float aspectRatio);
 		Camera();
 		Camera(ID3D11Device* pd3dDevice);
 
@@ -20,17 +37,14 @@ namespace BJEngine {
 
 		virtual void Close();
 
-		virtual void DrawCameraObject(ID3D11DeviceContext* pImmediateContext, dx::XMMATRIX view, dx::XMMATRIX proj);
+		virtual void DrawCameraObject(dx::XMMATRIX view, dx::XMMATRIX proj);
 		virtual void DrawCameraObject();
 		
 		void SetPosition(dx::XMVECTOR eye, dx::XMVECTOR at, dx::XMVECTOR up);
 		void SetPosition(float x, float y, float z);
 		void SetViewMatrix(dx::XMMATRIX view);
 
-		dx::CXMMATRIX GetViewMatrix() const;
-		dx::CXMMATRIX GetProjectionMatrix() const;
-		dx::BoundingFrustum GetFrustum() const;
-		dx::XMVECTOR GetEyeVector() const;
+		CameraDesc GetDesc() const noexcept;
 
 	protected:
 
@@ -38,12 +52,7 @@ namespace BJEngine {
 
 		void UpdateCamera();
 
-		dx::XMMATRIX viewMatrix;
-		dx::XMMATRIX projectionMatrix;
-
-		dx::XMVECTOR eye;
-		dx::XMVECTOR at;
-		dx::XMVECTOR up;
+		CameraDesc camDesc;
 
 		float camYaw;
 		float camPitch;
@@ -52,10 +61,9 @@ namespace BJEngine {
 		float sensitivity;
 		bool moveCamera;
 
-		dx::BoundingFrustum frustum;
 	private:
 
-		CameraCone* cone;
+		CameraCone* cone = nullptr;
 
 		
 	};

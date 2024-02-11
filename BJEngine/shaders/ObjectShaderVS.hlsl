@@ -29,13 +29,19 @@ struct VS_OUTPUT
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
-
+  
+   
+   
    float4 lightViewPosition[MAX_LIGHT_NUM] : TEXCOORD1;
 };
 
-VS_OUTPUT VS(VS_INPUT input)
+VS_OUTPUT VS(VS_INPUT input,  uint instanceid : SV_InstanceID)
 {
     VS_OUTPUT output;
+
+
+    input.pos.x = input.pos.x + instanceid *3000;
+
     output.pos = mul(input.pos, WVP);
     output.worldPos = mul(input.pos, world);
     output.eyePos = mul(input.pos, cam);

@@ -14,34 +14,11 @@ namespace BJEngine {
     bool BackGround::Init()
     {
         HRESULT hr = S_OK;
-        D3D11_BUFFER_DESC bd;
-        D3D11_SUBRESOURCE_DATA pSystem;
 
-        pVertexBuffer = Helper::InitVertexBuffer(pd3dDevice, sizeof(BJEStruct::VertexBackGround) * numSphereVertices, &vertices[0]);
-        pIndexBuffer = Helper::InitIndicesBuffer(pd3dDevice, sizeof(DWORD) * numSphereFaces * 3, &indices[0]);
+        pVertexBuffer = Helper::InitVertexBuffer(GP::GetDevice(), sizeof(BJEStruct::VertexBackGround) * numSphereVertices, &vertices[0]);
+        pIndexBuffer = Helper::InitIndicesBuffer(GP::GetDevice(), sizeof(DWORD) * numSphereFaces * 3, &indices[0]);
 
-        D3D11_INPUT_ELEMENT_DESC layout[2] = {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        };
-
-        if (shader == nullptr)
-        {
-            shader = new BJEngine::Shader(L"shaders\\CubeMapShader.txt", L"shaders\\CubeMapShader.txt", "SKYMAP_VS", "SKYMAP_PS");
-        }
-
-        shader->SetInputLayout(layout, ARRAYSIZE(layout));
-        shader->Init(pd3dDevice);
-
-        texture->InitCubeMap(pd3dDevice);
-
-        D3D11_DEPTH_STENCIL_DESC dssDesc;
-        ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-        dssDesc.DepthEnable = true;
-        dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-        dssDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-
-        hr = pd3dDevice->CreateDepthStencilState(&dssDesc, &depthStateLessEqual);
+        texture->InitCubeMap();
 
         if (FAILED(hr))
         {
@@ -50,7 +27,7 @@ namespace BJEngine {
         }
 
 
-        pConstantBuffer = Helper::InitConstantBuffer<Object::ConstantBuffer>(pd3dDevice);
+        ConstantBuffers.push_back(Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice()));
 
         Log::Get()->Debug("CubeMap is inited");
         isInited = true;
@@ -59,47 +36,48 @@ namespace BJEngine {
 
         return true;
     }
-
-    void BackGround::Draw()
+    void BackGround::SetTexture(Textures* texture)
     {
-
-        pImmediateContext->IASetInputLayout(shader->GetInputLayout());
-        pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        this->texture = texture; hastext = true;
+    }
+    void BackGround::Draw(const CameraDesc cam)
+    {
+        GP::BindShader(GP::BACKGROUND_SHADER);
+       
+        GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         world = dx::XMMatrixIdentity();
         
-        world = dx::XMMatrixScaling(5.0f, 5.0f, 5.0f) *
-            dx::XMMatrixTranslation(dx::XMVectorGetX(cam->GetEyeVector()), dx::XMVectorGetY(cam->GetEyeVector()), dx::XMVectorGetZ(cam->GetEyeVector()));
+        world = dx::XMMatrixScaling(5.0f, 5.0f, 5.0f) * 
+          
+              dx::XMMatrixTranslation(dx::XMVectorGetX(cam.eye), dx::XMVectorGetY(cam.eye), dx::XMVectorGetZ(cam.eye));
         
         UINT stride = sizeof(BJEStruct::VertexBackGround);
         UINT offset = 0;
 
-        pImmediateContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-        pImmediateContext->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
+        GP::GetDeviceContext()->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        GP::GetDeviceContext()->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
 
-        dx::XMMATRIX WVP = world * cam->GetViewMatrix() * cam->GetProjectionMatrix();
-        ConstantBuffer cb;
+        dx::XMMATRIX WVP = world * cam.viewMatrix * cam.projectionMatrix;
+        BJEStruct::VertexConstantBuffer cb;
         cb.WVP = XMMatrixTranspose(WVP);
         cb.World = XMMatrixTranspose(world);
-        pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
-        pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
-        pImmediateContext->PSSetShaderResources(0, 1, &texture->GetTexture());
-        pImmediateContext->PSSetSamplers(0, 1, Textures::GetWrapState());
+        GP::GetDeviceContext()->UpdateSubresource(ConstantBuffers[0], 0, NULL, &cb, 0, 0);
+        GP::GetDeviceContext()->VSSetConstantBuffers(0, 1, &ConstantBuffers[0]);
+        GP::GetDeviceContext()->PSSetShaderResources(0, 1, &texture->GetTexture());
+        GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
 
-        pImmediateContext->VSSetShader(shader->GetVertexShader(), 0, 0);
-        pImmediateContext->PSSetShader(shader->GetPixelShader(), 0, 0);
-        pImmediateContext->OMSetDepthStencilState(depthStateLessEqual, 0);
-        Blend::Get()->DrawNoBlend(pImmediateContext);
-        Blend::Get()->DrawCullStateClockFalse(pImmediateContext);
-        pImmediateContext->DrawIndexed(numSphereFaces * 3, 0, 0);
-        pImmediateContext->OMSetDepthStencilState(NULL, 0);
-
+        DepthStencil::SetDepthStencilState(LESS_EQUAL);
+       
+        Blend::Get()->DrawNoBlend();
+        Blend::Get()->DrawCullStateClockFalse();
+        GP::GetDeviceContext()->DrawIndexed(numSphereFaces * 3, 0, 0);
+        GP::GetDeviceContext()->OMSetDepthStencilState(NULL, 0);
     }
 
     void BackGround::Close()
     {
         this->Object::Close();
-        RELEASE(depthStateLessEqual);
         CLOSE(texture);
         vertices.clear();
         indices.clear();

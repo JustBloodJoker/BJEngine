@@ -131,7 +131,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Animation.h" />
     <ClInclude Include="BackGround.h" />
     <ClInclude Include="Blend.h" />
     <ClInclude Include="Camera.h" />
@@ -140,13 +139,13 @@
     <ClInclude Include="Element.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FWork.h" />
+    <ClInclude Include="GP.h" />
     <ClInclude Include="Helper.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightMananger.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MainCamera.h" />
-    <ClInclude Include="Map.h" />
     <ClInclude Include="Materials.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Object.h" />
@@ -160,6 +159,7 @@
     <ClInclude Include="Sound.h" />
     <ClInclude Include="SoundUtilits.h" />
     <ClInclude Include="Structures.h" />
+    <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="Textures.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UnpackMananger.h" />
@@ -167,7 +167,6 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="Blend.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -175,6 +174,7 @@
     <ClCompile Include="DepthStencil.cpp" />
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="FWork.cpp" />
+    <ClCompile Include="GP.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Light.cpp" />
@@ -182,7 +182,6 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainCamera.cpp" />
-    <ClCompile Include="Map.cpp" />
     <ClCompile Include="Materials.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Object.cpp" />
@@ -193,6 +192,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shadow.cpp" />
     <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="Textures.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UnpackMananger.cpp" />

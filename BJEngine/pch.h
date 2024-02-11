@@ -5,6 +5,8 @@
 
 #include "framework.h"
 
+#include "GP.h"
+
 #include "Structures.h"
 #include "Utilites.h"
 #include "Log.h"
@@ -15,7 +17,6 @@
 #include "Input.h"
 #include "UnpackMananger.h"
 #include "PackMananger.h"
-
 
 #endif 
 

@@ -26,7 +26,7 @@ namespace BJEngine {
 
 		int lightType;
 		int enabled;
-		int pad = 1;
+		int pad;
 		int pad1;
 
 	};

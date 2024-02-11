@@ -15,29 +15,33 @@ namespace BJEngine
 		Shadow() = default;
 		~Shadow() = default;
 
-		void InitShadow(ID3D11Device* pd3dDevice, int shadowType);
+		void InitShadow(int shadowType);
 
-		void Render(ID3D11DeviceContext* pImmediateContext, LightDesc light, std::vector<Object*> objects);
+		void Render(LightDesc light, std::vector<Object*> objects);
 
 		void Close();
 
 		ID3D11ShaderResourceView* const* GetTexture();
 
-		dx::XMMATRIX GetView() { return vw; };
-		dx::XMMATRIX GetProjection() { return prj; };
+		dx::XMMATRIX GetView() { return camDesc[0].viewMatrix; };
+		dx::XMMATRIX GetProjection() { return camDesc[0].projectionMatrix; };
 
 	private:
 
-		void InitCubeMapShadows(ID3D11Device* pd3dDevice);
-		void RenderCubeMapShadows(ID3D11DeviceContext* pImmediateContext, dx::XMFLOAT3 pos, std::vector<Object*> objects);
+		ID3D11Texture2D* textureSRV;
+
+		void InitCubeMapShadows();
+		void RenderCubeMapShadows(dx::XMFLOAT3 pos, std::vector<Object*> objects);
 
 
-		void InitSimpleMapShadows(ID3D11Device* pd3dDevice);
-		void RenderSimpleMapShadows(ID3D11DeviceContext* pImmediateContext, dx::XMFLOAT3  pos, dx::XMFLOAT3 dir, std::vector<Object*> objects);
+		void InitSimpleMapShadows();
+		void RenderSimpleMapShadows(dx::XMFLOAT3  pos, dx::XMFLOAT3 dir, std::vector<Object*> objects);
 
 		struct ConstantDepthBuffer
 		{
 			dx::XMMATRIX WVP;
+			dx::XMFLOAT3 pos;
+			float pad;
 		};
 		ConstantDepthBuffer depthBuffer;
 		ID3D11Buffer* pDepthConstantBuffer;
@@ -45,8 +49,7 @@ namespace BJEngine
 		ID3D11ShaderResourceView* srv;
 		ID3D11DepthStencilView* dsv[6];
 
-		dx::XMMATRIX vw;
-		dx::XMMATRIX prj;
+		CameraDesc camDesc[6];
 
 		Shader* shader;
 

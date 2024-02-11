@@ -5,6 +5,7 @@
 #include "MainCamera.h"
 #include "Object.h"
 #include "BackGround.h"
+#include "RenderTarget.h"
 
 namespace BJEngine {
 
@@ -17,10 +18,8 @@ namespace BJEngine {
 		{
 			driverType = D3D_DRIVER_TYPE_NULL;
 			featureLevel = D3D_FEATURE_LEVEL_11_0;
-			pd3dDevice = nullptr;
-			pImmediateContext = nullptr;
 			pSwapChain = nullptr;
-			pRenderTargetView = nullptr;
+			mainRTV = nullptr;
 		}
 		~Render() {  };
 
@@ -47,10 +46,6 @@ namespace BJEngine {
 			_aligned_free(p);
 		}
 
-		ID3D11Device* GetDevice() { return pd3dDevice; }
-		ID3D11DeviceContext* GetContext() { return pImmediateContext; }
-
-		
 		void SetObjectsVector(std::vector<Object*> obj) { this->objects = obj; }
 
 		void CreateSound(std::string path);
@@ -61,6 +56,8 @@ namespace BJEngine {
 
 	private:
 
+		bool DrawScene();
+
 		std::vector<Object*> objects;
 		std::vector<BJAudio::Sound*> sound;
 		std::vector<Camera*> cams;
@@ -70,18 +67,18 @@ namespace BJEngine {
 
 		BackGround* skyBox = nullptr;
 
-		ID3D11Device* pd3dDevice;
-		ID3D11DeviceContext* pImmediateContext;
-
 		HWND hwnd;
 
 		D3D_DRIVER_TYPE driverType;
 		D3D_FEATURE_LEVEL featureLevel;
 
 		IDXGISwapChain* pSwapChain;
-		ID3D11RenderTargetView* pRenderTargetView;
 
+		RenderTarget* mainRTV;
+		RenderTarget* sceneRTV;
+		
 		D3D11_VIEWPORT vp;
+		D3D11_VIEWPORT svp;
 
 		LightDesc ld;
 	};

@@ -2,13 +2,14 @@
 #include "pch.h"
 #include "Script.h"
 #include "Camera.h"
-#include "Shader.h"
 #include "Textures.h"
 #include "Blend.h"
 #include "Materials.h"
+#include "Element.h"
 
 namespace BJEngine {
 
+	class Materials;
 
 	class Object
 	{
@@ -20,10 +21,10 @@ namespace BJEngine {
 
 		virtual void Close();
 
-		virtual void Draw();
+		virtual void Draw(const CameraDesc cam);
 		virtual bool Init();
 
-		virtual void MinDraw();
+		virtual void MinDraw(dx::BoundingFrustum frustum);
 
 		struct Vertex
 		{
@@ -38,27 +39,13 @@ namespace BJEngine {
 			dx::XMFLOAT3 normal;
 		};
 
-		struct ConstantBuffer
-		{
-			dx::XMMATRIX WVP;
-			dx::XMMATRIX World;
-			dx::XMMATRIX ViewMatrix;
-			dx::XMMATRIX projectionMatrix;
-			dx::XMFLOAT4 pos;
-			dx::XMMATRIX lView[5];
-			dx::XMMATRIX lProj[5];
-		};
+		
 
 		
-		void SetCamera(Camera*& cam);
-		void SetShader(Shader*& shader);
-		void SetTexture(Textures* texture);
-		void SetDevice(ID3D11Device*& pd3dDevice);
-		void SetDeviceContext(ID3D11DeviceContext*& pImmediateContext);
 		
 		void SetLightViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projecion, int index);
 
-		virtual bool HasTexture() final { return hastext; };
+		
 
 		void SetObjectMatrixPos(float x, float y, float z);
 		void SetObjectMatrixPos(dx::XMFLOAT3 xmf3);
@@ -75,15 +62,12 @@ namespace BJEngine {
 	protected:
 		bool isInited = false;
 
-		Camera* cam;
-		Textures* texture;
-		Shader* shader;
-		Shader* glowShader;
+		
 		Script* script;
 
 		ID3D11Buffer* pVertexBuffer;
 		ID3D11Buffer* pIndexBuffer;
-		ID3D11Buffer* pConstantBuffer;
+		std::vector<ID3D11Buffer*> ConstantBuffers;
 
 		dx::XMMATRIX world;
 
@@ -95,14 +79,11 @@ namespace BJEngine {
 		dx::XMMATRIX lView[5];
 		dx::XMMATRIX lProjection[5];
 
-		bool hastext = false;
-
-		ID3D11Device* pd3dDevice;
-		ID3D11DeviceContext* pImmediateContext;
+		
 
 		std::vector<Materials*> materials;
 
-		dx::BoundingBox objectBox;
+		
 
 		std::wstring texturePrefixPath = L"";
 	};

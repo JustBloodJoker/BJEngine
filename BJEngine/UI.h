@@ -14,8 +14,7 @@ namespace BJEngine
 	{
 	public:
 
-		static bool Init(const HWND& hwnd, ID3D11Device* pd3dDevice, ID3D11DeviceContext* pImmediateContext,
-			std::vector<BJEngine::Camera*>& pCams, Render* render );
+		static bool Init(const HWND& hwnd, std::vector<BJEngine::Camera*>& pCams, Render* render );
 
 		static bool Begin();
 		static bool End();
@@ -30,11 +29,11 @@ namespace BJEngine
 
 		static bool AddModelToList(Model* model);
 
+		static std::unordered_map<BJEUtils::POST_PROCESSING, bool>& GetPostProcessingStatus()noexcept;
+
 	private:
 		
 		static Render* render;
-
-		static ID3D11Device* pd3dDevice;
 
 		static bool ISINIT;
 
@@ -45,7 +44,7 @@ namespace BJEngine
 		static bool HotKeys();
 		static bool MenuBar();
 		
-		static bool InitSomeTextureForGUI(ID3D11Device* pd3dDevice);
+		static bool InitSomeTextureForGUI();
 		////////////////////////
 
 
@@ -160,6 +159,16 @@ namespace BJEngine
 		static bool creatingState;
 		static bool gameState;
 		
+
+		///
+		///     POST_PROCESSING
+		///
+		
+		static bool isPostP;
+		static bool PostProcessing();
+
+		static std::unordered_map<BJEUtils::POST_PROCESSING, bool> postProcessingBools;
+
 	};
 
 

@@ -4,6 +4,8 @@
 namespace BJEngine
 {
 
+
+
 	class Log;
 
 	class Helper

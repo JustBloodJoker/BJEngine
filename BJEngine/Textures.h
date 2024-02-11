@@ -7,31 +7,36 @@ namespace BJEngine {
 	class Textures
 	{
 	public:
+		Textures() = default;
 		Textures(const wchar_t* TextureName);
 		Textures(std::wstring TextureName);
-		~Textures();
+		virtual ~Textures();
 
-		void Close();
+		virtual void Close();
 
-		bool InitTextures(ID3D11Device* device);
-		bool InitCubeMap(ID3D11Device* device);
+		virtual bool InitTextures();
+		bool InitCubeMap();
 
-		static bool InitStates(ID3D11Device* pd3dDevice);
+		static bool InitStates();
 		static ID3D11SamplerState* const* GetBorderState();
 		static ID3D11SamplerState* const* GetWrapState();
 
 
 		ID3D11ShaderResourceView*& GetTexture() { return Texture; }
-	private:
-		ID3D11ShaderResourceView* Texture;
 
+	protected:
+
+		ID3D11ShaderResourceView* Texture;
+		std::wstring TextureName;
+
+	private:
+		
 		static ID3D11SamplerState* WrapState;
 		static ID3D11SamplerState* BorderState;
 		static bool deletedStatic;
 		static D3D11_FILTER shadowFilter;
 		static D3D11_FILTER textureFilter;
 
-		std::wstring TextureName;
 	};
 
 

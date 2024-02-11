@@ -7,7 +7,6 @@
 namespace BJEngine {
 
 
-	using namespace DirectX;
 	using namespace BJEUtils;
 
 	bool Render::CreateDevice()
@@ -49,7 +48,8 @@ namespace BJEngine {
 			driverType = driverTypes[driverTypeIndex];
 			hr = D3D11CreateDeviceAndSwapChain(NULL, driverType, NULL,
 				NULL, featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
-				&sd, &pSwapChain, &pd3dDevice, &featureLevel, &pImmediateContext);
+				&sd, &pSwapChain, &GP::GetDevice(), &featureLevel, &GP::GetDeviceContext());
+
 			if (SUCCEEDED(hr)) {
 				break;
 			}
@@ -66,14 +66,11 @@ namespace BJEngine {
 			return false;
 		}
 
-		hr = pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &pRenderTargetView);
-		RELEASE(pBackBuffer);
-		if (FAILED(hr)) {
-			Log::Get()->Err("RTV create error");
-			return false;
-		}
+		DepthStencil::InitStencils();
 
-
+		mainRTV = new RenderTarget(pBackBuffer);
+		sceneRTV = new RenderTarget(1920, 1080);
+		
 		vp.Width = BJEUtils::GetWindowWidth();
 		vp.Height = BJEUtils::GetWindowHeight();
 		vp.MinDepth = 0.0f;
@@ -81,9 +78,17 @@ namespace BJEngine {
 		vp.TopLeftX = 0;
 		vp.TopLeftY = 0;
 
-		pImmediateContext->RSSetViewports(1, &vp);
 
-		
+		svp.Width = 1920;
+		svp.Height = 1080;
+		svp.MinDepth = 0.0f;
+		svp.MaxDepth = 1.0f;
+		svp.TopLeftX = 0;
+		svp.TopLeftY = 0;
+
+		GP::InitShaders();;
+
+		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 
 		return true;
 	}
@@ -91,9 +96,10 @@ namespace BJEngine {
 	void Render::BeginFrame()
 	{
 		float ClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
-		pImmediateContext->RSSetViewports(1, &vp);
-		pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);
-		pImmediateContext->OMSetRenderTargets(1, &pRenderTargetView, DepthStencil::ClearDepthStencil());
+		GP::GetDeviceContext()->RSSetViewports(1, &vp);
+
+		mainRTV->ClearRTV();
+		mainRTV->Bind(NULL);
 
 		UI::Begin();
 	}
@@ -113,12 +119,11 @@ namespace BJEngine {
 			return false;
 		}
 
-		Blend* blend = new Blend(pd3dDevice);
+		Blend* blend = new Blend();
 
-		DepthStencil::InitStencils(pRenderTargetView, pd3dDevice, pImmediateContext);
-
+		
 		cams.push_back(new MainCamera());
-		if (!UI::Init(hwnd, pd3dDevice, pImmediateContext, cams, this))
+		if (!UI::Init(hwnd, cams, this))
 		{
 			Log::Get()->Err("Incorrect ImGui init!");
 		}
@@ -129,82 +134,63 @@ namespace BJEngine {
 
 		if (!LightMananger::IsInited())
 		{
-			LightMananger::Init(pd3dDevice);
+			LightMananger::Init();
 		}
+		
+		Materials::SetObjectPtr(&objects);
 
 		return true;
 	}
 
 	bool Render::DrawWnd()
 	{
+		
+
 		if (GetIsResizedState())
 		{
 			ResizeWindow();
 		}
 
-		float ClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
-		pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);
-
-		LightMananger::DrawShadows(pImmediateContext, objects);
+		LightMananger::DrawShadows(objects);
 
 		BeginFrame();
-		
-		UnpackProject();
-		
-		cams[0]->DrawCameraObject();
 
-		for (auto& el : cams)
-		{
-			el->DrawCameraObject(pImmediateContext, cams[UI::FocusedCamera()]->GetViewMatrix(), cams[UI::FocusedCamera()]->GetProjectionMatrix());
-		}
+		UnpackProject();
+
+		cams[0]->DrawCameraObject();
 
 		for (auto& tSound : sound)
 		{
 			tSound->Play();
 		}
-	
-		if (LightMananger::IsInited())
-			LightMananger::Draw(pImmediateContext);
+		
+		GP::GetDeviceContext()->RSSetViewports(1, &svp);
+		sceneRTV->ClearDSV();
+		sceneRTV->ClearRTV();
+		sceneRTV->Bind();
 
-		for (auto& object : objects)
-		{
-			object->SetCamera(cams[UI::FocusedCamera()]);
-			LightMananger::SetMatrix(object);
-		}
+		DrawScene();
 
 		
-		pImmediateContext->PSSetSamplers(0, 1, Textures::GetBorderState());
 
-		for (auto& object : objects)
+		for (auto& el : UI::GetPostProcessingStatus())
 		{
-			object->Draw();
+			if (el.second)
+			{
+				sceneRTV->CreateCopyTexture();
+				sceneRTV->ClearRTV();
+				sceneRTV->Bind(NULL);
+				sceneRTV->DrawTexture(sceneRTV->GetCopyTexture(), el.first);
+			}
+
 		}
 
-		if (skyBox && skyBox->IsInited())
-		{
-			skyBox->SetCamera(cams[UI::FocusedCamera()]);
-			skyBox->Draw();
-		}
 
-	//	if (Input::Get()->CheckKeyState(DIK_8))
-	//	{
-	//		ID3D11Texture2D* pBuffer;
-	//
-	//		pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBuffer);
-	//
-	//		ID3D11Texture2D* texture_to_save = nullptr;
-	//		if (texture_to_save == nullptr)
-	//		{
-	//			D3D11_TEXTURE2D_DESC td;
-	//			pBuffer->GetDesc(&td);
-	//			pd3dDevice->CreateTexture2D(&td, NULL, &texture_to_save);
-	//		}
-	//
-	//		pImmediateContext->CopyResource(texture_to_save, pBuffer);
-	//
-	//		D3DX11SaveTextureToFile(pImmediateContext, texture_to_save, D3DX11_IFF_PNG, L"ffddss.png");
-	//	}
 
+
+		GP::GetDeviceContext()->RSSetViewports(1, &vp);
+		mainRTV->Bind(NULL);
+		mainRTV->DrawTexture(sceneRTV->GetSRV(), SCENE);
 
 		EndFrame();
 
@@ -212,7 +198,6 @@ namespace BJEngine {
 		{
 			PackMananger::Get()->Close();
 		}
-		
 		if (UnpackMananger::Get()->GetOpeningStatus())
 		{
 			UnpackMananger::Get()->Reset();
@@ -226,9 +211,6 @@ namespace BJEngine {
 
 		if (!object->IsInited())
 		{
-			object->SetDevice(pd3dDevice);
-			object->SetDeviceContext(pImmediateContext);
-
 			if (!object->Init()) {
 				return nullptr;
 			};
@@ -248,8 +230,6 @@ namespace BJEngine {
 		skyBox->SetTexture(new Textures(std::wstring(texturePath.begin(), texturePath.end())));
 		if (!skyBox->IsInited())
 		{
-			skyBox->SetDevice(pd3dDevice);
-			skyBox->SetDeviceContext(pImmediateContext);
 			if (!skyBox->Init())
 			{
 				Log::Get()->Err("SkyBox didn't inited!");
@@ -260,10 +240,27 @@ namespace BJEngine {
 
 	void Render::ResizeWindow()
 	{
-		pSwapChain->SetFullscreenState(GetFullScreenState(), nullptr);
+		GP::GetDeviceContext()->OMSetRenderTargets(0, 0, 0);
+
+		CLOSE(mainRTV);
+		
+		HRESULT hr = S_OK;
+
+		hr = pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+		
+		ID3D11Texture2D* pBuffer;
+		hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+			(void**)&pBuffer);
+		
+		mainRTV = new RenderTarget(pBuffer);
+
+
 
 		vp.Width = GetWindowWidth();
 		vp.Height = GetWindowHeight();
+
+
+		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 	}
 
 	void Render::CreateSound(std::string path)
@@ -320,13 +317,41 @@ namespace BJEngine {
 		
 	}
 
+	bool Render::DrawScene()
+	{
+		//for (auto& el : cams)
+		//{
+		//	el->DrawCameraObject(cams[UI::FocusedCamera()]->GetDesc().viewMatrix, cams[UI::FocusedCamera()]->GetDesc().projectionMatrix);
+		//}
+
+		if (LightMananger::IsInited())
+			LightMananger::Draw();
+		
+		objects.push_back(skyBox);
+
+		GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetBorderState());
+
+		for (auto& object : objects)
+		{
+			if (object && object->IsInited())
+			{
+				LightMananger::SetMatrix(object);
+				object->Draw(cams[UI::FocusedCamera()]->GetDesc());
+			}
+		}
+
+		objects.pop_back();
+
+		return true;
+	}
+
 	void Render::Close()
 	{
 		for (auto& el : objects) {
 			CLOSE(el);
 		}
 		objects.clear();
-
+		
 		for (auto& el : cams)
 		{
 			CLOSE(el);
@@ -334,12 +359,13 @@ namespace BJEngine {
 		cams.clear();
 
 		
-		RELEASE(pd3dDevice);
-		if (pImmediateContext)
-			pImmediateContext->ClearState();
-		RELEASE(pImmediateContext);
+		GP::ClearGlobalParameters();
+
 		RELEASE(pSwapChain);
-		RELEASE(pRenderTargetView);
+		
+		CLOSE(mainRTV);
+		CLOSE(skyBox);
+
 		Blend::Get()->Close();
 		Log::Get()->Debug("Render was closed");
 		PackMananger::Get()->Close();
