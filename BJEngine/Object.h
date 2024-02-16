@@ -10,6 +10,7 @@
 namespace BJEngine {
 
 	class Materials;
+	class Element;
 
 	class Object
 	{
@@ -24,8 +25,7 @@ namespace BJEngine {
 		virtual void Draw(const CameraDesc cam);
 		virtual bool Init();
 
-		virtual void MinDraw(dx::BoundingFrustum frustum);
-
+		
 		struct Vertex
 		{
 			Vertex() {}
@@ -40,24 +40,11 @@ namespace BJEngine {
 		};
 
 		
-
-		
-		
-		void SetLightViewAndProjectionMatrix(dx::XMMATRIX view, dx::XMMATRIX projecion, int index);
-
-		
-
-		void SetObjectMatrixPos(float x, float y, float z);
-		void SetObjectMatrixPos(dx::XMFLOAT3 xmf3);
-		void SetObjectMatrixScale(float x, float y, float z);
-		void SetObjectMatrixRotationY(float angle);
-		void SetObjectMatrixRotationX(float angle);
-		void SetObjectMatrixRotationZ(float angle);
 		void SetTexturesPrefixPath(std::wstring prefPath);
 
 		bool IsInited() { return isInited; }
 
-		dx::XMMATRIX GetObjectMatrix();
+		std::vector<Element*>& MoveElements() { return elements; };
 
 	protected:
 		bool isInited = false;
@@ -67,23 +54,11 @@ namespace BJEngine {
 
 		ID3D11Buffer* pVertexBuffer;
 		ID3D11Buffer* pIndexBuffer;
-		std::vector<ID3D11Buffer*> ConstantBuffers;
+		ID3D11Buffer* ConstantBuffers;
 
-		dx::XMMATRIX world;
-
-		dx::XMMATRIX rotation;
-		dx::XMMATRIX scale;
-		dx::XMMATRIX pos;
-
-		//////////////
-		dx::XMMATRIX lView[5];
-		dx::XMMATRIX lProjection[5];
-
-		
 
 		std::vector<Materials*> materials;
-
-		
+		std::vector<Element*> elements;
 
 		std::wstring texturePrefixPath = L"";
 	};

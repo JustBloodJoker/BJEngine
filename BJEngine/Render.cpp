@@ -1,10 +1,10 @@
 #include "Render.h"
 #include "UI.h"
-#include "LightMananger.h"
 #include "Model.h"
 
 
-namespace BJEngine {
+namespace BJEngine 
+{
 
 
 	using namespace BJEUtils;
@@ -68,6 +68,9 @@ namespace BJEngine {
 
 		DepthStencil::InitStencils();
 
+		dsv = new DepthStencil();
+		dsv->InitView(1920, 1080);
+
 		mainRTV = new RenderTarget(pBackBuffer);
 		sceneRTV = new RenderTarget(1920, 1080);
 		
@@ -86,7 +89,7 @@ namespace BJEngine {
 		svp.TopLeftX = 0;
 		svp.TopLeftY = 0;
 
-		GP::InitShaders();;
+		GP::InitShaders();
 
 		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 
@@ -99,7 +102,7 @@ namespace BJEngine {
 		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 
 		mainRTV->ClearRTV();
-		mainRTV->Bind(NULL);
+		GP::GetDeviceContext()->OMSetRenderTargets(1, &mainRTV->GetRTV(), NULL);
 
 		UI::Begin();
 	}
@@ -132,26 +135,39 @@ namespace BJEngine {
 			Log::Get()->Debug("ImGui was inited!");
 		}
 
-		if (!LightMananger::IsInited())
+		if (lmananger == nullptr)
 		{
-			LightMananger::Init();
+			lmananger = new LightMananger();
+			lmananger->Init();
 		}
 		
-		Materials::SetObjectPtr(&objects);
+		mainRTVBuffer = Helper::InitConstantBuffer<BJEStruct::MainSceneProcessingBuffer>(GP::GetDevice());
+		mainDesc.gamma = 1.0f;
+		mainDesc.expourse = 1.0f;
+
+		TESTINGTMP();
 
 		return true;
 	}
 
 	bool Render::DrawWnd()
 	{
-		
-
 		if (GetIsResizedState())
 		{
 			ResizeWindow();
 		}
 
-		LightMananger::DrawShadows(objects);
+		for (int index = 0; index < shadow.size(); index++)
+		{
+			shadow[index]->GenerateView(lmananger->GetDesc(index));
+			shadow[index]->Draw();
+
+			for (auto& el : elements)
+			{
+				el->DrawShadow();
+			}
+
+		}
 
 		BeginFrame();
 
@@ -165,13 +181,25 @@ namespace BJEngine {
 		}
 		
 		GP::GetDeviceContext()->RSSetViewports(1, &svp);
-		sceneRTV->ClearDSV();
+		dsv->ClearDepthStencilView();
 		sceneRTV->ClearRTV();
-		sceneRTV->Bind();
+
+		ID3D11RenderTargetView* items[1] =
+		{
+			sceneRTV->GetRTV(),
+		};
+
+		GP::GetDeviceContext()->OMSetRenderTargets(1, items, dsv->GetDepthStencil());
+
+		for (int index = 0; index < shadow.size(); index++)
+		{
+			shadow[index]->BindSRV(index);
+		}
+		GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
+		GP::GetDeviceContext()->PSSetSamplers(SHADOW_SAMPLERSTATE_POS, 1, Textures::GetClampState());
+
 
 		DrawScene();
-
-		
 
 		for (auto& el : UI::GetPostProcessingStatus())
 		{
@@ -179,23 +207,29 @@ namespace BJEngine {
 			{
 				sceneRTV->CreateCopyTexture();
 				sceneRTV->ClearRTV();
-				sceneRTV->Bind(NULL);
+				GP::GetDeviceContext()->OMSetRenderTargets(1, &sceneRTV->GetRTV(), NULL);
 				sceneRTV->DrawTexture(sceneRTV->GetCopyTexture(), el.first);
 			}
 
 		}
 
-
-
+		
 
 		GP::GetDeviceContext()->RSSetViewports(1, &vp);
-		mainRTV->Bind(NULL);
+		GP::GetDeviceContext()->OMSetRenderTargets(1, &mainRTV->GetRTV(), NULL);
+
+		GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &mainRTVBuffer);
+		GP::GetDeviceContext()->UpdateSubresource(mainRTVBuffer, 0, NULL, &mainDesc, 0, 0);
+		Blend::Get()->DrawNoBlend();
 		mainRTV->DrawTexture(sceneRTV->GetSRV(), SCENE);
 
 		EndFrame();
 
 		if (PackMananger::Get()->GetSavingStatus())
 		{
+			for (auto& el : objects)
+				el->Draw(cams[UI::FocusedCamera()]->GetDesc());
+
 			PackMananger::Get()->Close();
 		}
 		if (UnpackMananger::Get()->GetOpeningStatus())
@@ -215,6 +249,11 @@ namespace BJEngine {
 				return nullptr;
 			};
 		}
+		std::vector<Element*> tmp = std::move(object->MoveElements());
+		elements.insert(elements.end(), tmp.begin(), tmp.end());
+
+		std::sort(elements.begin(), elements.end(), [](Element*& a, Element*& b) { return a->GetPriorityRender() < b->GetPriorityRender(); });
+
 		objects.push_back(object);
 
 		return object;
@@ -307,9 +346,9 @@ namespace BJEngine {
 
 	void Render::SetLight(LightDesc ld)
 	{
-		if (LightMananger::AddLight(ld))
+		if (lmananger->AddLight(ld))
 		{
-			
+			shadow.push_back(new Shadow(ld.lightType));
 		};
 		islight = true;
 
@@ -317,41 +356,76 @@ namespace BJEngine {
 		
 	}
 
+	void Render::BindConstantBuffers()
+	{
+		
+		///////////////
+		// VERTEX SHADER
+		Element::BindConstantBuffer();
+		//////////////
+		// PIXEL SHADER
+		
+		if (lmananger->IsInited())
+			lmananger->Draw();
+
+		Materials::BindConstantBuffer();
+		//////////////
+		// GEOMETRY SHADER
+
+
+	}
+
+	void Render::TESTINGTMP()
+	{
+
+
+
+
+
+
+
+
+
+
+
+	}
+
 	bool Render::DrawScene()
 	{
-		//for (auto& el : cams)
-		//{
-		//	el->DrawCameraObject(cams[UI::FocusedCamera()]->GetDesc().viewMatrix, cams[UI::FocusedCamera()]->GetDesc().projectionMatrix);
-		//}
+		BindConstantBuffers();
 
-		if (LightMananger::IsInited())
-			LightMananger::Draw();
-		
-		objects.push_back(skyBox);
+		GP::BindShader(GP::MODEL_SHADER);
 
-		GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetBorderState());
 
-		for (auto& object : objects)
+		for (auto& el : elements)
 		{
-			if (object && object->IsInited())
-			{
-				LightMananger::SetMatrix(object);
-				object->Draw(cams[UI::FocusedCamera()]->GetDesc());
-			}
+			el->Draw(cams[UI::FocusedCamera()]->GetDesc());
 		}
 
-		objects.pop_back();
+
+		if (skyBox && skyBox->IsInited())
+		{
+			skyBox->Draw(cams[UI::FocusedCamera()]->GetDesc());
+		}
 
 		return true;
 	}
 
 	void Render::Close()
 	{
+		for (auto& el : elements) {
+			CLOSE(el);
+		}
 		for (auto& el : objects) {
 			CLOSE(el);
 		}
 		objects.clear();
 		
+		for (auto& el : shadow)
+		{
+			CLOSE(el);
+		}
+
 		for (auto& el : cams)
 		{
 			CLOSE(el);
@@ -363,6 +437,7 @@ namespace BJEngine {
 
 		RELEASE(pSwapChain);
 		
+		CLOSE(sceneRTV);
 		CLOSE(mainRTV);
 		CLOSE(skyBox);
 
@@ -370,7 +445,7 @@ namespace BJEngine {
 		Log::Get()->Debug("Render was closed");
 		PackMananger::Get()->Close();
 		UnpackMananger::Get()->Close();
-		LightMananger::Close();
+		CLOSE(lmananger);
 	}
 
 

@@ -77,21 +77,37 @@ namespace BJEngine
 		return isInitedM;
 	}
 
-	bool DepthStencil::InitView(int width, int height)
+	bool DepthStencil::InitView(int width, int height, bool MSAA,
+		UINT arraySize, DXGI_FORMAT format, UINT MiscFlags, UINT BindFlags,
+		bool isShaderResourseViewBind, bool isShadow)
 	{
 		
 		D3D11_TEXTURE2D_DESC depthStencilDesc;
 		depthStencilDesc.Width = width;
 		depthStencilDesc.Height = height;
 		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.ArraySize = 1;
-		depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthStencilDesc.ArraySize = arraySize;
+		if (isShadow)
+		{
+			if(format == DXGI_FORMAT_D32_FLOAT)
+				depthStencilDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		}
+		else
+		{
+			depthStencilDesc.Format = format;
+		}
+
 		depthStencilDesc.SampleDesc.Count = 1;
 		depthStencilDesc.SampleDesc.Quality = 0;
 		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthStencilDesc.BindFlags = BindFlags;
+
+		isShaderResourseViewBind ? depthStencilDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | BindFlags : true ;
+		
 		depthStencilDesc.CPUAccessFlags = 0;
-		depthStencilDesc.MiscFlags = 0;
+		depthStencilDesc.MiscFlags = MiscFlags;
+
+
 
 		ID3D11Texture2D* depthStencilBuffer;
 
@@ -100,17 +116,75 @@ namespace BJEngine
 		{
 			Log::Get()->Err("Create Simple Depth buffer error");
 		}
+		
+		if (isShaderResourseViewBind)
+		{
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+			if (isShadow)
+			{
+				if (format == DXGI_FORMAT_D32_FLOAT)
+					srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+			}
+			else
+			{
+				srvDesc.Format = format;
+			}
+			if (MiscFlags == D3D11_RESOURCE_MISC_TEXTURECUBE)
+			{
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+				srvDesc.TextureCube.MipLevels = 1;
+			}
+			hr = GP::GetDevice()->CreateShaderResourceView(depthStencilBuffer, &srvDesc, &srv);
+		}
 
-		hr = GP::GetDevice()->CreateDepthStencilView(depthStencilBuffer, NULL, &DepthStencilView);
+		D3D11_DEPTH_STENCIL_VIEW_DESC descView = CD3D11_DEPTH_STENCIL_VIEW_DESC();
+		if (isShadow)
+		{
+			descView.Format = format;
+			descView.Flags = 0;
+			if (MiscFlags == D3D11_RESOURCE_MISC_TEXTURECUBE)
+				descView.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+			else
+				descView.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+			descView.Texture2DArray.MipSlice = 0;
+			descView.Texture2DArray.ArraySize = arraySize;
+			descView.Texture2DArray.FirstArraySlice = 0;
+			hr = GP::GetDevice()->CreateDepthStencilView(depthStencilBuffer, &descView, &DepthStencilView);
+		}
+		else
+		{
+			
+			descView.Format = format;
+			if (MSAA)
+			{
+				descView.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+			}
+			else
+			{
+				descView.Texture2D.MipSlice = 0;
+				descView.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+			}
+			hr = GP::GetDevice()->CreateDepthStencilView(depthStencilBuffer, &descView, &DepthStencilView);
+		}
+		
 		if (FAILED(hr))
 		{
 			Log::Get()->Err("Create Simple DepthStencil buffer error");
 		}
 
+		
+
+
 		RELEASE(depthStencilBuffer);
 
 			
 		return true;
+	}
+
+	ID3D11ShaderResourceView*& DepthStencil::GetSRV()
+	{
+		return srv;
 	}
 
 	void DepthStencil::ClearDepthStencilView()

@@ -27,14 +27,10 @@ namespace BJEngine
 	class Materials
 	{
 
-		static std::vector<BJEngine::Object*>* objects;
+	
+		static ID3D11Buffer* pMaterialBuffer;
 
 	public:
-
-		static void SetObjectPtr(std::vector<BJEngine::Object*>* obj)
-		{
-			Materials::objects = obj;
-		};
 
 		Materials();
 
@@ -44,21 +40,26 @@ namespace BJEngine
 		void SetTexture(MATERIAL_TYPE textureType, std::wstring textureName);
 		void SetTexture(MATERIAL_TYPE textureType, Textures* texture);
 
-		void Draw(int registerMaterialPos);
-		void Draw(int registerMaterialPos, Element* elem);
+		void Draw();
 
 		void Close();
 
+		static void BindConstantBuffer()
+		{
+			if(pMaterialBuffer == nullptr)
+				pMaterialBuffer = Helper::InitConstantBuffer<ConstantMaterialBuffer>(GP::GetDevice());
+
+			GP::GetDeviceContext()->PSSetConstantBuffers(2, 1, &pMaterialBuffer);
+		}
+
+		int GenRenderPriority();
+
 	private:
 
-		UINT sizeViewPorts = 1;
-		CD3D11_VIEWPORT curr_vp;
-		static CD3D11_VIEWPORT reflect_vp;
 
 		void Init();
 
-		void GenerateReflectionTexture(dx::XMFLOAT3 pos);
-
+		
 		Textures* texture;
 		Textures* normalTexture;
 		Textures* roughnessTexture;
@@ -92,13 +93,13 @@ namespace BJEngine
 			
 			
 		};
-
-		ID3D11Buffer* pMaterialBuffer;
-
 		struct ConstantMaterialBuffer
 		{
 			MaterialDesc matDesc;
 		};
+		
+
+		
 
 		ConstantMaterialBuffer cmbDesc;
 

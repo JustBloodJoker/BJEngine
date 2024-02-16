@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "Light.h"
 #include "Object.h"
-#include "Shadow.h"
+
 
 namespace BJEngine
 {
@@ -11,56 +11,49 @@ namespace BJEngine
 	{
 		friend class UI;
 
+		struct ConstantBufferLight
+		{
+			LightDesc light[MAX_LIGHT_NUM];
+			int lightsCount = 0;
+			int pad3;
+			int pad1;
+			int pad2;
+		};
+
+		static ID3D11Buffer* lightBuffer;
+		
+		static LightMananger* instance;
 	public:
 
-		static bool Init();
-		static bool AddLight(LightDesc desc);
-		static bool Draw();
-		
-		//SHADOWS
-		static bool DrawShadows(std::vector<Object*> objects);
-		static bool SetMatrix(Object* object);
+		bool Init();
+		bool AddLight(LightDesc& desc);
+		bool Draw();
 
-		//SHADOWS
+		const bool IsInited();
+		const bool IsHaveLights();
 
-		static const bool IsInited();
-		static const bool IsHaveLights();
-
-		static void Close();
+		void Close();
 
 		//////////  Œ—“€À‹ ≈¡¿Õ€…
 		
-		static int GetType(int index)
+		int GetType(int index)
 		{
-			return lightDescBuffer.light[index].lightType;
+			return lDesc.light[index].lightType;
 		}
-		static LightDesc GetDesc(int index)
+		LightDesc GetDesc(int index)
 		{
-			return lightDescBuffer.light[index];
+			return lDesc.light[index];
 		}
 
 		//////////  Œ—“€À‹ ≈¡¿Õ€…
 
 	private:
 
-		static Shadow* shadows[MAX_LIGHT_NUM];
+		bool PackLights();
 		
-		static bool PackLights();
+		bool isInited;
 
-		static bool isInited;
-
-		struct ConstantBufferLight
-		{
-			LightDesc light[MAX_LIGHT_NUM];
-			int lightsCount = 0;
-			float gamma = 1.0f;
-			int pad1;
-			int pad2;
-		};
-
-		static ID3D11Buffer* lightBuffer;
-		static ConstantBufferLight lightDescBuffer;
-
+		ConstantBufferLight lDesc;		
 	};
 
 

@@ -5,22 +5,36 @@ namespace BJEngine
 {
 	unsigned int RenderTarget::size = 0;;
 	
-	RenderTarget::RenderTarget(ID3D11Texture2D* texture)
+	RenderTarget::RenderTarget(ID3D11Texture2D* texture, bool MSAA)
 	{
 		size++;
 
 		renderTargetTexture = texture;
-		HRESULT hr = GP::GetDevice()->CreateRenderTargetView(renderTargetTexture, NULL, &renderTargetView);
+		D3D11_TEXTURE2D_DESC DS;
+		texture->GetDesc(&DS);
+
+
+		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+		renderTargetViewDesc.Format = DS.Format;
+		if (MSAA)
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			renderTargetViewDesc.Texture2D.MipSlice = 0;
+		}
+		HRESULT hr = GP::GetDevice()->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
 		if (FAILED(hr)) {
 			Log::Get()->Err("RTV create error ", size);
 			size--;
 		}
 
-		
 		Screen::Init();
 	}
 
-	RenderTarget::RenderTarget(int width, int height)
+	RenderTarget::RenderTarget(int width, int height, bool MSAA)
 	{
 		size++;
 
@@ -35,6 +49,8 @@ namespace BJEngine
 		textureDesc.MiscFlags = 0;
 		
 		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+
 		textureDesc.Usage = D3D11_USAGE_DEFAULT;
 		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 		textureDesc.CPUAccessFlags = 0;
@@ -51,8 +67,15 @@ namespace BJEngine
 
 		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
 		renderTargetViewDesc.Format = textureDesc.Format;
-		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		renderTargetViewDesc.Texture2D.MipSlice = 0;
+		if (MSAA)
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			renderTargetViewDesc.Texture2D.MipSlice = 0;
+		}
 		result = GP::GetDevice()->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
 		
 
@@ -66,10 +89,16 @@ namespace BJEngine
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 		shaderResourceViewDesc.Format = textureDesc.Format;
-		shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		
-		shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-		shaderResourceViewDesc.Texture2D.MipLevels = 1;
+		if (MSAA)
+		{
+			shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			shaderResourceViewDesc.Texture2D.MipLevels = 1;
+			shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+		}
 
 		result = GP::GetDevice()->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &shaderResourceView);
 		result = GP::GetDevice()->CreateShaderResourceView(tempRenderTargetTexture, &shaderResourceViewDesc, &tempShaderResourceView);
@@ -81,8 +110,7 @@ namespace BJEngine
 			return;
 		}
 
-		dsv = new DepthStencil();
-		dsv->InitView(width, height);
+		
 	
 	}
 
@@ -95,16 +123,6 @@ namespace BJEngine
 	{
 		
 		GP::GetDeviceContext()->ClearRenderTargetView(renderTargetView, clearColor);
-	}
-	
-	void RenderTarget::ClearDSV()
-	{
-		dsv->ClearDepthStencilView();
-	}
-
-	void RenderTarget::Bind()
-	{
-		GP::GetDeviceContext()->OMSetRenderTargets(1, &renderTargetView, dsv->GetDepthStencil());
 	}
 
 	void RenderTarget::CreateCopyTexture()
@@ -123,9 +141,7 @@ namespace BJEngine
 		RELEASE(renderTargetView);
 		RELEASE(renderTargetTexture);
 		RELEASE(shaderResourceView);
-		
-		CLOSE(dsv);
-		
+				
 		size--;
 
 		if (size == 0)

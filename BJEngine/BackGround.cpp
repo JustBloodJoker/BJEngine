@@ -27,7 +27,7 @@ namespace BJEngine {
         }
 
 
-        ConstantBuffers.push_back(Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice()));
+        ConstantBuffers=Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice());
 
         Log::Get()->Debug("CubeMap is inited");
         isInited = true;
@@ -62,8 +62,8 @@ namespace BJEngine {
         BJEStruct::VertexConstantBuffer cb;
         cb.WVP = XMMatrixTranspose(WVP);
         cb.World = XMMatrixTranspose(world);
-        GP::GetDeviceContext()->UpdateSubresource(ConstantBuffers[0], 0, NULL, &cb, 0, 0);
-        GP::GetDeviceContext()->VSSetConstantBuffers(0, 1, &ConstantBuffers[0]);
+        GP::GetDeviceContext()->UpdateSubresource(ConstantBuffers, 0, NULL, &cb, 0, 0);
+        GP::GetDeviceContext()->VSSetConstantBuffers(0, 1, &ConstantBuffers);
         GP::GetDeviceContext()->PSSetShaderResources(0, 1, &texture->GetTexture());
         GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
 

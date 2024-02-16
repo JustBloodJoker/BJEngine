@@ -44,21 +44,15 @@ namespace BJEngine
 	public:
 		
 		RenderTarget() = default;
-		RenderTarget(ID3D11Texture2D* texture);
-		RenderTarget(int width, int height);
+		RenderTarget(ID3D11Texture2D* texture, bool MSAA = false);
+		RenderTarget(int width, int height, bool MSAA = false);
 
 		ID3D11RenderTargetView*& GetRTV();
 
 		void ClearRTV();
-		
-		void ClearDSV();
 
-		void Bind();
-		
 		void CreateCopyTexture();
 		ID3D11ShaderResourceView* GetCopyTexture();
-
-		void Bind(ID3D11DepthStencilView* dsv) { GP::GetDeviceContext()->OMSetRenderTargets(1, &renderTargetView, dsv); };
 
 		void Close();
 
@@ -71,7 +65,7 @@ namespace BJEngine
 
 	private:
 
-		DepthStencil* dsv;
+		
 
 		
 		ID3D11RenderTargetView* renderTargetView;

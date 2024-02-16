@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "Shader.h"
 
 namespace BJEngine {
 
@@ -31,7 +32,41 @@ namespace BJEngine {
 
 	};
 
-	
+	class Shadow
+	{
+		struct ShadowConstantBuffer
+		{
+			dx::XMMATRIX shViewProjection[6];
+		};
+		static ID3D11Buffer* shadowCBuffer;
+
+	public:
+
+		Shadow() = default;
+		Shadow(short type);
+
+		void Init(short type);
+		void Draw();
+
+		void GenerateView(const LightDesc ld);
+
+		void BindSRV(int deltIndex);
+
+		void Close();
+	private:
+
+		
+
+		bool isInited;
+		short shadowType;
+
+		Shader* shader;
+
+		D3D11_VIEWPORT vp;
+
+		DepthStencil* depthStencil;
+		ShadowConstantBuffer matrices;
+	};
 
 
 }

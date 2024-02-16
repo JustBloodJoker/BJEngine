@@ -27,7 +27,6 @@ namespace BJEngine
 
 		static const size_t FocusedCamera();
 
-		static bool AddModelToList(Model* model);
 
 		static std::unordered_map<BJEUtils::POST_PROCESSING, bool>& GetPostProcessingStatus()noexcept;
 
@@ -120,10 +119,6 @@ namespace BJEngine
 		////
 
 		static bool Model();
-		static std::vector<BJEngine::Model*> models;
-		static size_t focusedModel;
-		static std::string namesModels;
-		static int currItemComboModels;
 
 		/// 
 		///    CAMERA UI

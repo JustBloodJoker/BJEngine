@@ -28,30 +28,13 @@ namespace BJEngine
 
 		HRESULT hr = S_OK;
 
-		
-		ConstantBuffers.push_back(Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice()));
-		ConstantBuffers.push_back(Helper::InitConstantBuffer<BJEStruct::WVPConstantBuffer>(GP::GetDevice()));
-
-		for (auto& el : elements)
-		{
-			el->Init(&ConstantBuffers);
-		}
-
-		
-		rotation = dx::XMMatrixRotationY(0.0f);
-		scale = dx::XMMatrixScaling(1.0f, 1.0f, 1.0f);
-		pos = dx::XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-
-		world = rotation * scale * pos;
-
 		Log::Get()->Debug("Model was inited");
 		isInited = true;
 		
 		if(!script)
 			script = new Script();
 
-		UI::AddModelToList(this);
-
+		
 
 		
 		return true;
@@ -59,42 +42,6 @@ namespace BJEngine
 
 	void Model::Draw(const CameraDesc cam)
 	{
-		
-
-		//ImGui::Begin(filename.c_str());
-		//ImGui::Text("Set script");
-		//ImGui::InputText(" ", buffer, 100);
-		//if (ImGui::Button("Set"))
-		//{
-		//	script->ParseScript(buffer);
-		//};
-		//
-		//if(!isSimulate)
-		//	isSimulate = ImGui::Button("Start Script");
-		//if (isSimulate)
-		//{
-		//	if (!returned)
-		//	{
-		//		bworld = world;
-		//		returned = true;
-		//	}
-		//	world *= script->DrawScript();
-		//	
-		//	isSimulate = !ImGui::Button("Stop Script");
-		//}
-		//else if(returned)
-		//{
-		//	returned = false;
-		//	world = bworld;
-		//	script->ResetParameters();
-		//}
-		//ImGui::End();
-
-		for (auto& el : elements)
-		{	
-			el->Draw(cam, lView, lProjection);
-		}
-
 		if (PackMananger::Get()->GetSavingStatus())
 		{
 			ObjectType* tpe = new ObjectType();
@@ -114,14 +61,6 @@ namespace BJEngine
 		materials.clear();
 	}
 
-	void Model::MinDraw(dx::BoundingFrustum frustum)
-	{
-		for (auto& el : elements)
-		{
-			el->MinDraw(frustum);
-		}
-	}
-
 	void Model::SetScript(std::string data)
 	{
 		script = new Script();
@@ -130,6 +69,11 @@ namespace BJEngine
 
 	bool Model::LoadModel()
 	{
+		std::vector<BJEStruct::ModelVertex> ver;
+		std::vector<WORD> ind;
+		dx::XMVECTOR min;
+		dx::XMVECTOR max;
+
 		const aiScene* scene = nullptr;
 		Assimp::Importer importer;
 		
@@ -206,7 +150,13 @@ namespace BJEngine
 			}
 			pathname.Clear();
 
-
+			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_HEIGHT, 0, &pathname);
+			if (pathname.length != 0)
+			{
+				int ii;
+				ii = 0;
+			}
+			pathname.Clear();
 		}
 
 		dx::XMFLOAT3 minExtent;
@@ -275,7 +225,6 @@ namespace BJEngine
 
 				numofIndex += 3;
 			}
-
 			elements.push_back(new Element(ver, ind, materials[mesh->mMaterialIndex], min, max));
 			ver.clear();
 			ind.clear();

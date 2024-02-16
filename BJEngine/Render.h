@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "Light.h"
 #include "Sound.h"
+#include "LightMananger.h"
 #include "MainCamera.h"
 #include "Object.h"
 #include "BackGround.h"
@@ -12,6 +13,10 @@ namespace BJEngine {
 
 	class Render
 	{
+	protected:
+
+		friend class UI;
+
 	public:
 
 		Render()
@@ -54,10 +59,19 @@ namespace BJEngine {
 
 		void SetLight(LightDesc ld);
 
+		void BindConstantBuffers();
+
+		void TESTINGTMP();
+
+	protected:
+
+		BJEStruct::MainSceneProcessingBuffer mainDesc;
+
 	private:
 
 		bool DrawScene();
 
+		std::vector<Element*> elements;
 		std::vector<Object*> objects;
 		std::vector<BJAudio::Sound*> sound;
 		std::vector<Camera*> cams;
@@ -74,13 +88,20 @@ namespace BJEngine {
 
 		IDXGISwapChain* pSwapChain;
 
+		std::vector<Shadow*> shadow;
+
+		DepthStencil* dsv;
+
 		RenderTarget* mainRTV;
+		ID3D11Buffer* mainRTVBuffer;
 		RenderTarget* sceneRTV;
 		
 		D3D11_VIEWPORT vp;
 		D3D11_VIEWPORT svp;
 
 		LightDesc ld;
+
+		LightMananger* lmananger;
 	};
 
 

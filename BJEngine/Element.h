@@ -9,29 +9,46 @@ namespace BJEngine
 
 	class Element
 	{
+        static ID3D11Buffer* pConstantBuffer;
+        static ID3D11Buffer* pWorldConstantBuffer;
+
         static int count;
         
 	public:
         
+        static void BindConstantBuffer();
+
         Element();
         Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material,
                     dx::XMVECTOR min, dx::XMVECTOR max);
         ~Element();
 
         void Close();
-        void Init(std::vector<ID3D11Buffer*>* ConstantBuffers);
-        void Draw(CameraDesc cam, dx::XMMATRIX* lView, dx::XMMATRIX* lProjection);
-        void MinDraw(dx::BoundingFrustum frustum);
-
+        void Init();
+        void Draw(CameraDesc cam);
+        void DrawShadow();
+       
         std::string GetName() const;
 
         void SetFocusState(bool state);
 
-        dx::XMFLOAT3 GetWorldPosition() const;
+        bool operator<(const Element& other) const {
+            return priority > other.priority;
+        }
+
+        const int GetPriorityRender() const;
+
+    protected:
+
+        virtual void Binds();
+        dx::XMMATRIX world;
+        dx::XMVECTOR minLocal;
+        dx::XMVECTOR maxLocal;
+        dx::BoundingBox objectBox;
+        bool frustumCheck = true;
 
 	private:
-        dx::BoundingBox objectBox;
-        dx::XMMATRIX world;
+        int priority = 1;
 
         bool drawing;
 
@@ -45,12 +62,8 @@ namespace BJEngine
 
         ID3D11Buffer* pIndexBuffer;
         ID3D11Buffer* pVertexBuffer;
-        std::vector<ID3D11Buffer*>* ConstantBuffers;
 
-        dx::XMVECTOR minLocal;
-        dx::XMVECTOR maxLocal;
-
-	};
+    };
 
 
 }

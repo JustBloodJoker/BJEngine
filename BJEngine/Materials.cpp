@@ -3,24 +3,20 @@
 
 namespace BJEngine
 {
-	std::vector<BJEngine::Object*>* Materials::objects = nullptr;
-	CD3D11_VIEWPORT Materials::reflect_vp;
+	ID3D11Buffer* Materials::pMaterialBuffer = nullptr;
 
 	Materials::Materials()
 	{
 		Init();
 		
-		////////////////////////
-		//	reflectionTexture = new RenderTarget(512, 512, D3D11_SRV_DIMENSION_TEXTURECUBE, GP::pDevice, GP::GetDeviceContext());
-		////////////////////////
 	}
 
-	void Materials::Draw(int registerMaterialPos)
+	void Materials::Draw()
 	{
 		if (isInit)
 		{
 			GP::GetDeviceContext()->UpdateSubresource(pMaterialBuffer, 0, NULL, &cmbDesc, 0, 0);
-			GP::GetDeviceContext()->PSSetConstantBuffers(registerMaterialPos, 1, &pMaterialBuffer);
+			
 
 			if (cmbDesc.matDesc.ishaveTransparency)
 				Blend::Get()->DrawTransparencyBlend();
@@ -29,6 +25,7 @@ namespace BJEngine
 				Blend::Get()->DrawAlphaBlend();
 			else
 				Blend::Get()->DrawNoBlend();
+			        
 
 			
 
@@ -66,33 +63,23 @@ namespace BJEngine
 				GP::GetDeviceContext()->PSSetShaderResources(SPECULAR_TEXTURE_POS, 1, &specularTexture->GetTexture());
 				GP::GetDeviceContext()->PSSetSamplers(SPECULAR_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
-
 		}
 	}
 
-	void Materials::Draw(int registerMaterialPos, Element* elem)
+	
+	int Materials::GenRenderPriority()
 	{
-		if (isInit)
-		{
-			//GenerateReflectionTexture(elem->GetWorldPosition());
 
-			if (isReflect)
-			{
-				
-				
+		if (cmbDesc.matDesc.ishaveTransparency)
+			return 2;
 
-				return;
-			}
-			else
-			{
-				Draw(registerMaterialPos);
-			}
-		}
+		return 1;
 	}
 
 	void Materials::Init()
 	{
-		pMaterialBuffer = Helper::InitConstantBuffer<ConstantMaterialBuffer>(GP::GetDevice());
+		if(pMaterialBuffer == nullptr)
+			pMaterialBuffer = Helper::InitConstantBuffer<ConstantMaterialBuffer>(GP::GetDevice());
 
 		if (!pMaterialBuffer)
 		{
@@ -101,99 +88,7 @@ namespace BJEngine
 			return;
 		}
 
-		Materials::reflect_vp.Height = 512;
-		Materials::reflect_vp.Width = 512;
-		Materials::reflect_vp.MaxDepth = 1.0f;
-		Materials::reflect_vp.MinDepth = 0.0f;
-		Materials::reflect_vp.TopLeftX = 0.0f;
-		Materials::reflect_vp.TopLeftY = 0.0f;
-
 		isInit = true;
-	}
-
-	void Materials::GenerateReflectionTexture(dx::XMFLOAT3 pos)
-	{
-		//CameraDesc camDesc[6];
-
-		//camDesc[0].projectionMatrix = dx::XMMatrixPerspectiveFovLH(M_PI / 2.0f, 1.0f, 1.0f, 10000.0f);
-		//camDesc[1].projectionMatrix = camDesc[0].projectionMatrix;
-		//camDesc[2].projectionMatrix = camDesc[0].projectionMatrix;
-		//camDesc[3].projectionMatrix = camDesc[0].projectionMatrix;
-		//camDesc[4].projectionMatrix = camDesc[0].projectionMatrix;
-		//camDesc[5].projectionMatrix = camDesc[0].projectionMatrix;
-
-		//dx::XMFLOAT4 forward = dx::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f);
-		//dx::XMFLOAT4 up = dx::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
-
-		//camDesc[0].viewMatrix = dx::XMMatrixLookAtLH(dx::XMLoadFloat3(&pos),
-		//	dx::XMLoadFloat3(&pos) + dx::XMLoadFloat4(&forward),
-		//	dx::XMLoadFloat4(&up));
-
-		//forward = dx::XMFLOAT4(-1.0f, 0.0f, 0.0f, 0.0f);
-		//up = dx::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
-
-		//camDesc[1].viewMatrix = dx::XMMatrixLookAtLH(dx::XMLoadFloat3(&pos),
-		//	dx::XMLoadFloat3(&pos) + dx::XMLoadFloat4(&forward),
-		//	dx::XMLoadFloat4(&up));
-
-		//forward = dx::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
-		//up = dx::XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
-
-		//camDesc[2].viewMatrix = dx::XMMatrixLookAtLH(dx::XMLoadFloat3(&pos),
-		//	dx::XMLoadFloat3(&pos) + dx::XMLoadFloat4(&forward),
-		//	dx::XMLoadFloat4(&up));
-
-		//forward = dx::XMFLOAT4(0.0f, -1.0f, 0.0f, 0.0f);
-		//up = dx::XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f);
-
-		//camDesc[3].viewMatrix = dx::XMMatrixLookAtLH(dx::XMLoadFloat3(&pos),
-		//	dx::XMLoadFloat3(&pos) + dx::XMLoadFloat4(&forward),
-		//	dx::XMLoadFloat4(&up));
-
-		//forward = dx::XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f);
-		//up = dx::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
-
-		//camDesc[4].viewMatrix = dx::XMMatrixLookAtLH(dx::XMLoadFloat3(&pos),
-		//	dx::XMLoadFloat3(&pos) + dx::XMLoadFloat4(&forward),
-		//	dx::XMLoadFloat4(&up));
-
-		//forward = dx::XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
-		//up = dx::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
-
-		//camDesc[5].viewMatrix = dx::XMMatrixLookAtLH(dx::XMLoadFloat3(&pos),
-		//	dx::XMLoadFloat3(&pos) + dx::XMLoadFloat4(&forward),
-		//	dx::XMLoadFloat4(&up));
-
-		//
-		//GP::GetDeviceContext()->RSGetViewports(&sizeViewPorts, &curr_vp);
-
-		//GP::GetDeviceContext()->RSSetViewports(1, &reflect_vp);
-
-
-
-		//for (int x = 0; x < 6; x++)
-		//{
-		//	camDesc[x].GenFrustum();
-
-		//	reflectionTexture->Clear(x);
-		//	reflectionTexture->Bind(x);
-
-		//	for (auto& el : *objects)
-		//	{
-		//		if (el && el->IsInited())
-		//		{
-		//			el->Draw(camDesc[x]);
-		//		}
-		//	}
-
-		//	if(Input::Get()->CheckKeyState(DIK_6))
-		//		reflectionTexture->SaveRTVTexture(L"3.png");
-		//
-		//}
-
-		//GP::GetDeviceContext()->RSSetViewports(1, &curr_vp);
-		//RenderTarget::sceneRTV->Bind();
-	
 	}
 
 	void Materials::HasAlphaChannel(ID3D11ShaderResourceView* textureSRV)

@@ -5,6 +5,7 @@ namespace BJEngine {
 	bool Textures::deletedStatic = true;
 	ID3D11SamplerState* Textures::WrapState = {};
 	ID3D11SamplerState* Textures::BorderState = {};
+	ID3D11SamplerState* Textures::ClampState = {};
 
 	D3D11_FILTER Textures::textureFilter = D3D11_FILTER_ANISOTROPIC;
 	D3D11_FILTER Textures::shadowFilter = D3D11_FILTER_ANISOTROPIC;
@@ -140,6 +141,18 @@ namespace BJEngine {
 			&BorderState
 		);
 
+		ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
+		sampDesc = CD3D11_SAMPLER_DESC();
+		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+		sampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
+		GP::GetDevice()->CreateSamplerState(
+			&sampDesc,
+			&ClampState
+		);
+
 		deletedStatic = false;
 
 		return true;
@@ -154,6 +167,11 @@ namespace BJEngine {
 	ID3D11SamplerState* const* Textures::GetWrapState()
 	{
 		return &WrapState;
+	}
+
+	ID3D11SamplerState* const* Textures::GetClampState()
+	{
+		return &ClampState;
 	}
 
 

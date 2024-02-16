@@ -7,11 +7,16 @@ namespace BJEUtils
 
 
 
-#define DIFFUSE_TEXTURE_POS      0
-#define NORMAL_TEXTURE_POS       1
-#define ROUGHNESS_TEXTURE_POS    2
-#define EMISSION_TEXTURE_POS     3
-#define SPECULAR_TEXTURE_POS     4
+#define DIFFUSE_TEXTURE_POS           0
+#define NORMAL_TEXTURE_POS            1
+#define ROUGHNESS_TEXTURE_POS         2
+#define EMISSION_TEXTURE_POS          3
+#define SPECULAR_TEXTURE_POS          4
+
+
+#define SHADOWCUBE_TEXTURE_POS        5
+
+
 
 #define DIFFUSE_SAMPLERSTATE_POS      0
 #define NORMAL_SAMPLERSTATE_POS       0
@@ -19,6 +24,7 @@ namespace BJEUtils
 #define EMISSION_SAMPLERSTATE_POS     0
 #define SPECULAR_SAMPLERSTATE_POS     0
 
+#define SHADOW_SAMPLERSTATE_POS       1
 
 
 

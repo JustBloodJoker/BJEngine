@@ -57,8 +57,6 @@ namespace BJEStruct
         dx::XMMATRIX ViewMatrix;
         dx::XMMATRIX projectionMatrix;
         dx::XMFLOAT4 pos;
-        dx::XMMATRIX lView[5];
-        dx::XMMATRIX lProj[5];
     };
 
     struct GeometryConstantBuffer
@@ -68,6 +66,15 @@ namespace BJEStruct
         int pad;
         int pad2;
     };
+
+    struct MainSceneProcessingBuffer
+    {
+        float gamma;
+        float expourse;
+        int pad;
+        int pad1;
+    };
+
 
 }
 

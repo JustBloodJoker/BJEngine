@@ -7,8 +7,6 @@ cbuffer WorldMatrixBuffer : register(b1)
     matrix cam;
     matrix projection;
     float4 lightpos;
-    matrix lview[MAX_LIGHT_NUM];
-    matrix lproj[MAX_LIGHT_NUM];
 };
 
 struct VS_INPUT
@@ -29,18 +27,11 @@ struct VS_OUTPUT
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
-  
-   
-   
-   float4 lightViewPosition[MAX_LIGHT_NUM] : TEXCOORD1;
 };
 
-VS_OUTPUT VS(VS_INPUT input,  uint instanceid : SV_InstanceID)
+VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
-
-
-    input.pos.x = input.pos.x + instanceid *3000;
 
     output.pos = mul(input.pos, WVP);
     output.worldPos = mul(input.pos, world);
@@ -50,11 +41,5 @@ VS_OUTPUT VS(VS_INPUT input,  uint instanceid : SV_InstanceID)
     output.bitangent = mul(input.bitangent, world);
     output.texCoord = input.texCoord;
 
-    for(int i = 0; i < MAX_LIGHT_NUM; i++)
-    {
-        output.lightViewPosition[i] = mul(input.pos, world);
-        output.lightViewPosition[i] = mul(output.lightViewPosition[i], lview[i]);
-        output.lightViewPosition[i] = mul(output.lightViewPosition[i], lproj[i]);
-    }
     return output;
 }

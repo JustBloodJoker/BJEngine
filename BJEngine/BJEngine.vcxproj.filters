@@ -54,9 +54,6 @@
     <ClInclude Include="Light.h">
       <Filter>Light</Filter>
     </ClInclude>
-    <ClInclude Include="Shadow.h">
-      <Filter>Light</Filter>
-    </ClInclude>
     <ClInclude Include="BackGround.h">
       <Filter>Objects</Filter>
     </ClInclude>
@@ -159,9 +156,6 @@
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="Light.cpp">
-      <Filter>Light</Filter>
-    </ClCompile>
-    <ClCompile Include="Shadow.cpp">
       <Filter>Light</Filter>
     </ClCompile>
     <ClCompile Include="BackGround.cpp">

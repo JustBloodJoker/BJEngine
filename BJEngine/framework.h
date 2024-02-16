@@ -53,6 +53,7 @@ namespace dx = DirectX;
 #include <mutex>
 
 #include <iostream>
+#include <queue>
 
 #include <imgui.h>
 #include <imgui_impl_dx11.h>

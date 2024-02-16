@@ -18,7 +18,12 @@ namespace BJEngine {
 		void SetTexture(Textures* texture);
 
 	private:
-		
+		dx::XMMATRIX world;
+
+		dx::XMMATRIX rotation;
+		dx::XMMATRIX scale;
+		dx::XMMATRIX pos;
+
 		bool hastext = false;
 		Textures* texture;
 		

@@ -19,26 +19,13 @@ namespace BJEngine {
         bool Init() override;
         void Draw(const CameraDesc cam) override;
         void Close() override;
-        void MinDraw(dx::BoundingFrustum frustum) override;
-
+       
         void SetScript(std::string data);
     private:
 
-
-        std::vector<Element*> elements;
-
-        dx::XMMATRIX bworld;
-  
-        bool LoadModel();
-
-        std::vector<BJEStruct::ModelVertex> ver;
-        std::vector<WORD> ind;
-        dx::XMVECTOR min;
-        dx::XMVECTOR max;
-
+        bool LoadModel();       
         std::string filename;
 
-        //char buffer[100];
         bool isSimulate = false, returned = false;
 
 

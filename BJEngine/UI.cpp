@@ -48,10 +48,7 @@ namespace BJEngine
     int UI::currItemComboLights = 0;
     size_t UI::indexLight = 0;
 
-    std::vector<BJEngine::Model*> UI::models;
-    size_t UI::focusedModel = 0;
-    std::string UI::namesModels = "";
-    int UI::currItemComboModels = 0;
+
 
     std::vector<Textures*> UI::textures_UI;
     int UI::currLightAddItem = 0;
@@ -77,7 +74,7 @@ namespace BJEngine
        
         ShowWindow(GetConsoleWindow(), SW_HIDE);
 
-        pArrayLightDesc = LightMananger::lightDescBuffer.light;
+       
 
         return true;
     }
@@ -156,19 +153,6 @@ namespace BJEngine
         return 0;
     }
 
-    bool UI::AddModelToList(BJEngine::Model* model)
-    {
-        models.push_back(model);
-        std::string end = "";
-        if (namesModels.find(models[models.size() - 1]->filename) < namesModels.size())
-        {
-            end += " -copy";
-        }
-        end += '\0';
-        namesModels += models[models.size() - 1]->filename + end;
-        
-        return true;
-    }
 
     std::unordered_map<BJEUtils::POST_PROCESSING, bool>& UI::GetPostProcessingStatus() noexcept
     {
@@ -570,7 +554,7 @@ namespace BJEngine
                 
                 if (ImGui::Button("Open", ImVec2(50, 30)))
                 {
-                    LightMananger::AddLight(ldTemp);
+                    render->SetLight(ldTemp);
                     addLight = false;
                 }
 
@@ -733,60 +717,9 @@ namespace BJEngine
 
     bool UI::Model()
     {
-        if (!models.empty())
-        {
-
-            
-
-            ImGui::SeparatorText("Focused model");
-            
-            ImGui::Combo("Model Focus", &currItemComboModels, namesModels.c_str(), IM_ARRAYSIZE(namesModels.c_str()));
-            focusedModel = currItemComboModels;
-
-            ImGui::SeparatorText("Model settings");
-
-           
-
-
-            if (ImGui::TreeNode("Textures"))
-            {
-                
-                ImGui::TreePop();
-            }
-
-            if (ImGui::TreeNode("ffdss"))
-            {
-                ImGui::Text("Suka blyat");
-                ImGui::TreePop();
-            }
-            if (ImGui::TreeNode("Elements"))
-            {
-                static bool* selection = new bool[models[focusedModel]->elements.size()]();
-
-                for (size_t ind = 0; ind < models[focusedModel]->elements.size(); ind++)
-                {
-                    if (ImGui::Selectable(models[focusedModel]->elements[ind]->GetName().c_str(), selection[ind]))
-                    {
-                        if (!Input::Get()->CheckKeyState(DIK_RCONTROL))
-                            memset(selection, 0, models[focusedModel]->elements.size());
-                        
-                        selection[ind] ^= 1;
-                    }
-                    models[focusedModel]->elements[ind]->SetFocusState(selection[ind]);
-                }
-
-
-
-
-                ImGui::TreePop();
-            }
-
-
-        }
-        else
-        {
-            ImGui::Text("Project doesn't have models!");
-        }
+        
+        ImGui::Text("In future");
+        
 
 
 
@@ -841,19 +774,17 @@ namespace BJEngine
 
     bool UI::Light()
     {
-        ImGui::SeparatorText("Lights correction");
-
-        ImGui::SliderFloat("Gamma", &LightMananger::lightDescBuffer.gamma, 0.5f, 2.2f);
+        pArrayLightDesc = LightMananger::instance->lDesc.light;
 
         ImGui::SeparatorText("Focused light");
 
-        if (!LightMananger::IsHaveLights())
+        if (!LightMananger::instance->IsHaveLights())
         {
             ImGui::Text("Project doesn't have lights!");
             return false;
         }
 
-        for (; indexLight < LightMananger::lightDescBuffer.lightsCount; indexLight++)
+        for (; indexLight < LightMananger::instance->lDesc.lightsCount; indexLight++)
         {
             namesLights +=  BJEUtils::ParseLightTypeToStr(pArrayLightDesc[indexLight].lightType)
                 + " " + std::to_string(indexLight) + '\0';
@@ -893,6 +824,11 @@ namespace BJEngine
 
     bool UI::PostProcessing()
     {
+        ImGui::SeparatorText("Lights correction");
+
+        ImGui::SliderFloat("Gamma", &render->mainDesc.gamma, 0.5f, 4.0f);
+        ImGui::SliderFloat("Expourse", &render->mainDesc.expourse, 0.1f, 5.0f);
+
         ImGui::SeparatorText("Post processing");
 
         ImGui::Checkbox("Inversion", &postProcessingBools[BJEUtils::INVERSION]);
