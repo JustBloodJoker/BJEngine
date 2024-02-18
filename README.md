@@ -56,4 +56,4 @@ version 2.1
 GUI and something new
 
 version -1.9
-Useless functions are deleted. Added deferred shading but with out light pre-pass
+Useless functions are deleted. Added deferred shading but with out light pre-pass. Fixed omnidirectional shadows
