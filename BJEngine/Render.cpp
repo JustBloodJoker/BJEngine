@@ -11,6 +11,9 @@ namespace BJEngine
 
 	bool Render::CreateDevice()
 	{
+		D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
+		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
+
 		HRESULT hr = S_OK;
 
 		D3D_DRIVER_TYPE driverTypes[] =
@@ -73,6 +76,8 @@ namespace BJEngine
 
 		mainRTV = new RenderTarget(pBackBuffer);
 		sceneRTV = new RenderTarget(1920, 1080);
+		diffuseRTV = new RenderTarget(1920, 1080);
+		normalsRTV = new RenderTarget(1920, 1080);
 		
 		vp.Width = BJEUtils::GetWindowWidth();
 		vp.Height = BJEUtils::GetWindowHeight();
@@ -91,14 +96,11 @@ namespace BJEngine
 
 		GP::InitShaders();
 
-		GP::GetDeviceContext()->RSSetViewports(1, &vp);
-
 		return true;
 	}
 
 	void Render::BeginFrame()
 	{
-		float ClearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 
 		mainRTV->ClearRTV();
@@ -145,8 +147,6 @@ namespace BJEngine
 		mainDesc.gamma = 1.0f;
 		mainDesc.expourse = 1.0f;
 
-		TESTINGTMP();
-
 		return true;
 	}
 
@@ -159,6 +159,7 @@ namespace BJEngine
 
 		for (int index = 0; index < shadow.size(); index++)
 		{
+			
 			shadow[index]->GenerateView(lmananger->GetDesc(index));
 			shadow[index]->Draw();
 
@@ -166,63 +167,118 @@ namespace BJEngine
 			{
 				el->DrawShadow();
 			}
-
-		}
-
-		BeginFrame();
-
-		UnpackProject();
-
-		cams[0]->DrawCameraObject();
-
-		for (auto& tSound : sound)
-		{
-			tSound->Play();
 		}
 		
-		GP::GetDeviceContext()->RSSetViewports(1, &svp);
-		dsv->ClearDepthStencilView();
-		sceneRTV->ClearRTV();
-
-		ID3D11RenderTargetView* items[1] =
-		{
-			sceneRTV->GetRTV(),
-		};
-
-		GP::GetDeviceContext()->OMSetRenderTargets(1, items, dsv->GetDepthStencil());
-
-		for (int index = 0; index < shadow.size(); index++)
-		{
-			shadow[index]->BindSRV(index);
-		}
-		GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
-		GP::GetDeviceContext()->PSSetSamplers(SHADOW_SAMPLERSTATE_POS, 1, Textures::GetClampState());
-
-
-		DrawScene();
-
-		for (auto& el : UI::GetPostProcessingStatus())
-		{
-			if (el.second)
+		// START
+		{ 
+			BeginFrame();
+			UnpackProject();
+			cams[0]->DrawCameraObject();
+			for (auto& tSound : sound)
 			{
-				sceneRTV->CreateCopyTexture();
-				sceneRTV->ClearRTV();
-				GP::GetDeviceContext()->OMSetRenderTargets(1, &sceneRTV->GetRTV(), NULL);
-				sceneRTV->DrawTexture(sceneRTV->GetCopyTexture(), el.first);
+				tSound->Play();
 			}
+		}
+		
+		//RENDER TO TEXTURES
+		{ 
+			GP::GetDeviceContext()->RSSetViewports(1, &svp);
+			dsv->ClearDepthStencilView();
+			sceneRTV->ClearRTV();
+			diffuseRTV->ClearRTV();
+			normalsRTV->ClearRTV();
 
+			ID3D11RenderTargetView* items[3] =
+			{
+				sceneRTV->GetRTV(),
+				diffuseRTV->GetRTV(),
+				normalsRTV->GetRTV(),
+			};
+
+			GP::GetDeviceContext()->OMSetRenderTargets(ARRAYSIZE(items), items, dsv->GetDepthStencil());
+
+			GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
+
+			Element::BindConstantBuffer();
+			Materials::BindConstantBuffer();
+			GP::BindShader(GP::MODEL_SHADER);
+
+			DrawScene();
+			
+			
+		}
+	
+		//RENDER TEXTURES ON THE SCENE
+		{
+			sceneRTV->CreateCopyTexture();
+			sceneRTV->ClearRTV();
+			GP::GetDeviceContext()->OMSetRenderTargets(1, &sceneRTV->GetRTV(), dsv->GetDepthStencil());
+
+			////////////////// SET TEXTURES
+			GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
+
+			GP::GetDeviceContext()->PSSetShaderResources(0, 1, &sceneRTV->GetCopyTexture());
+			GP::GetDeviceContext()->PSSetShaderResources(1, 1, &diffuseRTV->GetSRV());
+			GP::GetDeviceContext()->PSSetShaderResources(2, 1, &normalsRTV->GetSRV());
+
+			for (int index = 0; index < shadow.size(); index++)
+			{
+						shadow[index]->BindSRV(index);
+			}
+			GP::GetDeviceContext()->PSSetSamplers(SHADOW_SAMPLERSTATE_POS, 1, Textures::GetClampState());
+			////////////////////////////////
+			if (lmananger->IsInited())
+				lmananger->Draw();
+
+			///////////////////////////////
+			GP::BindShader(GP::DEFFEREDSCENE_SHADER_PS);
+			
+			Camera::SetCameraBuffer(cams[UI::FocusedCamera()]->GetDesc());
+
+			Blend::Get()->DrawNoBlend();
+
+			DepthStencil::SetDepthStencilState(READ);
+
+			//////////////////////////////
+			sceneRTV->DrawTexture();
+
+
+			DepthStencil::SetDepthStencilState(NON);
+		}
+		
+		// SKYBOX
+		if (skyBox && skyBox->IsInited())
+		{
+			skyBox->Draw(cams[UI::FocusedCamera()]->GetDesc());
 		}
 
+		//POST PROCESSING SCENE TEXTURE
+		{ 
+			for (auto& el : UI::GetPostProcessingStatus())
+			{
+				if (el.second)
+				{
+					sceneRTV->CreateCopyTexture();
+					sceneRTV->ClearRTV();
+					GP::GetDeviceContext()->OMSetRenderTargets(1, &sceneRTV->GetRTV(), NULL);
+					sceneRTV->DrawTexture(sceneRTV->GetCopyTexture(), el.first);
+				}
+
+			}
+		}
 		
+		//RENDER SCENE TEXTURE ON THE SCREEN
+		{ 
+			GP::GetDeviceContext()->RSSetViewports(1, &vp);
+			GP::GetDeviceContext()->OMSetRenderTargets(1, &mainRTV->GetRTV(), NULL);
 
-		GP::GetDeviceContext()->RSSetViewports(1, &vp);
-		GP::GetDeviceContext()->OMSetRenderTargets(1, &mainRTV->GetRTV(), NULL);
+			GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &mainRTVBuffer);
+			GP::GetDeviceContext()->UpdateSubresource(mainRTVBuffer, 0, NULL, &mainDesc, 0, 0);
+			
+			mainRTV->DrawTexture(sceneRTV->GetSRV(), SCENE);
+		}
 
-		GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &mainRTVBuffer);
-		GP::GetDeviceContext()->UpdateSubresource(mainRTVBuffer, 0, NULL, &mainDesc, 0, 0);
-		Blend::Get()->DrawNoBlend();
-		mainRTV->DrawTexture(sceneRTV->GetSRV(), SCENE);
-
+		// END
 		EndFrame();
 
 		if (PackMananger::Get()->GetSavingStatus())
@@ -237,6 +293,19 @@ namespace BJEngine
 			UnpackMananger::Get()->Reset();
 		}
 
+		return true;
+	}
+	
+	bool Render::DrawScene()
+	{
+
+		for (auto& el : elements)
+		{
+			el->Draw(cams[UI::FocusedCamera()]->GetDesc());
+		}
+
+
+		
 		return true;
 	}
 
@@ -314,6 +383,7 @@ namespace BJEngine
 
 		if (UnpackMananger::Get()->GetOpeningStatus())
 		{
+			LightDesc ld;
 			std::vector<LightType> unp = UnpackMananger::Get()->GetLights();
 
 			for (auto& el : unp)
@@ -346,69 +416,11 @@ namespace BJEngine
 
 	void Render::SetLight(LightDesc ld)
 	{
-		if (lmananger->AddLight(ld))
-		{
+		if (lmananger->AddLight(ld) && ld.shadowEnabled && shadow.size() <= MAX_SHADOW_NUM)
+		{	
 			shadow.push_back(new Shadow(ld.lightType));
 		};
 		islight = true;
-
-
-		
-	}
-
-	void Render::BindConstantBuffers()
-	{
-		
-		///////////////
-		// VERTEX SHADER
-		Element::BindConstantBuffer();
-		//////////////
-		// PIXEL SHADER
-		
-		if (lmananger->IsInited())
-			lmananger->Draw();
-
-		Materials::BindConstantBuffer();
-		//////////////
-		// GEOMETRY SHADER
-
-
-	}
-
-	void Render::TESTINGTMP()
-	{
-
-
-
-
-
-
-
-
-
-
-
-	}
-
-	bool Render::DrawScene()
-	{
-		BindConstantBuffers();
-
-		GP::BindShader(GP::MODEL_SHADER);
-
-
-		for (auto& el : elements)
-		{
-			el->Draw(cams[UI::FocusedCamera()]->GetDesc());
-		}
-
-
-		if (skyBox && skyBox->IsInited())
-		{
-			skyBox->Draw(cams[UI::FocusedCamera()]->GetDesc());
-		}
-
-		return true;
 	}
 
 	void Render::Close()
@@ -435,8 +447,10 @@ namespace BJEngine
 		
 		GP::ClearGlobalParameters();
 
-		RELEASE(pSwapChain);
-		
+		RELEASE(pSwapChain)
+			;
+		CLOSE(normalsRTV);
+		CLOSE(diffuseRTV);
 		CLOSE(sceneRTV);
 		CLOSE(mainRTV);
 		CLOSE(skyBox);

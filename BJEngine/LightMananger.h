@@ -44,7 +44,10 @@ namespace BJEngine
 		{
 			return lDesc.light[index];
 		}
-
+		const int GetCurrentCount()
+		{
+			return lDesc.lightsCount - 1;
+		}
 		//////////  Œ—“€À‹ ≈¡¿Õ€…
 
 	private:

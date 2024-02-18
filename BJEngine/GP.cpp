@@ -54,6 +54,24 @@ bool GP::InitShaders()
 		shaders[BACKGROUND_SHADER]->Init();
 	}
 	
+	if (shaders[DEFFEREDSCENE_SHADER_PS] == nullptr)
+	{
+		shaders[DEFFEREDSCENE_SHADER_PS] = new BJEngine::Shader(L"shaders\\DefferedScenePS.hlsl", L"", "", "PS");
+		shaders[DEFFEREDSCENE_SHADER_PS]->Init();
+	}
+	
+		
+
+		
+
+
+
+
+
+
+
+
+
     return true;
 }
 

@@ -26,6 +26,7 @@ namespace BJEngine {
 	{
 
 		friend class UI;
+		static ID3D11Buffer* cameraBuffer;
 
 	public:
 
@@ -46,7 +47,12 @@ namespace BJEngine {
 
 		CameraDesc GetDesc() const noexcept;
 
+		
+		static void SetCameraBuffer(const CameraDesc ds);
+
+
 	protected:
+		static void InitCameraBuffer();
 
 		void CameraMove();
 

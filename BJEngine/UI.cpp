@@ -543,13 +543,17 @@ namespace BJEngine
             if (ImGui::Begin("Create Light", NULL, ImGuiWindowFlags_::ImGuiWindowFlags_NoResize
                 | ImGuiWindowFlags_::ImGuiWindowFlags_NoMove | ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse))
             {
-                LightDesc ldTemp;
-                
+                static LightDesc ldTemp;
+                static bool chBox = ldTemp.shadowEnabled;
+
                 ImGui::SetWindowPos("Create Light", ImVec2(BJEUtils::GetWindowWidth() / 2 - UI_OPENMENU_WIDTH / 2, BJEUtils::GetWindowHeight() / 2 - UI_OPENMENU_HEIGHT / 2));
                 ImGui::SetWindowSize("Create Light", ImVec2(UI_OPENMENU_WIDTH, UI_OPENMENU_HEIGHT));
 
                 ImGui::Combo("Type of light", &currLightAddItem, UI_ADDELEMENTMENU_LIGHTADD_COMBO);
 
+                ImGui::Checkbox("Shadow ", &chBox);
+
+                ldTemp.shadowEnabled = chBox;
                 ldTemp.lightType = currLightAddItem;
                 
                 if (ImGui::Button("Open", ImVec2(50, 30)))

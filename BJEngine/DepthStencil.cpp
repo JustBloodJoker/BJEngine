@@ -9,6 +9,7 @@ namespace BJEngine
 	ID3D11DepthStencilState* DepthStencil::WriteDepthStencilState = nullptr;
 	ID3D11DepthStencilState* DepthStencil::NoneDepthStencilState = nullptr;
 	ID3D11DepthStencilState* DepthStencil::LessEqualDepthStencilState = nullptr;
+	ID3D11DepthStencilState* DepthStencil::ReadOnlyDepthStencilState = nullptr;
 
 	void DepthStencil::Close()
 	{
@@ -62,8 +63,11 @@ namespace BJEngine
 			dsDesc = CD3D11_DEPTH_STENCIL_DESC(CD3D11_DEFAULT());
 
 			GP::GetDevice()->CreateDepthStencilState(&dsDesc, &NoneDepthStencilState);
+			dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 
-			
+			GP::GetDevice()->CreateDepthStencilState(&dsDesc, &ReadOnlyDepthStencilState);
+
+
 			ZeroMemory(&dsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 			dsDesc.DepthEnable = true;
 			dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -214,6 +218,10 @@ namespace BJEngine
 			case LESS_EQUAL:
 				GP::GetDeviceContext()->OMSetDepthStencilState(LessEqualDepthStencilState, 0);
 				break;
+			case READ:
+				GP::GetDeviceContext()->OMSetDepthStencilState(ReadOnlyDepthStencilState, 0);
+				break;
+
 			}
 		}
 	}

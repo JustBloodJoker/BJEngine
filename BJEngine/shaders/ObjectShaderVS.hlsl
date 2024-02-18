@@ -1,12 +1,8 @@
-#define MAX_LIGHT_NUM 5
-
 cbuffer WorldMatrixBuffer : register(b1)
 {
     matrix WVP;
     matrix world;
     matrix cam;
-    matrix projection;
-    float4 lightpos;
 };
 
 struct VS_INPUT
@@ -35,7 +31,7 @@ VS_OUTPUT VS(VS_INPUT input)
 
     output.pos = mul(input.pos, WVP);
     output.worldPos = mul(input.pos, world);
-    output.eyePos = mul(input.pos, cam);
+   
     output.normal = mul(input.normal, world);
     output.tangent = mul(input.tangent, world);
     output.bitangent = mul(input.bitangent, world);

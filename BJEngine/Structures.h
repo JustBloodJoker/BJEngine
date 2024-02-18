@@ -55,8 +55,6 @@ namespace BJEStruct
         dx::XMMATRIX WVP;
         dx::XMMATRIX World;
         dx::XMMATRIX ViewMatrix;
-        dx::XMMATRIX projectionMatrix;
-        dx::XMFLOAT4 pos;
     };
 
     struct GeometryConstantBuffer
@@ -75,6 +73,10 @@ namespace BJEStruct
         int pad1;
     };
 
-
+    struct CameraConstantBuffer
+    {
+        dx::XMMATRIX eyeMatrix;
+        dx::XMFLOAT4 eyePos;
+    };
 }
 

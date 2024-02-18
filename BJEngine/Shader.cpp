@@ -61,7 +61,7 @@ namespace BJEngine {
 		if (vertexShaderName != L"" || EPVS != "" || layout != nullptr)
 		{
 			ID3DBlob* pVSBlob = NULL;
-			hr = m_compileshaderfromfile(vertexShaderName, EPVS, "vs_4_0", &pVSBlob);
+			hr = m_compileshaderfromfile(vertexShaderName, EPVS, "vs_5_0", &pVSBlob);
 			if (FAILED(hr))
 			{
 				Log::Get()->Err("vertex shader compile error");
@@ -86,7 +86,7 @@ namespace BJEngine {
 		if (EPPS != "")
 		{
 			ID3DBlob* pPSBlob = NULL;
-			hr = m_compileshaderfromfile(pixelShaderName, EPPS, "ps_4_0", &pPSBlob);
+			hr = m_compileshaderfromfile(pixelShaderName, EPPS, "ps_5_0", &pPSBlob);
 			if (FAILED(hr))
 			{
 				Log::Get()->Err("pixel shader compile error");
@@ -105,7 +105,7 @@ namespace BJEngine {
 		if (EPGS != "")
 		{
 			ID3DBlob* pGSBlob = NULL;
-			hr = m_compileshaderfromfile(geometryShaderName, EPGS, "gs_4_0", &pGSBlob);
+			hr = m_compileshaderfromfile(geometryShaderName, EPGS, "gs_5_0", &pGSBlob);
 			if (FAILED(hr))
 			{
 				Log::Get()->Err("geometry shader compile error");

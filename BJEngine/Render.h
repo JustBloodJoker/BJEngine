@@ -21,8 +21,7 @@ namespace BJEngine {
 
 		Render()
 		{
-			driverType = D3D_DRIVER_TYPE_NULL;
-			featureLevel = D3D_FEATURE_LEVEL_11_0;
+			
 			pSwapChain = nullptr;
 			mainRTV = nullptr;
 		}
@@ -58,11 +57,7 @@ namespace BJEngine {
 		void UnpackProject();
 
 		void SetLight(LightDesc ld);
-
-		void BindConstantBuffers();
-
-		void TESTINGTMP();
-
+		
 	protected:
 
 		BJEStruct::MainSceneProcessingBuffer mainDesc;
@@ -83,9 +78,6 @@ namespace BJEngine {
 
 		HWND hwnd;
 
-		D3D_DRIVER_TYPE driverType;
-		D3D_FEATURE_LEVEL featureLevel;
-
 		IDXGISwapChain* pSwapChain;
 
 		std::vector<Shadow*> shadow;
@@ -95,11 +87,13 @@ namespace BJEngine {
 		RenderTarget* mainRTV;
 		ID3D11Buffer* mainRTVBuffer;
 		RenderTarget* sceneRTV;
+		RenderTarget* normalsRTV;
+		RenderTarget* diffuseRTV;
 		
 		D3D11_VIEWPORT vp;
 		D3D11_VIEWPORT svp;
 
-		LightDesc ld;
+		
 
 		LightMananger* lmananger;
 	};

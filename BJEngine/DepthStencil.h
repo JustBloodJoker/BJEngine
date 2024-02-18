@@ -10,6 +10,7 @@ namespace BJEngine
 		WRITE,
 		NON,
 		LESS_EQUAL,
+		READ,
 
 	};
 
@@ -43,6 +44,7 @@ namespace BJEngine
 		static ID3D11DepthStencilState* NoneDepthStencilState;
 		static ID3D11DepthStencilState* WriteDepthStencilState;
 		static ID3D11DepthStencilState* LessEqualDepthStencilState;
+		static ID3D11DepthStencilState* ReadOnlyDepthStencilState;
 
 		
 	};

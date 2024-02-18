@@ -67,7 +67,8 @@ namespace BJEUtils
 #define SHADOW_WIDTH 1024
 #define SHADOW_HEIGHT 1024
 
-#define MAX_LIGHT_NUM 5
+#define MAX_LIGHT_NUM 30
+#define MAX_SHADOW_NUM 5
 
 	//////////////////////////////////////
 	//					UI

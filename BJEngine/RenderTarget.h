@@ -18,8 +18,9 @@ namespace BJEngine
 		public:
 			
 			static void Init();
-			static void Draw(ID3D11ShaderResourceView* srv, BJEUtils::POST_PROCESSING type);
-
+			static void Draw();
+			static void Bind(BJEUtils::POST_PROCESSING type);
+			static void Bind();
 			static void Close();
 
 		private:
@@ -52,25 +53,25 @@ namespace BJEngine
 		void ClearRTV();
 
 		void CreateCopyTexture();
-		ID3D11ShaderResourceView* GetCopyTexture();
+		
 
 		void Close();
 
-		ID3D11ShaderResourceView* GetSRV();
+		ID3D11ShaderResourceView*& GetSRV();
+		ID3D11ShaderResourceView*& GetCopyTexture();
+
 		ID3D11Texture2D* GetTexture();
 
 		void SaveRTVTexture(std::wstring&& fileName);
 
 		void DrawTexture(ID3D11ShaderResourceView* srv, BJEUtils::POST_PROCESSING type);
+		void DrawTexture();
 
 	private:
-
-		
-
 		
 		ID3D11RenderTargetView* renderTargetView;
 
-		float clearColor[4] = { 0.1f,0.1f,0.1f,1.0f };
+		float clearColor[4] = { 0.0f,0.0f,0.0f,0.0f };
 
 		ID3D11Texture2D* renderTargetTexture;
 		ID3D11Texture2D* tempRenderTargetTexture;

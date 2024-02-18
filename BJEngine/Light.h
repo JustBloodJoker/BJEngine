@@ -16,6 +16,7 @@ namespace BJEngine {
 			att = dx::XMFLOAT3(0.01f, 0.02f, 0.0f);
 			angle = M_PI / 8;
 			enabled = 1;
+			shadowEnabled = 1;
 		}
 
 		dx::XMFLOAT4 pos;
@@ -27,7 +28,7 @@ namespace BJEngine {
 
 		int lightType;
 		int enabled;
-		int pad;
+		int shadowEnabled;
 		int pad1;
 
 	};

@@ -92,7 +92,6 @@ namespace BJEngine
 			cb.WVP = dx::XMMatrixTranspose(world * cam.viewMatrix * cam.projectionMatrix);
 			cb.World = XMMatrixTranspose(world);
 			cb.ViewMatrix = cam.viewMatrix;
-			cb.projectionMatrix = cam.projectionMatrix;
 		
 			
 			GP::GetDeviceContext()->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);

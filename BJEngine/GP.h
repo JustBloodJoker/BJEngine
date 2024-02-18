@@ -11,7 +11,8 @@ namespace GP
 		MODEL_SHADER,
 		GLOW_MODEL_SHADER,
 		BACKGROUND_SHADER,
-		
+		DEFFEREDSCENE_SHADER_PS,
+
 	};
 
 	ID3D11Device*& GetDevice();

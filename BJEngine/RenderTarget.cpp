@@ -130,7 +130,7 @@ namespace BJEngine
 		GP::GetDeviceContext()->CopyResource(tempRenderTargetTexture, renderTargetTexture);
 	}
 
-	ID3D11ShaderResourceView* RenderTarget::GetCopyTexture()
+	ID3D11ShaderResourceView*& RenderTarget::GetCopyTexture()
 	{
 		return tempShaderResourceView;
 	}
@@ -148,7 +148,7 @@ namespace BJEngine
 			Screen::Close();
 	}
 
-	ID3D11ShaderResourceView* RenderTarget::GetSRV()
+	ID3D11ShaderResourceView*& RenderTarget::GetSRV()
 	{
 		return shaderResourceView;
 	}
@@ -165,7 +165,18 @@ namespace BJEngine
 
 	void RenderTarget::DrawTexture(ID3D11ShaderResourceView* srv, BJEUtils::POST_PROCESSING type)
 	{
-		Screen::Draw(srv, type);
+		Screen::Bind(type);
+
+		GP::GetDeviceContext()->PSSetShaderResources(DIFFUSE_TEXTURE_POS, 1, &srv);
+		GP::GetDeviceContext()->PSSetSamplers(DIFFUSE_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
+
+		Screen::Draw();
+	}
+
+	void RenderTarget::DrawTexture()
+	{
+		Screen::Bind();
+		Screen::Draw();
 	}
 
 	BJEStruct::VertexBackGround RenderTarget::Screen::vertices[4] = 
@@ -224,29 +235,39 @@ namespace BJEngine
 		}
 	}
 
-	void RenderTarget::Screen::Draw(ID3D11ShaderResourceView* srv, BJEUtils::POST_PROCESSING type)
+	void RenderTarget::Screen::Draw()
 	{
-		if (shader != nullptr)
-		{
+		
 			UINT stride = sizeof(BJEStruct::VertexBackGround);
 			UINT offset = 0;
 
 			GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-			GP::GetDeviceContext()->IASetInputLayout(shader->GetInputLayout());
-			GP::GetDeviceContext()->VSSetShader(shader->GetVertexShader(), NULL, 0);
-			GP::GetDeviceContext()->PSSetShader(GetShader(type)->GetPixelShader(), NULL, 0);
+			
 			GP::GetDeviceContext()->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
-
-			GP::GetDeviceContext()->PSSetShaderResources(DIFFUSE_TEXTURE_POS, 1, &srv);
-			GP::GetDeviceContext()->PSSetSamplers(DIFFUSE_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
-
 
 			GP::GetDeviceContext()->Draw(4, 0);
 
 			GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		}
+		
 	}
 
+	void RenderTarget::Screen::Bind(BJEUtils::POST_PROCESSING type)
+	{
+		if (shader != nullptr)
+		{
+			GP::GetDeviceContext()->IASetInputLayout(shader->GetInputLayout());
+			GP::GetDeviceContext()->VSSetShader(shader->GetVertexShader(), NULL, 0);
+			GP::GetDeviceContext()->PSSetShader(GetShader(type)->GetPixelShader(), NULL, 0);
+		}
+	}
+	void RenderTarget::Screen::Bind()
+	{
+		if (shader != nullptr)
+		{
+			GP::GetDeviceContext()->IASetInputLayout(shader->GetInputLayout());
+			GP::GetDeviceContext()->VSSetShader(shader->GetVertexShader(), NULL, 0);
+		}
+	}
 	void RenderTarget::Screen::Close()
 	{
 		RELEASE(pVertexBuffer);
