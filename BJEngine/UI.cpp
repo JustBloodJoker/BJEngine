@@ -818,9 +818,9 @@ namespace BJEngine
         ImGui::ColorEdit3("Color", *variables3);
         
         ImGui::SeparatorText("Light Attenuation");
-        ImGui::SliderFloat("Constant" , &pArrayLightDesc[focusedLight].att.x, 0.0f, 1.0f);
-        ImGui::SliderFloat("Lineral"  , &pArrayLightDesc[focusedLight].att.y, 0.0f, 1.0f);
-        ImGui::SliderFloat("Quadratic", &pArrayLightDesc[focusedLight].att.z, 0.0f, 1.0f);
+        ImGui::SliderFloat("Constant" , &pArrayLightDesc[focusedLight].att.x, 0.0f, 10.0f);
+        ImGui::SliderFloat("Lineral"  , &pArrayLightDesc[focusedLight].att.y, 0.0f, 10.0f);
+        ImGui::SliderFloat("Quadratic", &pArrayLightDesc[focusedLight].att.z, 0.0f, 10.0f);
 
 
         return true;
@@ -828,10 +828,15 @@ namespace BJEngine
 
     bool UI::PostProcessing()
     {
+        ImGui::SeparatorText("PBR");
+
+        ImGui::Checkbox("Enable PBR lights", (bool*)&LightMananger::instance->lDesc.enablePBR);
+        
         ImGui::SeparatorText("Lights correction");
 
         ImGui::SliderFloat("Gamma", &render->mainDesc.gamma, 0.5f, 4.0f);
         ImGui::SliderFloat("Expourse", &render->mainDesc.expourse, 0.1f, 5.0f);
+
 
         ImGui::SeparatorText("Post processing");
 

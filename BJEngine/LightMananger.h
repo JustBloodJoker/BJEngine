@@ -15,7 +15,7 @@ namespace BJEngine
 		{
 			LightDesc light[MAX_LIGHT_NUM];
 			int lightsCount = 0;
-			int pad3;
+			int enablePBR = 0;
 			int pad1;
 			int pad2;
 		};

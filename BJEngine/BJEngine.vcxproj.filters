@@ -93,15 +93,6 @@
     <ClInclude Include="Render.h">
       <Filter>System</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
-      <Filter>EngineHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="Utilites.h">
-      <Filter>EngineHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="framework.h">
-      <Filter>EngineHeaders</Filter>
-    </ClInclude>
     <ClInclude Include="PackMananger.h">
       <Filter>Packs</Filter>
     </ClInclude>
@@ -123,9 +114,6 @@
     <ClInclude Include="LightMananger.h">
       <Filter>Light</Filter>
     </ClInclude>
-    <ClInclude Include="Helper.h">
-      <Filter>EngineHeaders</Filter>
-    </ClInclude>
     <ClInclude Include="CameraCone.h">
       <Filter>Camera</Filter>
     </ClInclude>
@@ -142,6 +130,21 @@
       <Filter>Shaders</Filter>
     </ClInclude>
     <ClInclude Include="GP.h">
+      <Filter>EngineHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper.h">
+      <Filter>EngineHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>EngineHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>EngineHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilites.h">
+      <Filter>EngineHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
       <Filter>EngineHeaders</Filter>
     </ClInclude>
   </ItemGroup>
@@ -200,9 +203,6 @@
     <ClCompile Include="UnpackMananger.cpp">
       <Filter>Packs</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>EngineHeaders</Filter>
-    </ClCompile>
     <ClCompile Include="UI.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -215,9 +215,6 @@
     <ClCompile Include="LightMananger.cpp">
       <Filter>Light</Filter>
     </ClCompile>
-    <ClCompile Include="Helper.cpp">
-      <Filter>EngineHeaders</Filter>
-    </ClCompile>
     <ClCompile Include="CameraCone.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
@@ -229,6 +226,15 @@
     </ClCompile>
     <ClCompile Include="RenderTarget.cpp">
       <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper.cpp">
+      <Filter>EngineHeaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Math.cpp">
+      <Filter>EngineHeaders</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>EngineHeaders</Filter>
     </ClCompile>
     <ClCompile Include="GP.cpp">
       <Filter>EngineHeaders</Filter>

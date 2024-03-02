@@ -27,7 +27,7 @@ namespace BJEngine
 
 			static Shader* GetShader(BJEUtils::POST_PROCESSING type);
 
-			static BJEStruct::VertexBackGround vertices[4];
+			static BJEStruct::VertexSimple vertices[4];
 
 
 			static ID3D11Buffer* pVertexBuffer;
@@ -46,7 +46,7 @@ namespace BJEngine
 		
 		RenderTarget() = default;
 		RenderTarget(ID3D11Texture2D* texture, bool MSAA = false);
-		RenderTarget(int width, int height, bool MSAA = false);
+		RenderTarget(int width, int height, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT, bool MSAA = false);
 
 		ID3D11RenderTargetView*& GetRTV();
 

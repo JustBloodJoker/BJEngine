@@ -1,9 +1,3 @@
-cbuffer Params : register(b0)
-{
-	matrix ViewProjection[6];
-};
-
-
 struct VertexOutput
 {
 	float4 Position : SV_POSITION;   
@@ -14,6 +8,24 @@ struct GeometryOutput
 	float4 Position : SV_POSITION;   
 	uint RTIndex : SV_RenderTargetArrayIndex;
 };
+
+cbuffer Params : register(b0)
+{
+	matrix ViewProjection[6];
+};
+
+cbuffer WorldMatrixBuffer : register(b1)
+{
+    matrix World;
+};
+
+VertexOutput VS(float4 pos : POSITION)
+{
+    VertexOutput output; 
+    output.Position = mul(pos, World);
+  
+    return  output;
+}
 
 [maxvertexcount(18)]
 void GS( triangle VertexOutput input[3], inout TriangleStream<GeometryOutput> CubeMapStream )
@@ -39,3 +51,9 @@ void GS( triangle VertexOutput input[3], inout TriangleStream<GeometryOutput> Cu
         }
     }
 }
+
+float PS(float4 depth : SV_POSITION) : SV_DEPTH
+{	
+    return depth.z;
+}
+

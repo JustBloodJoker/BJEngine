@@ -35,39 +35,86 @@ namespace BJEngine {
 
 	class Shadow
 	{
-		struct ShadowConstantBuffer
+		
+
+	public:
+
+		
+		virtual void Draw() = 0;
+
+		virtual void GenerateView(const LightDesc ld) = 0;
+
+		virtual void BindSRV(int deltIndex) = 0;
+
+		virtual void Close() = 0;
+
+	protected:
+
+		virtual void Init() = 0;
+
+		bool isInited;
+
+		Shader* shader;
+		D3D11_VIEWPORT vp;
+		DepthStencil* depthStencil;
+		
+	};
+
+	class OmnidirectionalShadow
+		: public Shadow
+	{
+		struct OmnidirectionalShadowConstantBuffer
 		{
 			dx::XMMATRIX shViewProjection[6];
 		};
 		static ID3D11Buffer* shadowCBuffer;
 
+		OmnidirectionalShadowConstantBuffer matrices;
+
+		void Init() override;
+
 	public:
 
-		Shadow() = default;
-		Shadow(short type);
-
-		void Init(short type);
-		void Draw();
-
-		void GenerateView(const LightDesc ld);
-
-		void BindSRV(int deltIndex);
-
-		void Close();
-	private:
+		OmnidirectionalShadow();
 
 		
+		void Draw() override;
 
-		bool isInited;
-		short shadowType;
+		void GenerateView(const LightDesc ld) override;
 
-		Shader* shader;
+		void BindSRV(int deltIndex) override;
 
-		D3D11_VIEWPORT vp;
+		void Close() override;
 
-		DepthStencil* depthStencil;
-		ShadowConstantBuffer matrices;
+
 	};
 
+	class SimpleShadow
+		: public Shadow
+	{
+		struct SimpleShadowConstantBuffer
+		{
+			dx::XMMATRIX shViewProjection;
+		};
+		static ID3D11Buffer* shadowCBuffer;
+
+		SimpleShadowConstantBuffer matrices;
+
+		void Init() override;
+
+	public:
+
+		SimpleShadow();
+
+
+		void Draw() override;
+
+		void GenerateView(const LightDesc ld) override;
+
+		void BindSRV(int deltIndex) override;
+
+		void Close() override;
+
+	};
 
 }

@@ -89,7 +89,7 @@ namespace BJEngine
 			aiColor3D tColor = { 0.0f,0.0f,0.0f };
 
 			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, tColor) == AI_SUCCESS;
-
+			
 			float tt = 0.0f;
 			scene->mMaterials[i]->Get(AI_MATKEY_OPACITY, tt);
 
@@ -128,14 +128,13 @@ namespace BJEngine
 			}
 			pathname.Clear();
 
-
 			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS, 0, &pathname);
 			if (pathname.length != 0)
 			{
 				materials[i]->SetTexture(HAS_ROUGHNESS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
-			
+
 			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_EMISSIVE, 0, &pathname);
 			if (pathname.length != 0)
 			{
@@ -149,12 +148,11 @@ namespace BJEngine
 				materials[i]->SetTexture(HAS_SPECULAR_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
 			}
 			pathname.Clear();
-
-			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_HEIGHT, 0, &pathname);
+			
+			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_METALNESS, 0, &pathname);
 			if (pathname.length != 0)
 			{
-				int ii;
-				ii = 0;
+			
 			}
 			pathname.Clear();
 		}

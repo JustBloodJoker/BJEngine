@@ -11,6 +11,7 @@ namespace BJEngine
 
 	bool Render::CreateDevice()
 	{
+		int MSAASupport = 16;
 		D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_NULL;
 		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
 
@@ -49,18 +50,68 @@ namespace BJEngine
 
 		for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
 			driverType = driverTypes[driverTypeIndex];
-			hr = D3D11CreateDeviceAndSwapChain(NULL, driverType, NULL,
+
+			hr = D3D11CreateDevice(NULL, driverType, NULL,
 				NULL, featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
-				&sd, &pSwapChain, &GP::GetDevice(), &featureLevel, &GP::GetDeviceContext());
+				&GP::GetDevice(), &featureLevel, &GP::GetDeviceContext());
 
 			if (SUCCEEDED(hr)) {
+				
+				
+				while (MSAASupport != 1)
+				{
+					UINT MsaaQuality;
+					hr = GP::GetDevice()->CheckMultisampleQualityLevels(
+						DXGI_FORMAT_R8G8B8A8_UNORM, MSAASupport, &MsaaQuality);
+					if (MsaaQuality > 0)
+					{
+					//	sd.SampleDesc.Count = MSAASupport;
+						break;
+					}
+					else
+					{
+						MSAASupport /= 2;
+					}
+				}
+				IDXGIDevice* dxgiDevice = 0;
+				hr = GP::GetDevice()->QueryInterface(__uuidof(IDXGIDevice),
+					(void**)&dxgiDevice);
+				IDXGIAdapter* dxgiAdapter = 0;
+				hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter),
+					(void**)&dxgiAdapter);
+	
+				IDXGIFactory* dxgiFactory = 0;
+				hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory),
+						(void**) &dxgiFactory);
+				hr = dxgiFactory->CreateSwapChain(GP::GetDevice(), &sd, &pSwapChain);
+				
+				if (FAILED(hr))
+				{
+					Log::Get()->Err("Can't create swapchaing");
+				}
+
+				RELEASE(dxgiDevice);
+				RELEASE(dxgiAdapter);
+				RELEASE(dxgiFactory);
+
 				break;
 			}
+
+	//		hr = D3D11CreateDeviceAndSwapChain(NULL, driverType, NULL,
+	//			NULL, featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
+	//			&sd, &pSwapChain, &GP::GetDevice(), &featureLevel, &GP::GetDeviceContext());
+	//		
+	//		if (SUCCEEDED(hr)) {
+	//			break;
+	//		}
 		}
+
 		if (FAILED(hr)) {
 			Log::Get()->Err("CreateDeviceAndSwapchain error");
 			return false;
 		}
+		
+		
 
 		ID3D11Texture2D* pBackBuffer = NULL;
 		hr = pSwapChain->GetBuffer(NULL, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
@@ -72,13 +123,14 @@ namespace BJEngine
 		DepthStencil::InitStencils();
 
 		dsv = new DepthStencil();
-		dsv->InitView(1920, 1080);
+		dsv->InitView(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT);
 
 		mainRTV = new RenderTarget(pBackBuffer);
-		sceneRTV = new RenderTarget(1920, 1080);
-		diffuseRTV = new RenderTarget(1920, 1080);
-		normalsRTV = new RenderTarget(1920, 1080);
-		
+		sceneRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		diffuseRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		normalsRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		roughnessRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R32_FLOAT);
+
 		vp.Width = BJEUtils::GetWindowWidth();
 		vp.Height = BJEUtils::GetWindowHeight();
 		vp.MinDepth = 0.0f;
@@ -86,9 +138,8 @@ namespace BJEngine
 		vp.TopLeftX = 0;
 		vp.TopLeftY = 0;
 
-
-		svp.Width = 1920;
-		svp.Height = 1080;
+		svp.Width = RENDERTARGET_WIDTH;
+		svp.Height = RENDERTARGET_HEIGHT;
 		svp.MinDepth = 0.0f;
 		svp.MaxDepth = 1.0f;
 		svp.TopLeftX = 0;
@@ -146,6 +197,7 @@ namespace BJEngine
 		mainRTVBuffer = Helper::InitConstantBuffer<BJEStruct::MainSceneProcessingBuffer>(GP::GetDevice());
 		mainDesc.gamma = 1.0f;
 		mainDesc.expourse = 1.0f;
+		mainDesc.itens = 1.0f;
 
 		return true;
 	}
@@ -159,7 +211,9 @@ namespace BJEngine
 
 		for (int index = 0; index < shadow.size(); index++)
 		{
-			
+			if (!lmananger->GetDesc(index).enabled)
+				continue;
+
 			shadow[index]->GenerateView(lmananger->GetDesc(index));
 			shadow[index]->Draw();
 
@@ -187,19 +241,21 @@ namespace BJEngine
 			sceneRTV->ClearRTV();
 			diffuseRTV->ClearRTV();
 			normalsRTV->ClearRTV();
+			roughnessRTV->ClearRTV();
 
-			ID3D11RenderTargetView* items[3] =
+			ID3D11RenderTargetView* items[4] =
 			{
 				sceneRTV->GetRTV(),
 				diffuseRTV->GetRTV(),
 				normalsRTV->GetRTV(),
+				roughnessRTV->GetRTV(),
 			};
 
 			GP::GetDeviceContext()->OMSetRenderTargets(ARRAYSIZE(items), items, dsv->GetDepthStencil());
 
 			GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
 
-			Element::BindConstantBuffer();
+			BaseElement::BindConstantBuffer();
 			Materials::BindConstantBuffer();
 			GP::BindShader(GP::MODEL_SHADER);
 
@@ -220,6 +276,7 @@ namespace BJEngine
 			GP::GetDeviceContext()->PSSetShaderResources(0, 1, &sceneRTV->GetCopyTexture());
 			GP::GetDeviceContext()->PSSetShaderResources(1, 1, &diffuseRTV->GetSRV());
 			GP::GetDeviceContext()->PSSetShaderResources(2, 1, &normalsRTV->GetSRV());
+			GP::GetDeviceContext()->PSSetShaderResources(3, 1, &roughnessRTV->GetSRV());
 
 			for (int index = 0; index < shadow.size(); index++)
 			{
@@ -242,6 +299,7 @@ namespace BJEngine
 			//////////////////////////////
 			sceneRTV->DrawTexture();
 
+			
 
 			DepthStencil::SetDepthStencilState(NON);
 		}
@@ -251,6 +309,9 @@ namespace BJEngine
 		{
 			skyBox->Draw(cams[UI::FocusedCamera()]->GetDesc());
 		}
+
+		GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &mainRTVBuffer);
+		GP::GetDeviceContext()->UpdateSubresource(mainRTVBuffer, 0, NULL, &mainDesc, 0, 0);
 
 		//POST PROCESSING SCENE TEXTURE
 		{ 
@@ -272,8 +333,7 @@ namespace BJEngine
 			GP::GetDeviceContext()->RSSetViewports(1, &vp);
 			GP::GetDeviceContext()->OMSetRenderTargets(1, &mainRTV->GetRTV(), NULL);
 
-			GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &mainRTVBuffer);
-			GP::GetDeviceContext()->UpdateSubresource(mainRTVBuffer, 0, NULL, &mainDesc, 0, 0);
+			
 			
 			mainRTV->DrawTexture(sceneRTV->GetSRV(), SCENE);
 		}
@@ -321,8 +381,8 @@ namespace BJEngine
 		std::vector<Element*> tmp = std::move(object->MoveElements());
 		elements.insert(elements.end(), tmp.begin(), tmp.end());
 
-		std::sort(elements.begin(), elements.end(), [](Element*& a, Element*& b) { return a->GetPriorityRender() < b->GetPriorityRender(); });
-
+		std::sort(elements.begin(), elements.end(), [](BaseElement*& a, BaseElement*& b) { return a < b; });
+		
 		objects.push_back(object);
 
 		return object;
@@ -418,8 +478,12 @@ namespace BJEngine
 	{
 		if (lmananger->AddLight(ld) && ld.shadowEnabled && shadow.size() <= MAX_SHADOW_NUM)
 		{	
-			shadow.push_back(new Shadow(ld.lightType));
+			if(ld.lightType == 1)
+				shadow.push_back(new OmnidirectionalShadow());
+			if (ld.lightType == 0)
+				shadow.push_back(new SimpleShadow());
 		};
+
 		islight = true;
 	}
 

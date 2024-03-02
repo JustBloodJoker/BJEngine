@@ -175,10 +175,10 @@ namespace BJEngine
 
 		BJEStruct::CameraConstantBuffer cds;
 		
-		cds.eyeMatrix = dx::XMMatrixTranspose(ds.viewMatrix);
-		cds.eyePos = dx::XMFLOAT4(cds.eyeMatrix(0, 3), cds.eyeMatrix(1, 3), cds.eyeMatrix(2, 3), cds.eyeMatrix(3, 3));
-		
-		GP::GetDeviceContext()->PSSetConstantBuffers(1, 1, &cameraBuffer);
+		cds.eyeMatrix = ds.viewMatrix;
+		dx::XMStoreFloat4(&cds.eyePos, ds.eye);
+
+		GP::GetDeviceContext()->PSSetConstantBuffers(3, 1, &cameraBuffer);
 		GP::GetDeviceContext()->UpdateSubresource(cameraBuffer, 0, NULL, &cds, 0, 0);
 	}
 

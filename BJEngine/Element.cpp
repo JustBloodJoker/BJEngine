@@ -6,16 +6,20 @@
 
 namespace BJEngine
 {
-	ID3D11Buffer* Element::pConstantBuffer = nullptr;
-	ID3D11Buffer* Element::pWorldConstantBuffer = nullptr;
+	ID3D11Buffer* BaseElement::pConstantBuffer = nullptr;
 	int Element::count = 0;
 	
-	void Element::BindConstantBuffer()
+	void BaseElement::BindConstantBuffer()
 	{
 		if (pConstantBuffer == nullptr)
 			pConstantBuffer = Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice());
 
 		GP::GetDeviceContext()->VSSetConstantBuffers(1, 1, &pConstantBuffer);
+	}
+
+	ID3D11Buffer*& BaseElement::GetConstantBuffer()
+	{
+		return pConstantBuffer;
 	}
 
 	Element::Element()
@@ -26,11 +30,7 @@ namespace BJEngine
 	Element::Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material,
 		dx::XMVECTOR min, dx::XMVECTOR max)
 	{
-		if(pConstantBuffer == nullptr)
-			pConstantBuffer = Helper::InitConstantBuffer<BJEStruct::VertexConstantBuffer>(GP::GetDevice());
-
-		pWorldConstantBuffer = Helper::InitConstantBuffer<BJEStruct::WVPConstantBuffer>(GP::GetDevice());
-
+		
 		world = dx::XMMatrixIdentity();
 
 		vertices = std::move(v);
@@ -73,8 +73,6 @@ namespace BJEngine
 		objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(maxLocal, world),
 			dx::XMVector3Transform(minLocal, world)
 		);
-		
-		Binds();
 
 		if (!drawing && ((cam.frustum.Intersects(objectBox) || cam.frustum.Contains(objectBox))) || !frustumCheck)
 		{
@@ -91,10 +89,9 @@ namespace BJEngine
 			BJEStruct::VertexConstantBuffer cb;
 			cb.WVP = dx::XMMatrixTranspose(world * cam.viewMatrix * cam.projectionMatrix);
 			cb.World = XMMatrixTranspose(world);
-			cb.ViewMatrix = cam.viewMatrix;
 		
 			
-			GP::GetDeviceContext()->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
+			GP::GetDeviceContext()->UpdateSubresource(BaseElement::GetConstantBuffer(), 0, NULL, &cb, 0, 0);
 			
 			Blend::Get()->DrawCullNoneState();			
 			DepthStencil::SetDepthStencilState(NON);
@@ -108,45 +105,45 @@ namespace BJEngine
 
 	void Element::DrawShadow()
 	{
-		if (!drawing && priority != 2)
+		if (!drawing && priority == 1)
 		{
 			UINT stride = sizeof(BJEStruct::ModelVertex);
 			UINT offset = 0;
 			GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			GP::GetDeviceContext()->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
 			GP::GetDeviceContext()->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-
-			
 			drawing = true;
 			BJEStruct::WVPConstantBuffer cb;
 			cb.WVP = XMMatrixTranspose(world);
-			GP::GetDeviceContext()->VSSetConstantBuffers(1, 1, &pWorldConstantBuffer);
-			GP::GetDeviceContext()->UpdateSubresource(pWorldConstantBuffer, 0, NULL, &cb, 0, 0);
+			GP::GetDeviceContext()->UpdateSubresource(BaseElement::GetConstantBuffer(), 0, NULL, &cb, 0, 0);
 
 			GP::GetDeviceContext()->DrawIndexed(indices.size(), 0, 0);
 			drawing = false;
 		}
 	}
 
-	std::string Element::GetName() const
+	ElementSphere::ElementSphere()
 	{
-		return name;
 	}
 
-	void Element::SetFocusState(bool state)
+	ElementSphere::~ElementSphere()
 	{
-		focusedState = state;
 	}
 
-	const int Element::GetPriorityRender() const
+	void ElementSphere::Close()
 	{
-		return priority;
 	}
 
-	void Element::Binds()
+	void ElementSphere::Init()
 	{
-		
 	}
 
+	void ElementSphere::Draw(CameraDesc cam)
+	{
+	}
+
+	void ElementSphere::DrawShadow()
+	{
+	}
 
 }

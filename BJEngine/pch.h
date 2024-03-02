@@ -5,6 +5,7 @@
 
 #include "framework.h"
 
+#include "Math.h"
 #include "GP.h"
 
 #include "Structures.h"

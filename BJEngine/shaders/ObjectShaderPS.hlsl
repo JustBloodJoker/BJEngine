@@ -3,7 +3,7 @@ float4 GlobalAmbient = {1.0f,1.0f,1.0f,1.0f};
 
 Texture2D Texture : register(t0);
 Texture2D NormalTexture : register(t1);
-Texture2D RougnessTexture : register(t2);
+Texture2D RoughnessTexture : register(t2);
 Texture2D EmissionTexture : register(t3);
 Texture2D SpecularTexture : register(t4);
 
@@ -17,6 +17,7 @@ struct PS_OUTPUT
 	float4 OutputPosition : SV_TARGET0;
 	float4 OutputDiffuse : SV_TARGET1;
 	float4 OutputNormals : SV_TARGET2;
+	float  OutputRoughness : SV_TARGET3;
 };
 
 struct Materials
@@ -43,11 +44,10 @@ struct VS_OUTPUT
 {
     float4 pos : SV_POSITION;
     float4 worldPos : POSITION0;
-	float4 eyePos : POSITION1;
-    float2 texCoord : TEXCOORD;
-    float3 normal : NORMAL;
+	float3 normal : TEXCOORD1;
     float3 tangent : TANGENT;
-	float3 bitangent : BITANGENT; 
+    float3 bitangent : BITANGENT;
+	float2 texCoord : TEXCOORD0;
 };
 
 PS_OUTPUT PS(VS_OUTPUT input)
@@ -58,7 +58,7 @@ PS_OUTPUT PS(VS_OUTPUT input)
 
 	if(material.isTexture)
 	{
-		psOut.OutputDiffuse = Texture.Sample( SamplerStateWrap, input.texCoord );
+		psOut.OutputDiffuse *= Texture.Sample( SamplerStateWrap, input.texCoord );
 	}
 	clip(psOut.OutputDiffuse.a < 0.1f ? -1 : 1);
 	if(material.ishaveTransparency)
@@ -79,6 +79,14 @@ PS_OUTPUT PS(VS_OUTPUT input)
 	psOut.OutputNormals.xyz = input.normal;
 	psOut.OutputNormals.w = 1.0f;
 	psOut.OutputPosition = input.worldPos;
+	psOut.OutputRoughness = 1.0f;
+
+	if(material.isRoughnessTexture)
+	{
+		psOut.OutputRoughness = RoughnessTexture.Sample(SamplerStateWrap, input.texCoord).g;
+	}
+
+	
 
 	return psOut;
 }

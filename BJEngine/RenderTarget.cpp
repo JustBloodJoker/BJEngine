@@ -14,18 +14,8 @@ namespace BJEngine
 		texture->GetDesc(&DS);
 
 
-		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-		renderTargetViewDesc.Format = DS.Format;
-		if (MSAA)
-		{
-			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-		}
-		else
-		{
-			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			renderTargetViewDesc.Texture2D.MipSlice = 0;
-		}
-		HRESULT hr = GP::GetDevice()->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
+		
+		HRESULT hr = GP::GetDevice()->CreateRenderTargetView(renderTargetTexture, NULL, &renderTargetView);
 		if (FAILED(hr)) {
 			Log::Get()->Err("RTV create error ", size);
 			size--;
@@ -34,7 +24,7 @@ namespace BJEngine
 		Screen::Init();
 	}
 
-	RenderTarget::RenderTarget(int width, int height, bool MSAA)
+	RenderTarget::RenderTarget(int width, int height, DXGI_FORMAT format, bool MSAA)
 	{
 		size++;
 
@@ -43,7 +33,7 @@ namespace BJEngine
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = 1;
-		textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		textureDesc.Format = format;
 		
 		textureDesc.ArraySize = 1; 
 		textureDesc.MiscFlags = 0;
@@ -179,12 +169,12 @@ namespace BJEngine
 		Screen::Draw();
 	}
 
-	BJEStruct::VertexBackGround RenderTarget::Screen::vertices[4] = 
+	BJEStruct::VertexSimple RenderTarget::Screen::vertices[4] =
 	{ 
-		BJEStruct::VertexBackGround(-1.0f, 1.0f, 0.0f, 0.0f, 0.0f),
-		BJEStruct::VertexBackGround(1.0f, 1.0f, 0.0f,  1.0f, 0.0f),
-		BJEStruct::VertexBackGround(-1.0f, -1.0f, 0.0f,0.0f, 1.0f),
-		BJEStruct::VertexBackGround(1.0f, -1.0f, 0.0f, 1.0f, 1.0f)
+		BJEStruct::VertexSimple(-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,0.0f,0.0f),
+		BJEStruct::VertexSimple(1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 3.0f,0.0f,0.0f),
+		BJEStruct::VertexSimple(-1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,0.0f,0.0f),
+		BJEStruct::VertexSimple(1.0f, 1.0f, 0.0f,   1.0f, 0.0f, 2.0f,0.0f,0.0f)
 	};
 	
 	ID3D11Buffer* RenderTarget::Screen::pVertexBuffer = nullptr;
@@ -230,7 +220,7 @@ namespace BJEngine
 			boundaryDelineationShader = new Shader(BOUNDARY_DELINEATION_RTV_SHADER, L"", "", "PS");
 			boundaryDelineationShader->Init();
 
-			pVertexBuffer = Helper::InitVertexBuffer(GP::GetDevice(), sizeof(BJEStruct::VertexBackGround) * 4, &vertices[0]);
+			pVertexBuffer = Helper::InitVertexBuffer(GP::GetDevice(), sizeof(BJEStruct::VertexSimple) * 4, &vertices[0]);
 			isInited = true;
 		}
 	}
@@ -238,7 +228,7 @@ namespace BJEngine
 	void RenderTarget::Screen::Draw()
 	{
 		
-			UINT stride = sizeof(BJEStruct::VertexBackGround);
+			UINT stride = sizeof(BJEStruct::VertexSimple);
 			UINT offset = 0;
 
 			GP::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

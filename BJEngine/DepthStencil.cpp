@@ -138,6 +138,12 @@ namespace BJEngine
 				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 				srvDesc.TextureCube.MipLevels = 1;
 			}
+			else
+			{
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Texture2D.MipLevels = 1;
+				srvDesc.Texture2D.MostDetailedMip = 0;
+			}
 			hr = GP::GetDevice()->CreateShaderResourceView(depthStencilBuffer, &srvDesc, &srv);
 		}
 

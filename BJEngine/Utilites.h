@@ -138,6 +138,10 @@ namespace BJEUtils
 #define SIMPLE_BLUR_RTV_SHADER L"shaders\\simpleblurrtvPS.hlsl"
 #define BOUNDARY_DELINEATION_RTV_SHADER L"shaders\\boundarydelineationrtvPS.hlsl"
 	
+//1920  1080 3840 2160
+#define RENDERTARGET_WIDTH  1920
+#define RENDERTARGET_HEIGHT 1080
+
 
 }
 

@@ -2,7 +2,6 @@ cbuffer WorldMatrixBuffer : register(b1)
 {
     matrix WVP;
     matrix world;
-    matrix cam;
 };
 
 struct VS_INPUT
@@ -18,11 +17,10 @@ struct VS_OUTPUT
 {
     float4 pos : SV_POSITION;
     float4 worldPos : POSITION0;
-    float4 eyePos : POSITION1;
-    float2 texCoord : TEXCOORD;
-    float3 normal : NORMAL;
+    float3 normal : TEXCOORD1;
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
+    float2 texCoord : TEXCOORD0;
 };
 
 VS_OUTPUT VS(VS_INPUT input)

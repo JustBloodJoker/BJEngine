@@ -8,6 +8,7 @@
 #include "BackGround.h"
 #include "RenderTarget.h"
 
+
 namespace BJEngine {
 
 
@@ -66,7 +67,7 @@ namespace BJEngine {
 
 		bool DrawScene();
 
-		std::vector<Element*> elements;
+		std::vector<BaseElement*> elements;
 		std::vector<Object*> objects;
 		std::vector<BJAudio::Sound*> sound;
 		std::vector<Camera*> cams;
@@ -89,11 +90,10 @@ namespace BJEngine {
 		RenderTarget* sceneRTV;
 		RenderTarget* normalsRTV;
 		RenderTarget* diffuseRTV;
-		
+		RenderTarget* roughnessRTV;
+
 		D3D11_VIEWPORT vp;
 		D3D11_VIEWPORT svp;
-
-		
 
 		LightMananger* lmananger;
 	};

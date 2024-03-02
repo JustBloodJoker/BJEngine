@@ -54,7 +54,6 @@ namespace BJEStruct
     {
         dx::XMMATRIX WVP;
         dx::XMMATRIX World;
-        dx::XMMATRIX ViewMatrix;
     };
 
     struct GeometryConstantBuffer
@@ -69,7 +68,7 @@ namespace BJEStruct
     {
         float gamma;
         float expourse;
-        int pad;
+        float itens;
         int pad1;
     };
 

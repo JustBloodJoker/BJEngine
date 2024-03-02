@@ -63,4 +63,3 @@ namespace dx = DirectX;
 #include <experimental/filesystem>
 
 #include <sol/sol.hpp>
-
