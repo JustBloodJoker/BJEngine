@@ -40,21 +40,6 @@ namespace BJEngine
 		return true;
 	}
 
-	void Model::Draw(const CameraDesc cam)
-	{
-		if (PackMananger::Get()->GetSavingStatus())
-		{
-			ObjectType* tpe = new ObjectType();
-			
-			tpe->path = filename;
-			tpe->prepath = std::string(texturePrefixPath.begin(), texturePrefixPath.end());
-			tpe->script = script->GetName();
-			PackMananger::Get()->AddObject(*tpe);
-
-			delete tpe;
-		}
-	}
-
 	void Model::Close()
 	{
 		Object::Close();
@@ -85,87 +70,62 @@ namespace BJEngine
 		for (int i = 0; i < scene->mNumMaterials; i++)
 		{
 			materials.push_back(new Materials());
-
-			aiColor3D tColor = { 0.0f,0.0f,0.0f };
-
-			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, tColor) == AI_SUCCESS;
-			
-			float tt = 0.0f;
-			scene->mMaterials[i]->Get(AI_MATKEY_OPACITY, tt);
-
-			materials[i]->SetParam(DIFFUSE, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
-
-			tColor = { 0,0,0 };
-			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, tColor);
-			materials[i]->SetParam(SPECULAR, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
-
-			tColor = { 0,0,0 };
-			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_EMISSIVE, tColor);
-			materials[i]->SetParam(EMISSIVE, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
-
-			tColor = { 0,0,0 };
-			scene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, tColor);
-
-			float tp = 0.0f;
-			scene->mMaterials[i]->Get(AI_MATKEY_SHININESS, tp);
-			materials[i]->SetParam(AMBIENT, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, tt));
-
-			materials[i]->SetParam(SPECULAR_POWER, tp);
-
+			float opac = 1.0f;
+			float tt = 0.0f;	
 			aiString pathname;
-			scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &pathname);
+			aiColor3D tColor = { 0.0f,0.0f,0.0f };
+			
+			if(scene->mMaterials[i]->Get(AI_MATKEY_OPACITY, tt) == AI_SUCCESS)
+				opac = tt;
 
-			if (pathname.length != 0)
-			{
+			if(AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, tColor))
+				materials[i]->SetParam(DIFFUSE, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, opac));
+		
+			if(AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, tColor))
+				materials[i]->SetParam(SPECULAR, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, opac));
+
+			if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_COLOR_EMISSIVE, tColor))
+				materials[i]->SetParam(EMISSIVE, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, opac));
+
+			if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, tColor))
+				materials[i]->SetParam(AMBIENT, dx::XMFLOAT4(tColor.r, tColor.g, tColor.b, opac));
+
+			if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_SHININESS, tt))
+				materials[i]->SetParam(SPECULAR_POWER, tt);
+			
+			//////////////////////////////////////////////////////////////////////////////////////
+			//									   TEXTURES
+			/////////////////////////////////////////////////////////////////////////////////////
+
+			if(AI_SUCCESS == scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &pathname))
 				materials[i]->SetTexture(HAS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
-			}
-			pathname.Clear();
-
-			scene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &pathname);
-			if (pathname.length != 0)
-			{
+			
+			if (AI_SUCCESS == scene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &pathname))	
 				materials[i]->SetTexture(HAS_NORMAL_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
-			}
-			pathname.Clear();
-
-			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS, 0, &pathname);
-			if (pathname.length != 0)
-			{
+		
+			if (AI_SUCCESS == scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS, 0, &pathname))
 				materials[i]->SetTexture(HAS_ROUGHNESS_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
-			}
-			pathname.Clear();
-
-			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_EMISSIVE, 0, &pathname);
-			if (pathname.length != 0)
-			{
+			
+			if (AI_SUCCESS == scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_EMISSIVE, 0, &pathname))
 				materials[i]->SetTexture(HAS_EMISSION_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
-			}
-			pathname.Clear();
-
-			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_SPECULAR, 0, &pathname);
-			if (pathname.length != 0)
-			{
+			
+			if (AI_SUCCESS == scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_SPECULAR, 0, &pathname))
 				materials[i]->SetTexture(HAS_SPECULAR_TEXTURE, texturePrefixPath + BJEUtils::aiStringToWString(pathname));
-			}
-			pathname.Clear();
 			
-			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_METALNESS, 0, &pathname);
-			if (pathname.length != 0)
-			{
-			
-			}
-			pathname.Clear();
+			if (AI_SUCCESS == scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_METALNESS, 0, &pathname))
+				tt++;
+
 		}
 
 		dx::XMFLOAT3 minExtent;
 		dx::XMFLOAT3 maxExtent;
 
 		int numofIndex = 0;
-
+	
 		for (int i = 0; i < scene->mNumMeshes; i++)
 		{
 			const aiMesh* mesh = scene->mMeshes[i];
-
+			
 			minExtent.x = mesh->mVertices[0].x;
 			minExtent.y = mesh->mVertices[0].y;
 			minExtent.z = mesh->mVertices[0].z;
@@ -223,7 +183,7 @@ namespace BJEngine
 
 				numofIndex += 3;
 			}
-			elements.push_back(new Element(ver, ind, materials[mesh->mMaterialIndex], min, max));
+			elements.push_back(new Element(std::move(ver), std::move(ind), materials[mesh->mMaterialIndex], min, max));
 			ver.clear();
 			ind.clear();
 		}

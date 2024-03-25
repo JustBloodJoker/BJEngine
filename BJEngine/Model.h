@@ -17,7 +17,6 @@ namespace BJEngine {
         ~Model();
 
         bool Init() override;
-        void Draw(const CameraDesc cam) override;
         void Close() override;
        
         void SetScript(std::string data);

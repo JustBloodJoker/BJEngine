@@ -5,7 +5,7 @@ struct VertexOutput
 
 struct GeometryOutput
 {
-	float4 Position : SV_POSITION;   
+	float4 Position : SV_POSITION;  
 	uint RTIndex : SV_RenderTargetArrayIndex;
 };
 
@@ -52,8 +52,15 @@ void GS( triangle VertexOutput input[3], inout TriangleStream<GeometryOutput> Cu
     }
 }
 
-float PS(float4 depth : SV_POSITION) : SV_DEPTH
-{	
-    return depth.z;
-}
+struct PixelOutput
+{
+	float dsvOut : SV_DEPTH;
+};
 
+PixelOutput PS(float4 depth : SV_POSITION)
+{	
+	PixelOutput ou;
+	ou.dsvOut = depth.z;
+
+    return ou;
+}

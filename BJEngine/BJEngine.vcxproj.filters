@@ -54,9 +54,6 @@
     <ClInclude Include="Light.h">
       <Filter>Light</Filter>
     </ClInclude>
-    <ClInclude Include="BackGround.h">
-      <Filter>Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Model.h">
       <Filter>Objects</Filter>
     </ClInclude>
@@ -92,15 +89,6 @@
     </ClInclude>
     <ClInclude Include="Render.h">
       <Filter>System</Filter>
-    </ClInclude>
-    <ClInclude Include="PackMananger.h">
-      <Filter>Packs</Filter>
-    </ClInclude>
-    <ClInclude Include="UnpackMananger.h">
-      <Filter>Packs</Filter>
-    </ClInclude>
-    <ClInclude Include="PackageUtilites.h">
-      <Filter>Packs</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>UI</Filter>
@@ -147,6 +135,12 @@
     <ClInclude Include="framework.h">
       <Filter>EngineHeaders</Filter>
     </ClInclude>
+    <ClInclude Include="FileSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystemHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -160,9 +154,6 @@
     </ClCompile>
     <ClCompile Include="Light.cpp">
       <Filter>Light</Filter>
-    </ClCompile>
-    <ClCompile Include="BackGround.cpp">
-      <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="Model.cpp">
       <Filter>Objects</Filter>
@@ -196,12 +187,6 @@
     </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>System</Filter>
-    </ClCompile>
-    <ClCompile Include="PackMananger.cpp">
-      <Filter>Packs</Filter>
-    </ClCompile>
-    <ClCompile Include="UnpackMananger.cpp">
-      <Filter>Packs</Filter>
     </ClCompile>
     <ClCompile Include="UI.cpp">
       <Filter>UI</Filter>
@@ -238,6 +223,9 @@
     </ClCompile>
     <ClCompile Include="GP.cpp">
       <Filter>EngineHeaders</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

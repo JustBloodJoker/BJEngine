@@ -3,53 +3,87 @@
 namespace BJEngine
 {
 	ID3D11Buffer* LightMananger::lightBuffer = nullptr;
-	LightMananger* LightMananger::instance = nullptr;
+	ID3D11Buffer* LightMananger::lightBuffer2 = nullptr;
+	ID3D11ShaderResourceView* LightMananger::srvv = nullptr;
+
 	bool LightMananger::Init()
 	{
 		
 		if (!isInited)
 		{
-			if (instance == nullptr)
-				instance = this;
-
-			lightBuffer = Helper::InitConstantBuffer<ConstantBufferLight>(GP::GetDevice());
+			lightBuffer = Helper::InitConstantBuffer<BJEStruct::ConstantBufferLight>(GP::GetDevice());
 			if (lightBuffer == nullptr) {
 				Log::Get()->Err("light create error");
 				return FAILED(E_FAIL);
 			}
+
+			
+			/*for (int i = 0; i < 19; i++)
+			{
+				BJEStruct::LightDesc ld;
+				ld.enabled = 1;
+				ld.shadowEnabled = 0;
+				ld.pos.y = 10.0f;
+				ld.pos.x = i * 10 - 24 * 10;
+				ld.color.x = (rand() % 10) / 10.0f;
+				ld.color.y = (rand() % 10) / 10.0f;
+				ld.color.z = (rand() % 10) / 10.0f;
+				ld.att.y = 0.4;
+				lights.push_back(ld);
+			}
+			lightsCount = lights.size();*/
+
 			isInited = true;
 		}
+
+		
+
 		Log::Get()->Debug("LightMananger inited!");
 		return true;
 	}
 
-	bool LightMananger::AddLight(LightDesc& desc)
+	bool LightMananger::AddLight(BJEStruct::LightDesc& desc)
 	{
+		lights.push_back(desc);
 
-
-		if (lDesc.lightsCount == MAX_LIGHT_NUM)
+		if (dynamicMaxLightSize <= lights.size())
 		{
-			return false;
+			dynamicMaxLightSize += lights.size();
+			isInitedBuffer = false;
 		}
-		lDesc.light[lDesc.lightsCount] = desc;
 		
+		if (!isInitedBuffer)
+		{
+			isInitedBuffer = InitStructuredBuffer();
+		}
 
-
-		lDesc.lightsCount++;
-		Log::Get()->Debug("Created light!");
-
-
+		Log::Get()->Debug("Create light!");
 		return true;
 	}
 	
 	bool LightMananger::Draw()
 	{
+		BJEStruct::ConstantBufferLight lDesc;
+
+		lDesc.lightsCount = lights.size();
+		lDesc.enablePBR = pbrEnable;
+		lDesc.enableIBR = ibrEnable;
+
 		GP::GetDeviceContext()->UpdateSubresource(lightBuffer, 0, NULL, &lDesc, 0, 0);
 		GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &lightBuffer); 
 
-		if (PackMananger::Get()->GetSavingStatus())
+		if (lightBuffer2 != nullptr)
 		{
-			PackLights();
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+			HRESULT hr = GP::GetDeviceContext()->Map(lightBuffer2, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &lights[0], sizeof(BJEStruct::LightDesc) * lights.size());
+			GP::GetDeviceContext()->Unmap(lightBuffer2, 0);
+			GP::GetDeviceContext()->PSSetShaderResources(15, 1, &srvv);
+		}
+		else if (lights.size() != 0)
+		{
+
 		}
 
 		return true;
@@ -62,34 +96,50 @@ namespace BJEngine
 
 	const bool LightMananger::IsHaveLights()
 	{
-		return lDesc.lightsCount;
+		return lights.size();
 	}
 	
 	void LightMananger::Close()
 	{
 		RELEASE(lightBuffer);
+		RELEASE(lightBuffer2);
+		RELEASE(srvv);
 	}
-
-	bool LightMananger::PackLights()
+	bool LightMananger::InitStructuredBuffer()
 	{
-		for (size_t index = 0; index < lDesc.lightsCount; index++)
-		{
-			LightType ltPack;
+		RELEASE(lightBuffer2);
+		RELEASE(srvv);
 
-			ltPack.angle = lDesc.light[index].angle;
-			ltPack.att = lDesc.light[index].att;
-			ltPack.color = lDesc.light[index].color;
-			ltPack.dir = lDesc.light[index].dir;
-			ltPack.enabled = lDesc.light[index].enabled;
-			ltPack.lightType = lDesc.light[index].lightType;
-			ltPack.pos = lDesc.light[index].pos;
-			
-			PackMananger::Get()->AddLight(ltPack);
+		D3D11_BUFFER_DESC sbDesc;
+		sbDesc.ByteWidth = sizeof(BJEStruct::LightDesc) * dynamicMaxLightSize;
+		sbDesc.Usage = D3D11_USAGE_DYNAMIC;
+		sbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		sbDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		sbDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+		sbDesc.StructureByteStride = sizeof(BJEStruct::LightDesc);
+
+		D3D11_SUBRESOURCE_DATA subResourceData2;
+		subResourceData2.pSysMem = &lights[0];
+
+		HRESULT result = GP::GetDevice()->CreateBuffer(&sbDesc, &subResourceData2, &lightBuffer2);
+
+		if (FAILED(result))
+		{
+			Log::Get()->Err(std::system_category().message(result).c_str());
 		}
 
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.FirstElement = 0;
+		srvDesc.Buffer.NumElements = dynamicMaxLightSize;
+
+		result = GP::GetDevice()->CreateShaderResourceView(lightBuffer2, &srvDesc, &srvv);
+		if (FAILED(result))
+		{
+			Log::Get()->Err(std::system_category().message(result).c_str());
+		}
 
 		return true;
 	}
-
-
 }

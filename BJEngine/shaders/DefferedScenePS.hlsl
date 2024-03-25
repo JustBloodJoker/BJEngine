@@ -7,12 +7,16 @@ SamplerState SamplerStateWrap : register(s0);
 Texture2D PositionScene       : register(t0);
 Texture2D DiffuseScene        : register(t1);
 Texture2D NormalsScene        : register(t2);
-Texture2D RoughnessScene      : register(t3);
+Texture2D SpecularScene       : register(t3);
+Texture2D RoughnessScene      : register(t4);
+
+TextureCube IrradianceScene   : register(t6);
 
 SamplerComparisonState SamplerStateClamp             : register(s1);
 
-TextureCube OmnidirectionalShadowMap[MAX_SHADOW_NUM] : register(t5);
-Texture2D   SimpleShadowMap         [MAX_SHADOW_NUM] : register(t10);
+TextureCube OmnidirectionalShadowMap[MAX_SHADOW_NUM] : register(t8);
+Texture2D   SimpleShadowMap         [MAX_SHADOW_NUM] : register(t13);
+
 
 struct Light
 {
@@ -28,13 +32,13 @@ struct Light
 	int shadowEnabled;
 	int pad2;
 };
+StructuredBuffer<Light> LightsData : register(t15);
 
 cbuffer Light : register(b0)
 {
-    Light light[MAX_LIGHT_NUM];
     int countOfLights;
 	int pbrEnable;
-	int pad1;
+	int ibrEnable;
 	int pad2;
 };
 
@@ -134,22 +138,22 @@ LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4
 	float depth = 1.0f;
 	int sI = 0;
 	
-
+	
 	LightStructure lightFinalColor = { {0,0,0,0}, {0,0,0,0} };
 
 	for(int i = 0; i < countOfLights; i++)
 	{
-		if(light[i].enabled)
+		if(LightsData[i].enabled)
 		{
 			LightStructure tcolLight = { {0,0,0,0}, {0,0,0,0} } ;
 
-			if(light[i].lightType == 0)
+			if(LightsData[i].lightType == 0)
 			{
-    			tcolLight = DoSpotLight(light[i], inputNormals, inputWorldPos, inputEyePos);
+    			tcolLight = DoSpotLight(LightsData[i], inputNormals, inputWorldPos, inputEyePos);
 			}	
-			else if (light[i].lightType == 1)
+			else if (LightsData[i].lightType == 1)
 			{
-				tcolLight = DoPointLight(light[i], inputNormals, inputWorldPos, inputEyePos);
+				tcolLight = DoPointLight(LightsData[i], inputNormals, inputWorldPos, inputEyePos);
     		}
 			else
 			{
@@ -157,31 +161,33 @@ LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4
 			}
 			
 		
-			if(light[i].shadowEnabled)
+			if(LightsData[i].shadowEnabled)
 			{
-				if(light[i].lightType == 1)
+				if(LightsData[i].lightType == 1)
 				{
-					float LightDepth = CalculateShadow(inputWorldPos - light[i].pos, 1.0f, 10000.0f);
+					float LightDepth = CalculateShadow(inputWorldPos - LightsData[i].pos, 1.0f, 10000.0f);
 
 					switch(sI)
 					{
-						case 0: depth = OmnidirectionalShadowMap[0].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - light[i].pos.xyz, LightDepth); break;
-						case 1: depth = OmnidirectionalShadowMap[1].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - light[i].pos.xyz, LightDepth); break;
-						case 2: depth = OmnidirectionalShadowMap[2].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - light[i].pos.xyz, LightDepth); break;
-						case 3: depth = OmnidirectionalShadowMap[3].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - light[i].pos.xyz, LightDepth); break;
-						case 4: depth = OmnidirectionalShadowMap[4].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - light[i].pos.xyz, LightDepth); break;
+						case 0: depth = OmnidirectionalShadowMap[0].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 1: depth = OmnidirectionalShadowMap[1].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 2: depth = OmnidirectionalShadowMap[2].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 3: depth = OmnidirectionalShadowMap[3].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 4: depth = OmnidirectionalShadowMap[4].SampleCmpLevelZero(SamplerStateClamp, inputWorldPos.xyz - LightsData[i].pos.xyz, LightDepth); break;
 						default: break;
 					}
 				}
-				else if(light[i].lightType == 0)
+				else if(LightsData[i].lightType == 0)
 				{
 					depth = 1.0f;
 				}
 				sI++;
-				tcolLight.diffuse *= depth;
-				tcolLight.specular *= depth;
+				
 			}
-		
+			tcolLight.diffuse *= depth;
+			tcolLight.specular *= depth;
+
+
 			lightFinalColor.diffuse = saturate(lightFinalColor.diffuse + tcolLight.diffuse); 
 			lightFinalColor.specular = saturate(lightFinalColor.specular + tcolLight.specular);
 		
@@ -195,6 +201,8 @@ LightStructure CalculateLights(float3 inputNormals, float4 inputWorldPos, float4
 	
 	return lightFinalColor;
 }
+
+
 
 float4 DefaultLight(float3 normals, float4 worldP, float4 camPos)
 {
@@ -211,46 +219,105 @@ float4 DefaultLight(float3 normals, float4 worldP, float4 camPos)
 	finalColor = saturate( ObjectColor + ObjectAmbient + ObjectSpecular);
 	return finalColor;
 }
-/////////////////////////////////////////
-float DistributionGGX(float3 N, float3 H, float roughness)
-{
-    float a = roughness*roughness;
-    float a2 = a*a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-	
-    float num = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-	
-    return num / denom;
-}
- 
-float GeometrySchlickGGX(float NdotV, float roughness)
-{
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
- 
-    float num = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-	
-    return num / denom;
-}
-float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
-{
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
-	
-    return ggx1 * ggx2;
-}
-float3 fresnelSchlick(float cosTheta, float3 F0)
-{
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}  
 
 /////////////////////////////////////////
+
+float GGX_PartialGeometry(float cosThetaN, float alpha) {
+    float cosTheta_sqr = saturate(cosThetaN*cosThetaN);
+    float tan2 = ( 1 - cosTheta_sqr ) / cosTheta_sqr;
+    float GP = 2 / ( 1 + sqrt( 1 + alpha * alpha * tan2 ) );
+    return GP;
+}
+
+float GGX_Distribution(float cosThetaNH, float alpha) {
+    float alpha2 = alpha * alpha;
+    float NH_sqr = saturate(cosThetaNH * cosThetaNH);
+    float den = NH_sqr * alpha2 + (1.0 - NH_sqr);
+    return alpha2 / ( PI * den * den );
+}
+
+float3 FresnelSchlick(float3 F0, float cosTheta, float roughness) 
+{
+    return F0 + (max(float3(1.0 - roughness,1.0 - roughness,1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+float3 PBRLights(Light lightT, float3 V, float3 L, float3 N, float3 ALBEDO, float3 SPEC, float ROUGH, float3 irradiance)
+{
+	float dist = length(L);
+	N = normalize(N);
+    V = normalize(V);
+    L = normalize(L);
+	float3 H = normalize(V+L);
+    
+	float NL = dot(N, L);
+	if (NL <= 0.0) return 0.0;
+
+    float NV = dot(N, V);
+	if (NV <= 0.0) return 0.0;
+    
+	float NH = dot(N, H);
+	float HV = dot(H, V);
+
+
+	float roug_alpha = ROUGH * ROUGH;
+	float G = GGX_PartialGeometry(NV, roug_alpha) * GGX_PartialGeometry(NL, roug_alpha);
+	float D = GGX_Distribution(NH, roug_alpha);
+	float3 F = FresnelSchlick(SPEC, HV, roug_alpha); //SPEC
+
+	float3 resultSpec = G*D*F*0.25/NV;
+	float3 resultDiff = saturate(1-F);
+
+	float attenuation = 1.0f / ( lightT.att.x + lightT.att.y * dist + lightT.att.z * dist * dist );
+
+	return max(0.0f, resultSpec * attenuation * lightT.color + resultDiff * ALBEDO * lightT.color * NL * irradiance * attenuation/ PI);
+}
+
+float3 PBRCalculate(float3 Normals, float4 WorldPosition, float4 cameraPos, float3 albed, float3 spec,float rough)
+{
+	float3 finalCol = float3(0.0f, 0.0f, 0.0f);
+	int sI = 0;
+	float3 IrradianceMap = IrradianceScene.Sample(SamplerStateWrap, Normals).xyz;
+	for(int i = 0; i < countOfLights; i++)
+	{
+		if(LightsData[i].enabled)
+		{	
+			float depth = 1.0f;
+			float3 color = PBRLights(LightsData[i], cameraPos.xyz - WorldPosition.xyz ,LightsData[i].pos.xyz - WorldPosition.xyz , Normals, albed, spec, rough, ibrEnable ? IrradianceMap : 1.0f);
+			
+			if(LightsData[i].shadowEnabled)
+			{
+				if(LightsData[i].lightType == 1)
+				{
+					float LightDepth = CalculateShadow(WorldPosition - LightsData[i].pos, 1.0f, 10000.0f);
+
+					switch(sI)
+					{
+						case 0: depth = OmnidirectionalShadowMap[0].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 1: depth = OmnidirectionalShadowMap[1].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 2: depth = OmnidirectionalShadowMap[2].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 3: depth = OmnidirectionalShadowMap[3].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						case 4: depth = OmnidirectionalShadowMap[4].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - LightsData[i].pos.xyz, LightDepth); break;
+						default: break;
+					}
+				}
+				else if(LightsData[i].lightType == 0)
+				{
+					depth = 1.0f;
+				}
+				sI++;
+			}
+			
+			color *= depth;
+
+			finalCol = saturate(finalCol + color);
+		}
+	}
+	return finalCol;
+}
+
+
+/////////////////////////////////////////
+
 PS_OUTPUT PS(VS_OUTPUT input)
 {
 	PS_OUTPUT psOut;
@@ -258,88 +325,18 @@ PS_OUTPUT PS(VS_OUTPUT input)
 	float4 WorldPosition = PositionScene.Sample( SamplerStateWrap, input.texCoord );
 	float4 Normals = NormalsScene.Sample( SamplerStateWrap, input.texCoord );
 	float4 ObjectTexture = DiffuseScene.Sample( SamplerStateWrap, input.texCoord );
+	float4 SpecularTexture = SpecularScene.Sample( SamplerStateWrap, input.texCoord );
 	float roughnessMap = RoughnessScene.Sample( SamplerStateWrap, input.texCoord ).r;
 	float metallicMap = 1.0f - roughnessMap;
+
+	
 
 	if(pbrEnable)
 	{	
 		
-		float depth = 1.0f;
-		int sI = 0;
-		float3 N = normalize(Normals.xyz);
-    	float3 V = normalize(cameraPos.xyz - WorldPosition.xyz);
 		
-
-    	float3 F0 = float3(0.04f,0.04f,0.04f); 
-   	 	F0 = lerp(F0, ObjectTexture, metallicMap);
-	           
-    	float3 Lo = float3(0.0,0.0,0.0);
-    	for(int i = 0; i < countOfLights; ++i) 
-    	{
-			if(light[i].enabled)
-			{
-        		float3 L = normalize(light[i].pos - WorldPosition).xyz;
-        		float distance = length(light[i].pos - WorldPosition);
-
-        		float3 H = normalize(V + L);
-        		float attenuation = 1.0f / ( light[i].att.x + light[i].att.y * distance + light[i].att.z * distance * distance );
-        		float3 radiance = light[i].color * attenuation;        
-        
-        		float NDF = DistributionGGX(N, H, roughnessMap);        
-        		float G = GeometrySmith(N, V, L, roughnessMap);      
-        		float3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);       
-        
-        		float3 kS = F;
-        		float3 kD = float3(1.0,1.0,1.0) - kS;
-        		kD *= 1.0 - metallicMap;	  
-        
-        		float3 numerator = NDF * G * F;
-        		float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
-        		float3 specular = numerator / max(denominator, 0.001);  
-            
-        		float NdotL = max(dot(N, L), 0.0);                
-        		float3 lightRes = (kD * ObjectTexture / PI + specular) * radiance * NdotL; 
-
-				if(light[i].lightType == 0)
-				{
-					float minCos = cos( light[i].angle );
- 			   		float maxCos = ( minCos + 1.0f ) / 2.0f;
-    				float cosAngle = dot( light[i].dir, -L );
-					float spotIntensity = smoothstep( minCos, maxCos, cosAngle );
-					lightRes *= spotIntensity;
-				}
-
-				if(light[i].shadowEnabled)
-				{
-					if(light[i].lightType == 1)
-					{
-						float LightDepth = CalculateShadow(WorldPosition - light[i].pos, 1.0f, 10000.0f);
-
-						switch(sI)
-						{
-							case 0: depth = OmnidirectionalShadowMap[0].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - light[i].pos.xyz, LightDepth); break;
-							case 1: depth = OmnidirectionalShadowMap[1].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - light[i].pos.xyz, LightDepth); break;
-							case 2: depth = OmnidirectionalShadowMap[2].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - light[i].pos.xyz, LightDepth); break;
-							case 3: depth = OmnidirectionalShadowMap[3].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - light[i].pos.xyz, LightDepth); break;
-							case 4: depth = OmnidirectionalShadowMap[4].SampleCmpLevelZero(SamplerStateClamp, WorldPosition.xyz - light[i].pos.xyz, LightDepth); break;
-							default: break;
-						}
-					}
-					else
-					{
-						depth = 1.0f;
-					}
-					sI++;
-					lightRes *= depth;
-				}
-
-				Lo += lightRes;
-    		}   
-		}
-    	float3 ambient = GlobalAmbient.xyz * ObjectTexture.xyz ;
-    	float3 color = ambient + Lo;
-	  
-		psOut.FinalColor.xyz = color;
+		
+		psOut.FinalColor.xyz = PBRCalculate(Normals, WorldPosition, cameraPos, ObjectTexture.xyz,SpecularTexture.xyz, roughnessMap);
 		psOut.FinalColor.w = ObjectTexture.w;
 	}
 	else

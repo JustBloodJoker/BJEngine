@@ -18,17 +18,9 @@ namespace BJEngine {
 		
 		
 		if(shadowCBuffer == nullptr)
-			shadowCBuffer = Helper::InitConstantBuffer<OmnidirectionalShadowConstantBuffer>(GP::GetDevice());
+			shadowCBuffer = Helper::InitConstantBuffer<BJEStruct::CubeGenerateConstantBuffer>(GP::GetDevice());
 			
 		depthStencil->InitView(SHADOW_WIDTH, SHADOW_WIDTH,false, 6, DXGI_FORMAT_D32_FLOAT, D3D11_RESOURCE_MISC_TEXTURECUBE, D3D11_BIND_DEPTH_STENCIL, true, true);
-
-		D3D11_INPUT_ELEMENT_DESC layout[] = 
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-		};
-		shader = new Shader(L"shaders\\OmnidirectionalShadow.hlsl",L"shaders\\OmnidirectionalShadow.hlsl",L"shaders\\OmnidirectionalShadow.hlsl", "GS","VS","PS");
-		shader->SetInputLayout(layout, ARRAYSIZE(layout));
-		shader->Init();
 
 		isInited = true;
 		
@@ -38,9 +30,10 @@ namespace BJEngine {
 		vp.TopLeftY = 0.0f;
 		vp.MaxDepth = 1.0f;
 		vp.MinDepth = 0.0f;
+
 	}
 
-	void OmnidirectionalShadow::GenerateView(const LightDesc ld)
+	void OmnidirectionalShadow::GenerateView(const BJEStruct::LightDesc ld)
 	{
 		
 		dx::XMFLOAT4 forward = dx::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f);
@@ -91,12 +84,11 @@ namespace BJEngine {
 
 	void OmnidirectionalShadow::BindSRV(int deltIndex)
 	{
-		GP::GetDeviceContext()->PSSetShaderResources(SHADOWCUBE_TEXTURE_POS + deltIndex, 1, &depthStencil->GetSRV());
+		GP::GetDeviceContext()->PSSetShaderResources(SHADOWCUBE_DEFPASS_TEXTURE_POS + deltIndex, 1, &depthStencil->GetSRV());
 	}
 
 	void OmnidirectionalShadow::Close()
 	{
-		CLOSE(shader);
 		CLOSE(depthStencil);
 		RELEASE(shadowCBuffer);
 	}
@@ -106,10 +98,7 @@ namespace BJEngine {
 		
 		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 
-		GP::GetDeviceContext()->IASetInputLayout(shader->GetInputLayout());
-		GP::GetDeviceContext()->VSSetShader(shader->GetVertexShader(), NULL, 0);
-		GP::GetDeviceContext()->PSSetShader(shader->GetPixelShader(), NULL, 0);
-		GP::GetDeviceContext()->GSSetShader(shader->GetGeometryShader(), NULL, 0);
+		GP::BindShader(GP::OMNIDIRECTIONAL_SHADOW_SHADER);
 
 		Blend::Get()->DrawCullBackState();
 		
@@ -139,14 +128,6 @@ namespace BJEngine {
 
 		depthStencil->InitView(SHADOW_WIDTH, SHADOW_WIDTH, false, 1, DXGI_FORMAT_D32_FLOAT, 0U, D3D11_BIND_DEPTH_STENCIL, true, true);
 
-		D3D11_INPUT_ELEMENT_DESC layout[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-		};
-		shader = new Shader(L"shaders\\SimpleShadowMap.hlsl", L"shaders\\SimpleShadowMap.hlsl", "VS", "PS");
-		shader->SetInputLayout(layout, ARRAYSIZE(layout));
-		shader->Init();
-
 		isInited = true;
 
 		vp.Width = static_cast<float>(SHADOW_WIDTH);
@@ -161,10 +142,7 @@ namespace BJEngine {
 	{
 		GP::GetDeviceContext()->RSSetViewports(1, &vp);
 
-		GP::GetDeviceContext()->IASetInputLayout(shader->GetInputLayout());
-		GP::GetDeviceContext()->VSSetShader(shader->GetVertexShader(), NULL, 0);
-		GP::GetDeviceContext()->PSSetShader(shader->GetPixelShader(), NULL, 0);
-		GP::GetDeviceContext()->GSSetShader(shader->GetGeometryShader(), NULL, 0);
+		GP::BindShader(GP::SIMPLE_SHADOW_SHADER);
 
 		Blend::Get()->DrawCullFrontState();
 
@@ -175,7 +153,7 @@ namespace BJEngine {
 		depthStencil->ClearDepthStencilView();
 	}
 
-	void SimpleShadow::GenerateView(const LightDesc ld)
+	void SimpleShadow::GenerateView(const BJEStruct::LightDesc ld)
 	{
 		dx::XMFLOAT4 up = dx::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -188,12 +166,11 @@ namespace BJEngine {
 
 	void SimpleShadow::BindSRV(int deltIndex)
 	{
-		GP::GetDeviceContext()->PSSetShaderResources(SHADOWCUBE_TEXTURE_POS + MAX_SHADOW_NUM + deltIndex, 1, &depthStencil->GetSRV());
+		GP::GetDeviceContext()->PSSetShaderResources(SHADOWCUBE_DEFPASS_TEXTURE_POS + MAX_SHADOW_NUM + deltIndex, 1, &depthStencil->GetSRV());
 	}
 
 	void SimpleShadow::Close()
 	{
-		CLOSE(shader);
 		CLOSE(depthStencil);
 		RELEASE(shadowCBuffer);
 	}

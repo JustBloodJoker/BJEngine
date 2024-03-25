@@ -4,7 +4,9 @@
 
 int main()
 {
-	
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+
 	BJFrameWork::FWork frame;
 	BJEngine::Render* render = new BJEngine::Render();
 

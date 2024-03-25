@@ -93,14 +93,6 @@ namespace BJAudio
         ImGui::SliderFloat("Volume", &volume, 0.001f, 1.5f);
         ImGui::End();
 
-        if (BJEngine::PackMananger::Get()->GetSavingStatus())
-        {
-            SoundType templd;
-            templd.path = temp;
-            templd.volume = volume;
-            BJEngine::PackMananger::Get()->AddSound(templd);
-        }
-
         pSourceVoice->SetVolume(volume);
 
         return true;

@@ -17,7 +17,8 @@ struct PS_OUTPUT
 	float4 OutputPosition : SV_TARGET0;
 	float4 OutputDiffuse : SV_TARGET1;
 	float4 OutputNormals : SV_TARGET2;
-	float  OutputRoughness : SV_TARGET3;
+	float4 OutputSpecular : SV_TARGET3;
+	float  OutputRoughness : SV_TARGET4;
 };
 
 struct Materials
@@ -80,6 +81,12 @@ PS_OUTPUT PS(VS_OUTPUT input)
 	psOut.OutputNormals.w = 1.0f;
 	psOut.OutputPosition = input.worldPos;
 	psOut.OutputRoughness = 1.0f;
+
+	psOut.OutputSpecular = material.specular;
+	if(material.isSpecularTexture)
+	{
+		psOut.OutputSpecular *= SpecularTexture.Sample( SamplerStateWrap, input.texCoord );
+	}
 
 	if(material.isRoughnessTexture)
 	{

@@ -126,10 +126,14 @@ namespace BJEngine
 		dsv->InitView(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT);
 
 		mainRTV = new RenderTarget(pBackBuffer);
-		sceneRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		diffuseRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		normalsRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		roughnessRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R32_FLOAT);
+		sceneRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT,true, false);
+		diffuseRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT, false, false);
+		normalsRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT, false, false);
+		specularRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R16G16B16A16_FLOAT, false, false);
+		roughnessRTV = new RenderTarget(RENDERTARGET_WIDTH, RENDERTARGET_HEIGHT, DXGI_FORMAT_R32_FLOAT, false, false);
+
+
+		irradianceRTV = new RenderTarget(SHADOW_WIDTH, SHADOW_WIDTH, DXGI_FORMAT_R32G32B32A32_FLOAT, false, 6, true, false);
 
 		vp.Width = BJEUtils::GetWindowWidth();
 		vp.Height = BJEUtils::GetWindowHeight();
@@ -146,6 +150,8 @@ namespace BJEngine
 		svp.TopLeftY = 0;
 
 		GP::InitShaders();
+
+		
 
 		return true;
 	}
@@ -192,12 +198,16 @@ namespace BJEngine
 		{
 			lmananger = new LightMananger();
 			lmananger->Init();
+			UI::SetLightMananger(lmananger);
 		}
 		
 		mainRTVBuffer = Helper::InitConstantBuffer<BJEStruct::MainSceneProcessingBuffer>(GP::GetDevice());
 		mainDesc.gamma = 1.0f;
 		mainDesc.expourse = 1.0f;
 		mainDesc.itens = 1.0f;
+		
+		elementSkyBoxConvertion = new ElementSkyBoxConvertion();
+		elementSkyBoxConvertion->Init();
 
 		return true;
 	}
@@ -209,24 +219,43 @@ namespace BJEngine
 			ResizeWindow();
 		}
 
-		for (int index = 0; index < shadow.size(); index++)
+		for (int index = 0, lightindex = 0; index < shadow.size(); index++, lightindex++)
 		{
-			if (!lmananger->GetDesc(index).enabled)
+			if (!lmananger->GetDesc(lightindex).shadowEnabled)
+			{
+				index--;
 				continue;
+			}
 
-			shadow[index]->GenerateView(lmananger->GetDesc(index));
+			if (!lmananger->GetDesc(lightindex).enabled)
+			{
+				continue;
+			}
+			
+			
+			shadow[index]->GenerateView(lmananger->GetDesc(lightindex));
 			shadow[index]->Draw();
 
-			for (auto& el : elements)
+			for (auto& el : defferedElements)
 			{
-				el->DrawShadow();
+				el->DrawShadow(GP::GetDeviceContext());
 			}
 		}
 		
+		if (!elementSkyBoxConvertion->IsDraw() && forwardElements.size() != 0 && dynamic_cast<ElementSkyBox*>(*(forwardElements.end() - 1)) != nullptr )
+		{
+			irradianceRTV->ClearRTV();
+			GP::GetDeviceContext()->OMSetRenderTargets(1, &irradianceRTV->GetRTV(), NULL);
+			GP::GetDeviceContext()->PSSetShaderResources(0, 1, &dynamic_cast<ElementSkyBox*>(*(forwardElements.end() - 1))->GetTexture()->GetTexture());
+			GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
+			elementSkyBoxConvertion->Draw(cams[UI::FocusedCamera()]->GetDesc(), GP::GetDeviceContext());
+			(*(forwardElements.end() - 1))->DrawShadow(GP::GetDeviceContext());
+		}
+
 		// START
 		{ 
 			BeginFrame();
-			UnpackProject();
+
 			cams[0]->DrawCameraObject();
 			for (auto& tSound : sound)
 			{
@@ -241,13 +270,15 @@ namespace BJEngine
 			sceneRTV->ClearRTV();
 			diffuseRTV->ClearRTV();
 			normalsRTV->ClearRTV();
+			specularRTV->ClearRTV();
 			roughnessRTV->ClearRTV();
 
-			ID3D11RenderTargetView* items[4] =
+			ID3D11RenderTargetView* items[5] =
 			{
 				sceneRTV->GetRTV(),
 				diffuseRTV->GetRTV(),
 				normalsRTV->GetRTV(),
+				specularRTV->GetRTV(),
 				roughnessRTV->GetRTV(),
 			};
 
@@ -259,11 +290,10 @@ namespace BJEngine
 			Materials::BindConstantBuffer();
 			GP::BindShader(GP::MODEL_SHADER);
 
-			DrawScene();
-			
-			
+
+			DrawScene();	
 		}
-	
+		
 		//RENDER TEXTURES ON THE SCENE
 		{
 			sceneRTV->CreateCopyTexture();
@@ -273,10 +303,15 @@ namespace BJEngine
 			////////////////// SET TEXTURES
 			GP::GetDeviceContext()->PSSetSamplers(0, 1, Textures::GetWrapState());
 
-			GP::GetDeviceContext()->PSSetShaderResources(0, 1, &sceneRTV->GetCopyTexture());
-			GP::GetDeviceContext()->PSSetShaderResources(1, 1, &diffuseRTV->GetSRV());
-			GP::GetDeviceContext()->PSSetShaderResources(2, 1, &normalsRTV->GetSRV());
-			GP::GetDeviceContext()->PSSetShaderResources(3, 1, &roughnessRTV->GetSRV());
+			GP::GetDeviceContext()->PSSetShaderResources(WORLDPOS_DEFPASS_TEXTURE_POS, 1, &sceneRTV->GetCopyTexture());
+			GP::GetDeviceContext()->PSSetShaderResources(DIFFUSE_DEFPASS_TEXTURE_POS, 1, &diffuseRTV->GetSRV());
+			GP::GetDeviceContext()->PSSetShaderResources(NORMAL_DEFPASS_TEXTURE_POS, 1, &normalsRTV->GetSRV());
+			GP::GetDeviceContext()->PSSetShaderResources(SPECULAR_DEFPASS_TEXTURE_POS, 1, &specularRTV->GetSRV());
+			GP::GetDeviceContext()->PSSetShaderResources(ROUGHNESS_DEFPASS_TEXTURE_POS, 1, &roughnessRTV->GetSRV());
+			//GP::GetDeviceContext()->PSSetShaderResources(EMISSION_DEFPASS_TEXTURE_POS, 1, &);
+
+			GP::GetDeviceContext()->PSSetShaderResources(IRRADIANCE_DEFPASS_TEXTURE_POS, 1, &irradianceRTV->GetSRV());
+
 
 			for (int index = 0; index < shadow.size(); index++)
 			{
@@ -302,13 +337,14 @@ namespace BJEngine
 			
 
 			DepthStencil::SetDepthStencilState(NON);
+
+			
+
+			GP::ResetShaders();
 		}
 		
-		// SKYBOX
-		if (skyBox && skyBox->IsInited())
-		{
-			skyBox->Draw(cams[UI::FocusedCamera()]->GetDesc());
-		}
+		for (auto& el : forwardElements)
+			el->Draw(cams[UI::FocusedCamera()]->GetDesc(), GP::GetDeviceContext());
 
 		GP::GetDeviceContext()->PSSetConstantBuffers(0, 1, &mainRTVBuffer);
 		GP::GetDeviceContext()->UpdateSubresource(mainRTVBuffer, 0, NULL, &mainDesc, 0, 0);
@@ -341,27 +377,18 @@ namespace BJEngine
 		// END
 		EndFrame();
 
-		if (PackMananger::Get()->GetSavingStatus())
-		{
-			for (auto& el : objects)
-				el->Draw(cams[UI::FocusedCamera()]->GetDesc());
-
-			PackMananger::Get()->Close();
-		}
-		if (UnpackMananger::Get()->GetOpeningStatus())
-		{
-			UnpackMananger::Get()->Reset();
-		}
+		ExecuteFileSystemCommand();
 
 		return true;
 	}
 	
+
 	bool Render::DrawScene()
 	{
 
-		for (auto& el : elements)
+		for (auto& el : defferedElements)
 		{
-			el->Draw(cams[UI::FocusedCamera()]->GetDesc());
+			el->Draw(cams[UI::FocusedCamera()]->GetDesc(), GP::GetDeviceContext());
 		}
 
 
@@ -378,10 +405,10 @@ namespace BJEngine
 				return nullptr;
 			};
 		}
-		std::vector<Element*> tmp = std::move(object->MoveElements());
-		elements.insert(elements.end(), tmp.begin(), tmp.end());
+		std::vector<BaseElement*> tmp = std::move(object->MoveElements());
+		defferedElements.insert(defferedElements.end(), tmp.begin(), tmp.end());
 
-		std::sort(elements.begin(), elements.end(), [](BaseElement*& a, BaseElement*& b) { return a < b; });
+		std::sort(defferedElements.begin(), defferedElements.end(), [](BaseElement*& a, BaseElement*& b) { return a < b; });
 		
 		objects.push_back(object);
 
@@ -390,20 +417,26 @@ namespace BJEngine
 
 	void Render::AddSkyBox(std::string texturePath)
 	{
-		if (skyBox)
+		ElementSkyBox* ptr = nullptr;
+		if (!forwardElements.empty())
 		{
-			CLOSE(skyBox);
-		}
-		skyBox = new BackGround();
-		skyBox->SetTexture(new Textures(std::wstring(texturePath.begin(), texturePath.end())));
-		if (!skyBox->IsInited())
-		{
-			if (!skyBox->Init())
+			ptr = dynamic_cast<ElementSkyBox*>(*(forwardElements.end() - 1));
+			if (ptr)
 			{
-				Log::Get()->Err("SkyBox didn't inited!");
+				CLOSE(ptr);
+				forwardElements.pop_back();
 			}
 		}
+		ptr = new ElementSkyBox(new Textures(std::wstring(texturePath.begin(), texturePath.end())));
 
+		if (!ptr)
+		{
+			Log::Get()->Err("SkyBox didn't inited!");
+			return;
+		}
+		forwardElements.push_back(ptr);
+		elementSkyBoxConvertion->Redraw();
+		
 	}
 
 	void Render::ResizeWindow()
@@ -437,44 +470,7 @@ namespace BJEngine
 		sound[sound.size() - 1]->Init();
 	}
 
-	void Render::UnpackProject()
-	{
-		
-
-		if (UnpackMananger::Get()->GetOpeningStatus())
-		{
-			LightDesc ld;
-			std::vector<LightType> unp = UnpackMananger::Get()->GetLights();
-
-			for (auto& el : unp)
-			{
-				ld.pos = el.pos;
-				ld.dir = el.dir;
-				ld.angle = el.angle;
-				ld.att = el.att;
-				ld.color = el.color;
-				ld.enabled = el.enabled;
-				ld.lightType = el.lightType;
-				SetLight(ld);
-			}
-
-			unp.clear();
-	
-			std::vector<ObjectType> unpo = UnpackMananger::Get()->GetObject();
-			Model* md = nullptr;
-			for (auto& el : unpo)
-			{
-				md = new Model(el.path.c_str());
-				md->SetTexturesPrefixPath(std::wstring(el.prepath.begin(), el.prepath.end()));
-				md->SetScript(el.script);
-				InitObjs(md);
-			}
-		}
-
-
-	}
-
-	void Render::SetLight(LightDesc ld)
+	void Render::SetLight(BJEStruct::LightDesc ld)
 	{
 		if (lmananger->AddLight(ld) && ld.shadowEnabled && shadow.size() <= MAX_SHADOW_NUM)
 		{	
@@ -487,11 +483,42 @@ namespace BJEngine
 		islight = true;
 	}
 
+	void Render::LoadProject(std::string path)
+	{
+		fileSysExecution.push(new FileOpen(std::move(path), &defferedElements, &forwardElements, &ldtmp));
+	}
+
+	void Render::SaveProject(std::string path, std::string name)
+	{
+		fileSysExecution.push(new FileSave(std::move(path), std::move(name), lmananger->GetLights(), Materials::GetAllMaterials(), defferedElements, forwardElements));
+	}
+
+	void Render::ExecuteFileSystemCommand()
+	{
+		while (!fileSysExecution.empty())
+		{
+			fileSysExecution.front()->Execute();
+			auto ptr = dynamic_cast<FileOpen*>(fileSysExecution.front());
+			if (ptr)
+			{
+				for (auto& el : ldtmp)
+				{
+					SetLight(el);
+				}
+			}
+			fileSysExecution.pop();
+		}
+	}
+
 	void Render::Close()
 	{
-		for (auto& el : elements) {
+		for (auto& el : defferedElements) {
 			CLOSE(el);
 		}
+		for (auto& el : forwardElements) {
+			CLOSE(el);
+		}
+
 		for (auto& el : objects) {
 			CLOSE(el);
 		}
@@ -517,12 +544,10 @@ namespace BJEngine
 		CLOSE(diffuseRTV);
 		CLOSE(sceneRTV);
 		CLOSE(mainRTV);
-		CLOSE(skyBox);
+
 
 		Blend::Get()->Close();
 		Log::Get()->Debug("Render was closed");
-		PackMananger::Get()->Close();
-		UnpackMananger::Get()->Close();
 		CLOSE(lmananger);
 	}
 

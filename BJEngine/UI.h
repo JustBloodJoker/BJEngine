@@ -26,7 +26,7 @@ namespace BJEngine
 		static bool IsInit();
 
 		static const size_t FocusedCamera();
-
+		static bool SetLightMananger(LightMananger* lman);
 
 		static std::unordered_map<BJEUtils::POST_PROCESSING, bool>& GetPostProcessingStatus()noexcept;
 
@@ -141,7 +141,7 @@ namespace BJEngine
 		/// 
 		
 		static bool Light(); 
-		static LightDesc* pArrayLightDesc;
+		static LightMananger* lman;
 		static size_t focusedLight;
 		static std::string namesLights;
 		static int currItemComboLights;

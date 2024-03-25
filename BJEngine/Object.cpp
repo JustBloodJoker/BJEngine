@@ -40,11 +40,6 @@ namespace BJEngine {
 		}
 	}
 
-	void Object::Draw(const CameraDesc cam)
-	{
-	}
-
-
 	bool Object::Init()
 	{
 		return true;

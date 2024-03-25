@@ -10,7 +10,7 @@
 namespace BJEngine {
 
 	class Materials;
-	class Element;
+	class BaseElement;
 
 	class Object
 	{
@@ -22,31 +22,16 @@ namespace BJEngine {
 
 		virtual void Close();
 
-		virtual void Draw(const CameraDesc cam);
 		virtual bool Init();
-
-		
-		struct Vertex
-		{
-			Vertex() {}
-			Vertex(float x, float y, float z,
-				float u, float v,
-				float nx, float ny, float nz)
-				: pos(x, y, z), texCoord(u, v), normal(nx, ny, nz) {}
-
-			dx::XMFLOAT3 pos;
-			dx::XMFLOAT2 texCoord;
-			dx::XMFLOAT3 normal;
-		};
-
 		
 		void SetTexturesPrefixPath(std::wstring prefPath);
 
 		bool IsInited() { return isInited; }
 
-		std::vector<Element*>& MoveElements() { return elements; };
+		std::vector<BaseElement*>& MoveElements() { return elements; };
 
 	protected:
+	
 		bool isInited = false;
 
 		
@@ -58,7 +43,7 @@ namespace BJEngine {
 
 
 		std::vector<Materials*> materials;
-		std::vector<Element*> elements;
+		std::vector<BaseElement*> elements;
 
 		std::wstring texturePrefixPath = L"";
 	};

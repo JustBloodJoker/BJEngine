@@ -5,28 +5,20 @@
 
 
 namespace BJEngine
-{
-
+{ 
+	
 	static class LightMananger
 	{
 		friend class UI;
 
-		struct ConstantBufferLight
-		{
-			LightDesc light[MAX_LIGHT_NUM];
-			int lightsCount = 0;
-			int enablePBR = 0;
-			int pad1;
-			int pad2;
-		};
-
 		static ID3D11Buffer* lightBuffer;
-		
-		static LightMananger* instance;
+		static ID3D11Buffer* lightBuffer2;
+		static ID3D11ShaderResourceView* srvv;
+
 	public:
 
 		bool Init();
-		bool AddLight(LightDesc& desc);
+		bool AddLight(BJEStruct::LightDesc& desc);
 		bool Draw();
 
 		const bool IsInited();
@@ -34,29 +26,34 @@ namespace BJEngine
 
 		void Close();
 
-		//////////  Œ—“€À‹ ≈¡¿Õ€…
-		
 		int GetType(int index)
 		{
-			return lDesc.light[index].lightType;
+			return lights[index].lightType;
 		}
-		LightDesc GetDesc(int index)
+		BJEStruct::LightDesc GetDesc(int index)
 		{
-			return lDesc.light[index];
+			return lights[index];
 		}
 		const int GetCurrentCount()
 		{
-			return lDesc.lightsCount - 1;
+			return lights.size();
 		}
-		//////////  Œ—“€À‹ ≈¡¿Õ€…
+		std::vector<BJEStruct::LightDesc>& GetLights()
+		{
+			return lights;
+		}
 
 	private:
 
-		bool PackLights();
-		
-		bool isInited;
+		bool InitStructuredBuffer();
 
-		ConstantBufferLight lDesc;		
+		bool isInited = false;
+		bool isInitedBuffer = false;
+
+		std::vector<BJEStruct::LightDesc> lights;
+		int dynamicMaxLightSize = 5;
+		bool pbrEnable = false;
+		bool ibrEnable = false;
 	};
 
 

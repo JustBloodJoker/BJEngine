@@ -46,7 +46,8 @@ namespace BJEngine
 		
 		RenderTarget() = default;
 		RenderTarget(ID3D11Texture2D* texture, bool MSAA = false);
-		RenderTarget(int width, int height, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT, bool MSAA = false);
+		RenderTarget(int width, int height, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT, bool createCopy = true, bool MSAA = false);
+		RenderTarget(int width, int height, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT, bool createCopy = true, int arraySize = 1, bool isCubeMap = false, bool MSAA = false);
 
 		ID3D11RenderTargetView*& GetRTV();
 

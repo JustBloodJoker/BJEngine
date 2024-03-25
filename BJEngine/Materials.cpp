@@ -3,12 +3,14 @@
 
 namespace BJEngine
 {
+	std::vector<Materials*> Materials::materialVector;
 	ID3D11Buffer* Materials::pMaterialBuffer = nullptr;
 
 	Materials::Materials()
 	{
 		Init();
-		
+		name = std::string("MATERIAL") + std::to_string(materialVector.size());
+		materialVector.push_back((this));
 	}
 
 	void Materials::Draw()
@@ -20,7 +22,6 @@ namespace BJEngine
 
 			if (cmbDesc.matDesc.ishaveTransparency)
 				Blend::Get()->DrawTransparencyBlend();
-
 			else if (cmbDesc.matDesc.ishavealphablend)
 				Blend::Get()->DrawAlphaBlend();
 			else
@@ -31,36 +32,36 @@ namespace BJEngine
 
 			if (cmbDesc.matDesc.isTexture)
 			{
-				GP::GetDeviceContext()->GenerateMips(texture->GetTexture());
-				GP::GetDeviceContext()->PSSetShaderResources(DIFFUSE_TEXTURE_POS, 1, &texture->GetTexture());
+				GP::GetDeviceContext()->GenerateMips(textures[HAS_TEXTURE]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(DIFFUSE_TEXTURE_POS, 1, &textures[HAS_TEXTURE]->GetTexture());
 				GP::GetDeviceContext()->PSSetSamplers(DIFFUSE_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isNormalTexture)
 			{
-				GP::GetDeviceContext()->GenerateMips(normalTexture->GetTexture());
-				GP::GetDeviceContext()->PSSetShaderResources(NORMAL_TEXTURE_POS, 1, &normalTexture->GetTexture());
+				GP::GetDeviceContext()->GenerateMips(textures[HAS_NORMAL_TEXTURE]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(NORMAL_TEXTURE_POS, 1, &textures[HAS_NORMAL_TEXTURE]->GetTexture());
 				GP::GetDeviceContext()->PSSetSamplers(NORMAL_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isRoughnessTexture)
 			{
-				GP::GetDeviceContext()->GenerateMips(roughnessTexture->GetTexture());
-				GP::GetDeviceContext()->PSSetShaderResources(ROUGHNESS_TEXTURE_POS, 1, &roughnessTexture->GetTexture());
+				GP::GetDeviceContext()->GenerateMips(textures[HAS_ROUGHNESS_TEXTURE]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(ROUGHNESS_TEXTURE_POS, 1, &textures[HAS_ROUGHNESS_TEXTURE]->GetTexture());
 				GP::GetDeviceContext()->PSSetSamplers(ROUGHNESS_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isEmissionTexture)
 			{
-				GP::GetDeviceContext()->GenerateMips(emissionTexture->GetTexture());
-				GP::GetDeviceContext()->PSSetShaderResources(EMISSION_TEXTURE_POS, 1, &emissionTexture->GetTexture());
+				GP::GetDeviceContext()->GenerateMips(textures[HAS_EMISSION_TEXTURE]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(EMISSION_TEXTURE_POS, 1, &textures[HAS_EMISSION_TEXTURE]->GetTexture());
 				GP::GetDeviceContext()->PSSetSamplers(EMISSION_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 
 			if (cmbDesc.matDesc.isSpecularTexture)
 			{
-				GP::GetDeviceContext()->GenerateMips(specularTexture->GetTexture());
-				GP::GetDeviceContext()->PSSetShaderResources(SPECULAR_TEXTURE_POS, 1, &specularTexture->GetTexture());
+				GP::GetDeviceContext()->GenerateMips(textures[HAS_SPECULAR_TEXTURE]->GetTexture());
+				GP::GetDeviceContext()->PSSetShaderResources(SPECULAR_TEXTURE_POS, 1, &textures[HAS_SPECULAR_TEXTURE]->GetTexture());
 				GP::GetDeviceContext()->PSSetSamplers(SPECULAR_SAMPLERSTATE_POS, 1, Textures::GetWrapState());
 			}
 		}
@@ -76,10 +77,28 @@ namespace BJEngine
 		return 1;
 	}
 
+	std::string Materials::GetName() const
+	{
+		return name;
+	}
+
+	const std::string Materials::GetTexturePath(MATERIAL_TYPE textureType)
+	{
+		if (textures[textureType] != nullptr)
+		{
+			std::wstring tmp = textures[textureType]->GetTexturePath();
+			
+			return std::string(tmp.begin(), tmp.end());
+
+		}
+		else
+			return std::string();
+	}
+
 	void Materials::Init()
 	{
 		if(pMaterialBuffer == nullptr)
-			pMaterialBuffer = Helper::InitConstantBuffer<ConstantMaterialBuffer>(GP::GetDevice());
+			pMaterialBuffer = Helper::InitConstantBuffer<BJEStruct::ConstantMaterialBuffer>(GP::GetDevice());
 
 		if (!pMaterialBuffer)
 		{
@@ -162,7 +181,9 @@ namespace BJEngine
 				cmbDesc.matDesc.specularPower = param;
 				break;
 
-			
+			case OPACITY:
+				cmbDesc.matDesc.diffuse.w = param;
+				break;
 
 			default:
 				Log::Get()->Err("Incorrect param type");
@@ -177,41 +198,42 @@ namespace BJEngine
 		{
 		case HAS_TEXTURE:
 
-			texture = new Textures(textureName.c_str());
-			texture->InitTextures();
+			textures[HAS_TEXTURE] = new Textures(textureName.c_str());
+			textures[HAS_TEXTURE]->InitTextures();
 			cmbDesc.matDesc.isTexture = true;
 
-			HasAlphaChannel(texture->GetTexture());
+			HasAlphaChannel(textures[HAS_TEXTURE]->GetTexture());
 
 			break;
 		case HAS_NORMAL_TEXTURE:
 
-			normalTexture = new Textures(textureName.c_str());
-			normalTexture->InitTextures();
+			textures[HAS_NORMAL_TEXTURE] = new Textures(textureName.c_str());
+			textures[HAS_NORMAL_TEXTURE]->InitTextures();
+
 			cmbDesc.matDesc.isNormalTexture = true;
 
 			break;
 
 		case HAS_ROUGHNESS_TEXTURE:
 
-			roughnessTexture = new Textures(textureName.c_str());
-			roughnessTexture->InitTextures();
+			textures[HAS_ROUGHNESS_TEXTURE] = new Textures(textureName.c_str());
+			textures[HAS_ROUGHNESS_TEXTURE]->InitTextures();
 			cmbDesc.matDesc.isRoughnessTexture = true;
 
 			break;
 
 		case HAS_EMISSION_TEXTURE:
 			
-			emissionTexture = new Textures(textureName.c_str());
-			emissionTexture->InitTextures();
+			textures[HAS_EMISSION_TEXTURE] = new Textures(textureName.c_str());
+			textures[HAS_EMISSION_TEXTURE]->InitTextures();
 			cmbDesc.matDesc.isEmissionTexture = true;
 
 			break;
 
 		case HAS_SPECULAR_TEXTURE:
 
-			specularTexture = new Textures(textureName.c_str());
-			specularTexture->InitTextures();
+			textures[HAS_SPECULAR_TEXTURE] = new Textures(textureName.c_str());
+			textures[HAS_SPECULAR_TEXTURE]->InitTextures();
 			cmbDesc.matDesc.isSpecularTexture = true;
 
 			break;
@@ -236,15 +258,15 @@ namespace BJEngine
 		{
 		case HAS_TEXTURE:
 
-			this->texture = ttexture;
-			texture->InitTextures();
+			textures[HAS_TEXTURE] = ttexture;
+			textures[HAS_TEXTURE]->InitTextures();
 			cmbDesc.matDesc.isTexture = true;
 
 			break;
 		case HAS_NORMAL_TEXTURE:
 
-			this->normalTexture = ttexture;
-			normalTexture->InitTextures();
+			textures[HAS_NORMAL_TEXTURE] = ttexture;
+			textures[HAS_NORMAL_TEXTURE]->InitTextures();
 			cmbDesc.matDesc.isNormalTexture = true;
 
 			break;
@@ -258,11 +280,10 @@ namespace BJEngine
 
 	void  Materials::Close()
 	{
-		CLOSE(texture);
-		CLOSE(normalTexture);
-		CLOSE(roughnessTexture);
-		CLOSE(emissionTexture);
-		CLOSE(specularTexture);
+		for (auto& el : textures)
+			CLOSE(el.second);
+
+		
 		RELEASE(pMaterialBuffer);
 	}
 

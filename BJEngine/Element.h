@@ -7,6 +7,13 @@ namespace BJEngine
 
     class Materials;
 
+    enum ELEMENT_PRIORITY
+    {
+        DEFAULT = 1,
+        TRANSPARENCY = 2,
+        SKYBOX = 3,
+    };
+
     class BaseElement
     {
         
@@ -17,19 +24,19 @@ namespace BJEngine
         static void BindConstantBuffer();
         static ID3D11Buffer*& GetConstantBuffer();
         
-        
-        
+       
         virtual void Close()                                   = 0;
         virtual void Init()                                    = 0;
-        virtual void Draw(CameraDesc cam)                      = 0;
-        virtual void DrawShadow()                              = 0;
+        virtual void Draw(CameraDesc cam,
+            ID3D11DeviceContext* context)                      = 0;
+        virtual void DrawShadow(ID3D11DeviceContext* context) = 0;
        
         const bool operator<(const BaseElement& other) const 
         {
             return priority > other.GetPriorityRender();
         }
 
-        const int& GetPriorityRender() const
+        const ELEMENT_PRIORITY& GetPriorityRender() const
         {
             return priority;
         };
@@ -42,7 +49,7 @@ namespace BJEngine
 
     protected:
 
-        int priority = 1;
+        ELEMENT_PRIORITY priority = DEFAULT;
         std::string name;
 
     };
@@ -58,15 +65,20 @@ namespace BJEngine
         
         
         Element();
-        Element(std::vector<BJEStruct::ModelVertex> v, std::vector<WORD> i, Materials* material,
+        Element(std::vector<BJEStruct::ModelVertex>&& v, std::vector<WORD>&& i, Materials* material,
                     dx::XMVECTOR min, dx::XMVECTOR max);
         ~Element();
 
         void Close()                        override;
         void Init()                         override;
-        void Draw(CameraDesc cam)           override;
-        void DrawShadow()                   override;
+        void Draw(CameraDesc cam,
+            ID3D11DeviceContext* context)             override;
+        void DrawShadow(ID3D11DeviceContext* context)                     override;
         
+        std::string GetMaterialName()                          ;
+        std::vector<BJEStruct::ModelVertex> GetVertices() const;
+        std::vector<WORD>                   GetIndices()  const;
+
 	private:
         
         dx::XMMATRIX world;
@@ -87,33 +99,65 @@ namespace BJEngine
         ID3D11Buffer* pVertexBuffer;
     };
 
-    class ElementSphere
+    class ElementSkyBox
         : public BaseElement
     {
-
-        static int count;
-
+        CameraDesc lastCamDesc;
+        
     public:
 
-        ElementSphere();
-        ~ElementSphere();
+        ElementSkyBox(Textures* texture);
+        ~ElementSkyBox();
 
         void Close()                        override;
         void Init()                         override;
-        void Draw(CameraDesc cam)           override;
-        void DrawShadow()                   override;
-        
+        void Draw(CameraDesc cam, ID3D11DeviceContext* context)           override;
+        void DrawShadow(ID3D11DeviceContext* context)                   override;
+
+        std::string GetTextureName();
+        std::vector<BJEStruct::VertexPosOnly> GetVertices() const;
+        std::vector<WORD>                    GetIndices()  const;
+        Textures* GetTexture() { return ttext; };
+
     private:
-
         dx::XMMATRIX world;
-        
-        bool drawing = false;
-        bool drawingInShadowPass = false;
 
-        ID3D11Buffer* pIndexBuffer;
+        std::vector<BJEStruct::VertexPosOnly> vertices;
+        std::vector<WORD> indices;
+
+        Textures* ttext;
+
         ID3D11Buffer* pVertexBuffer;
+        ID3D11Buffer* pIndexBuffer;
 
+        bool drawing;
+
+       
     };
 
+    class ElementSkyBoxConvertion
+        : public BaseElement
+    {
+        static ID3D11Buffer* cubeBuffer;
 
+    public:
+
+        ElementSkyBoxConvertion();
+        ~ElementSkyBoxConvertion();
+
+        void Close()                        override;
+        void Init()                         override;
+        void Draw(CameraDesc cam, ID3D11DeviceContext* context)           override;
+        void DrawShadow(ID3D11DeviceContext* context)                   override;
+
+        void Redraw();
+        bool IsDraw();
+
+    private:
+        bool isDraw = false;
+
+        
+        D3D11_VIEWPORT vp;
+        BJEStruct::CubeGenerateConstantBuffer matrices;
+    };
 }

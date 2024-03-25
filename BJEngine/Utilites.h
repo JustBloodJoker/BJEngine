@@ -14,7 +14,16 @@ namespace BJEUtils
 #define SPECULAR_TEXTURE_POS          4
 
 
-#define SHADOWCUBE_TEXTURE_POS        5
+
+#define WORLDPOS_DEFPASS_TEXTURE_POS          0
+#define DIFFUSE_DEFPASS_TEXTURE_POS           1
+#define NORMAL_DEFPASS_TEXTURE_POS            2
+#define SPECULAR_DEFPASS_TEXTURE_POS          3
+#define ROUGHNESS_DEFPASS_TEXTURE_POS         4
+#define EMISSION_DEFPASS_TEXTURE_POS          5
+#define IRRADIANCE_DEFPASS_TEXTURE_POS        6
+
+#define SHADOWCUBE_DEFPASS_TEXTURE_POS        8
 
 
 
@@ -56,7 +65,7 @@ namespace BJEUtils
 		DIRECTIONALLIGHT
 	};
 
-#define FRAMEWORKVERSION 2
+#define FRAMEWORKVERSION -1.7
 
 #define LOGNAME "log.txt"
 

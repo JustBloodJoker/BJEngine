@@ -12,6 +12,10 @@ namespace GP
 		GLOW_MODEL_SHADER,
 		BACKGROUND_SHADER,
 		DEFFEREDSCENE_SHADER_PS,
+		SPHERE_SHADER,
+		OMNIDIRECTIONAL_SHADOW_SHADER,
+		SIMPLE_SHADOW_SHADER,
+		IRRADIANCE_SKYBOX_TEXTURE,
 
 	};
 
@@ -22,6 +26,7 @@ namespace GP
 
 	bool ClearGlobalParameters();
 
+	void ResetShaders();
 }
 
 

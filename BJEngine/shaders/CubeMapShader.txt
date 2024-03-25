@@ -1,9 +1,7 @@
-#define MAX_LIGHT_NUM 5
-
-
-cbuffer WorldMatrixBuffer : register(b0)
+cbuffer WorldMatrixBuffer : register(b1)
 {
-    float4x4 WVP;
+    matrix WVP;
+    matrix world;
 };
 
 SamplerState ObjSamplerState;
@@ -15,11 +13,11 @@ struct SKYMAP_VS_OUTPUT
     float3 texCoord : TEXCOORD;
 };
 
-SKYMAP_VS_OUTPUT SKYMAP_VS(float3 inPos : POSITION, float2 inTexCoord : TEXCOORD)
+SKYMAP_VS_OUTPUT SKYMAP_VS(float4 inPos : POSITION)
 {
     SKYMAP_VS_OUTPUT output = (SKYMAP_VS_OUTPUT)0;
 
-    output.Pos = mul(float4(inPos, 1.0f), WVP).xyww;
+    output.Pos = mul(inPos, WVP);
 
     output.texCoord = inPos;
 

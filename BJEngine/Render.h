@@ -5,9 +5,8 @@
 #include "LightMananger.h"
 #include "MainCamera.h"
 #include "Object.h"
-#include "BackGround.h"
 #include "RenderTarget.h"
-
+#include "FileSystem.h"
 
 namespace BJEngine {
 
@@ -22,7 +21,6 @@ namespace BJEngine {
 
 		Render()
 		{
-			
 			pSwapChain = nullptr;
 			mainRTV = nullptr;
 		}
@@ -41,41 +39,38 @@ namespace BJEngine {
 		void Close();
 		void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
 
-		void* operator new(size_t i)
-		{
-			return _aligned_malloc(i, 16);
-		}
-
-		void operator delete(void* p)
-		{
-			_aligned_free(p);
-		}
-
 		void SetObjectsVector(std::vector<Object*> obj) { this->objects = obj; }
 
 		void CreateSound(std::string path);
 
-		void UnpackProject();
-
-		void SetLight(LightDesc ld);
+		void SetLight(BJEStruct::LightDesc ld);
 		
+		//////////////////
+		//FILE
+
+		void LoadProject(std::string path);
+		void SaveProject(std::string path, std::string name);
+
+
 	protected:
 
 		BJEStruct::MainSceneProcessingBuffer mainDesc;
 
 	private:
 
+		void ExecuteFileSystemCommand();
+		std::queue<FileSystem*> fileSysExecution;
+
 		bool DrawScene();
 
-		std::vector<BaseElement*> elements;
+		std::vector<BaseElement*> defferedElements;
+		std::vector<BaseElement*> forwardElements;
 		std::vector<Object*> objects;
 		std::vector<BJAudio::Sound*> sound;
 		std::vector<Camera*> cams;
 
 		bool islight = false;
 		bool isInitlight = false;
-
-		BackGround* skyBox = nullptr;
 
 		HWND hwnd;
 
@@ -90,12 +85,19 @@ namespace BJEngine {
 		RenderTarget* sceneRTV;
 		RenderTarget* normalsRTV;
 		RenderTarget* diffuseRTV;
+		RenderTarget* specularRTV;
 		RenderTarget* roughnessRTV;
+
+		RenderTarget* irradianceRTV;
 
 		D3D11_VIEWPORT vp;
 		D3D11_VIEWPORT svp;
 
 		LightMananger* lmananger;
+
+		std::vector<BJEStruct::LightDesc> ldtmp;
+
+		ElementSkyBoxConvertion* elementSkyBoxConvertion;
 	};
 
 

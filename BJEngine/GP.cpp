@@ -47,8 +47,7 @@ bool GP::InitShaders()
 	}
 	if (shaders[BACKGROUND_SHADER] == nullptr)
 	{
-		D3D11_INPUT_ELEMENT_DESC layout[] = { { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-											  { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 } };
+		D3D11_INPUT_ELEMENT_DESC layout[] = { { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 } };
 		shaders[BACKGROUND_SHADER] = new BJEngine::Shader(L"shaders\\CubeMapShader.txt", L"shaders\\CubeMapShader.txt", "SKYMAP_VS", "SKYMAP_PS");
 		shaders[BACKGROUND_SHADER]->SetInputLayout(layout, ARRAYSIZE(layout));
 		shaders[BACKGROUND_SHADER]->Init();
@@ -59,13 +58,36 @@ bool GP::InitShaders()
 		shaders[DEFFEREDSCENE_SHADER_PS] = new BJEngine::Shader(L"shaders\\DefferedScenePS.hlsl", L"", "", "PS");
 		shaders[DEFFEREDSCENE_SHADER_PS]->Init();
 	}
-	
-		
-
-		
-
-
-
+	if (shaders[OMNIDIRECTIONAL_SHADOW_SHADER] == nullptr)
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		shaders[OMNIDIRECTIONAL_SHADOW_SHADER] = new BJEngine::Shader(L"shaders\\OmnidirectionalShadow.hlsl", L"shaders\\OmnidirectionalShadow.hlsl", L"shaders\\OmnidirectionalShadow.hlsl", "GS", "VS", "PS");
+		shaders[OMNIDIRECTIONAL_SHADOW_SHADER]->SetInputLayout(layout, ARRAYSIZE(layout));
+		shaders[OMNIDIRECTIONAL_SHADOW_SHADER]->Init();
+	}
+	if (shaders[SIMPLE_SHADOW_SHADER] == nullptr)
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		shaders[SIMPLE_SHADOW_SHADER] = new BJEngine::Shader(L"shaders\\SimpleShadowMap.hlsl", L"shaders\\SimpleShadowMap.hlsl", "VS", "PS");
+		shaders[SIMPLE_SHADOW_SHADER]->SetInputLayout(layout, ARRAYSIZE(layout));
+		shaders[SIMPLE_SHADOW_SHADER]->Init();
+	}
+	if (shaders[IRRADIANCE_SKYBOX_TEXTURE] == nullptr)
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		shaders[IRRADIANCE_SKYBOX_TEXTURE] = new BJEngine::Shader(L"shaders\\CubeMapGenerate.hlsl", L"shaders\\CubeMapGenerate.hlsl", L"shaders\\CubeMapGenerate.hlsl", "GS", "VS", "ConventionSkyBoxPS");
+		shaders[IRRADIANCE_SKYBOX_TEXTURE]->SetInputLayout(layout, ARRAYSIZE(layout));
+		shaders[IRRADIANCE_SKYBOX_TEXTURE]->Init();
+	}
 
 
 
@@ -90,4 +112,13 @@ bool GP::ClearGlobalParameters()
 
 
 	return true;
+}
+
+void GP::ResetShaders()
+{
+	pDeviceContext->VSSetShader(nullptr, 0, 0);
+	pDeviceContext->HSSetShader(nullptr, 0, 0);
+	pDeviceContext->DSSetShader(nullptr, 0, 0);
+	pDeviceContext->GSSetShader(nullptr, 0, 0);
+	pDeviceContext->PSSetShader(nullptr, 0, 0);
 }

@@ -6,6 +6,8 @@ namespace BJEngine {
 
 	class Textures
 	{
+		static size_t count;
+
 	public:
 		Textures() = default;
 		Textures(const wchar_t* TextureName);
@@ -24,6 +26,11 @@ namespace BJEngine {
 
 
 		ID3D11ShaderResourceView*& GetTexture() { return Texture; }
+
+		std::wstring GetTexturePath() const
+		{
+			return TextureName;
+		}
 
 	protected:
 

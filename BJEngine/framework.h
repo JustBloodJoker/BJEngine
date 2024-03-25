@@ -50,7 +50,6 @@ namespace dx = DirectX;
 
 
 #include <thread>
-#include <mutex>
 
 #include <iostream>
 #include <queue>
@@ -58,8 +57,8 @@ namespace dx = DirectX;
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 
-#include <experimental/filesystem>
+#include <filesystem>
 
 #include <sol/sol.hpp>
+#include <wrl/client.h>

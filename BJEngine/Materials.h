@@ -18,15 +18,19 @@ namespace BJEngine
 		HAS_ROUGHNESS_TEXTURE,
 		HAS_EMISSION_TEXTURE,
 		HAS_SPECULAR_TEXTURE,
-		HAS_REFLECTION
+		HAS_REFLECTION,
+		OPACITY,
+
 	};
+
+	
 
 	class Object;
 	class Element;
 
 	class Materials
 	{
-
+		static std::vector<Materials*> materialVector;
 	
 		static ID3D11Buffer* pMaterialBuffer;
 
@@ -47,61 +51,41 @@ namespace BJEngine
 		static void BindConstantBuffer()
 		{
 			if(pMaterialBuffer == nullptr)
-				pMaterialBuffer = Helper::InitConstantBuffer<ConstantMaterialBuffer>(GP::GetDevice());
+				pMaterialBuffer = Helper::InitConstantBuffer<BJEStruct::ConstantMaterialBuffer>(GP::GetDevice());
 
 			GP::GetDeviceContext()->PSSetConstantBuffers(2, 1, &pMaterialBuffer);
 		}
 
 		int GenRenderPriority();
 
+		std::string GetName() const;
+
+		// FILE SYSTEM
+
+		static std::vector<Materials*> GetAllMaterials()
+		{
+			return materialVector;
+		}
+
+		BJEStruct::MaterialDesc GetMaterialDesc() const
+		{
+			return cmbDesc.matDesc;			
+		};
+
+		const std::string GetTexturePath(MATERIAL_TYPE textureType);
+
+		////////////////////////// 
 	private:
 
+		std::string name;
 
 		void Init();
 
-		
-		Textures* texture;
-		Textures* normalTexture;
-		Textures* roughnessTexture;
-		Textures* emissionTexture;
-		Textures* specularTexture;
+		std::unordered_map<MATERIAL_TYPE, Textures*> textures;
 		
 		bool isReflect;
 
-		struct MaterialDesc
-		{
-			MaterialDesc()
-			{
-				ZeroMemory(this, sizeof(MaterialDesc));
-			}
-
-			dx::XMFLOAT4 emissive;
-			dx::XMFLOAT4 ambient;
-			dx::XMFLOAT4 diffuse;
-			dx::XMFLOAT4 specular;
-
-			float specularPower;
-
-			int isTexture;
-			int isNormalTexture;
-			int isRoughnessTexture;
-			int isEmissionTexture;
-			int isSpecularTexture;
-			int ishaveTransparency;
-
-			int ishavealphablend;
-			
-			
-		};
-		struct ConstantMaterialBuffer
-		{
-			MaterialDesc matDesc;
-		};
-		
-
-		
-
-		ConstantMaterialBuffer cmbDesc;
+		BJEStruct::ConstantMaterialBuffer cmbDesc;
 
 		bool isInit;
 

@@ -2,6 +2,8 @@
 
 namespace BJEngine {
 
+	size_t Textures::count = 0;
+
 	bool Textures::deletedStatic = true;
 	ID3D11SamplerState* Textures::WrapState = {};
 	ID3D11SamplerState* Textures::BorderState = {};
@@ -20,6 +22,7 @@ namespace BJEngine {
 		TextureName(TextureName)
 	{
 		this->Texture = nullptr;
+		
 	}
 
 	Textures::~Textures()
@@ -29,16 +32,20 @@ namespace BJEngine {
 
 	void Textures::Close()
 	{
-		if (!deletedStatic)
+		count--;
+		if (!deletedStatic && count == 0)
 		{
 			RELEASE(BorderState);
 			RELEASE(WrapState);
+			deletedStatic = true;
 		}
+		
 		RELEASE(Texture);
 	}
 
 	bool Textures::InitTextures()
 	{
+		count++;
 		HRESULT hr = S_OK;
 
 		hr = D3DX11CreateShaderResourceViewFromFile(GP::GetDevice(), TextureName.c_str(),
@@ -61,6 +68,7 @@ namespace BJEngine {
 
 	bool Textures::InitCubeMap()
 	{
+		count++;
 		D3DX11_IMAGE_LOAD_INFO loadInfo;
 		loadInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 

@@ -137,12 +137,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BackGround.h" />
     <ClInclude Include="Blend.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraCone.h" />
     <ClInclude Include="DepthStencil.h" />
     <ClInclude Include="Element.h" />
+    <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="FileSystemHelper.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FWork.h" />
     <ClInclude Include="GP.h" />
@@ -156,8 +157,6 @@
     <ClInclude Include="Math.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Object.h" />
-    <ClInclude Include="PackMananger.h" />
-    <ClInclude Include="PackageUtilites.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Script.h" />
@@ -168,17 +167,16 @@
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="Textures.h" />
     <ClInclude Include="UI.h" />
-    <ClInclude Include="UnpackMananger.h" />
     <ClInclude Include="Utilites.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="Blend.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraCone.cpp" />
     <ClCompile Include="DepthStencil.cpp" />
     <ClCompile Include="Element.cpp" />
+    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="FWork.cpp" />
     <ClCompile Include="GP.cpp" />
     <ClCompile Include="Helper.cpp" />
@@ -192,7 +190,6 @@
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Object.cpp" />
-    <ClCompile Include="PackMananger.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Script.cpp" />
@@ -201,7 +198,6 @@
     <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="Textures.cpp" />
     <ClCompile Include="UI.cpp" />
-    <ClCompile Include="UnpackMananger.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

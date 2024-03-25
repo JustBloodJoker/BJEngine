@@ -42,7 +42,7 @@ namespace BJEngine
     size_t  UI::focusedCamera = 1;
     int UI::currItemComboCams = 0;
  
-    LightDesc* UI::pArrayLightDesc = nullptr;
+    LightMananger* UI::lman = nullptr;
     size_t UI::focusedLight = 0;
     std::string UI::namesLights = "";
     int UI::currItemComboLights = 0;
@@ -207,10 +207,7 @@ namespace BJEngine
             saveas = true;
 
         else if (Input::Get()->CheckKeyState(DIK_LCONTROL) && Input::Get()->CheckKeyState(DIK_S, true))
-            if (PackMananger::Get()->IsPath())
-                save = true;
-            else
-                saveas = true;
+            saveas = true;
 
         else if (Input::Get()->CheckKeyState(DIK_LCONTROL) && Input::Get()->CheckKeyState(DIK_LSHIFT) && Input::Get()->CheckKeyState(DIK_L, true))
             ConsoleWindow();
@@ -241,10 +238,7 @@ namespace BJEngine
 
                 if (ImGui::MenuItem("Save", "CTRL+S"))
                 {
-                    if (PackMananger::Get()->IsPath())
-                        save = !save;
-                    else
-                        saveas = !saveas;
+                    saveas = !saveas;
                 }
                 if (ImGui::MenuItem("Save as", "CTRL+SHIFT+S"))
                 {
@@ -331,7 +325,7 @@ namespace BJEngine
 
                 if (ImGui::Button("Open", ImVec2(50, 30)))
                 {
-                    UnpackMananger::Get()->Init(pathto);
+                    render->LoadProject(std::string(pathto));
                     unpack = false;
                 }
 
@@ -352,7 +346,7 @@ namespace BJEngine
     {
         if (save)
         {
-            PackMananger::Get()->Init();
+            //pack
             save = false;
         }
         else if (saveas)
@@ -374,7 +368,7 @@ namespace BJEngine
 
             if (ImGui::Button("Yes", ImVec2(50, 30)))
             {
-                PackMananger::Get()->Init(pathto);
+                render->SaveProject(std::string(pathto), std::string("hehe.bje"));
                 saveas = false;
             }
 
@@ -543,7 +537,7 @@ namespace BJEngine
             if (ImGui::Begin("Create Light", NULL, ImGuiWindowFlags_::ImGuiWindowFlags_NoResize
                 | ImGuiWindowFlags_::ImGuiWindowFlags_NoMove | ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse))
             {
-                static LightDesc ldTemp;
+                static BJEStruct::LightDesc ldTemp;
                 static bool chBox = ldTemp.shadowEnabled;
 
                 ImGui::SetWindowPos("Create Light", ImVec2(BJEUtils::GetWindowWidth() / 2 - UI_OPENMENU_WIDTH / 2, BJEUtils::GetWindowHeight() / 2 - UI_OPENMENU_HEIGHT / 2));
@@ -776,21 +770,25 @@ namespace BJEngine
         return true;
     }
 
+    bool UI::SetLightMananger(LightMananger* lman)
+    {
+        UI::lman = lman;
+        return true;
+    }
+
     bool UI::Light()
     {
-        pArrayLightDesc = LightMananger::instance->lDesc.light;
-
         ImGui::SeparatorText("Focused light");
 
-        if (!LightMananger::instance->IsHaveLights())
+        if (!lman->IsHaveLights())
         {
             ImGui::Text("Project doesn't have lights!");
             return false;
         }
 
-        for (; indexLight < LightMananger::instance->lDesc.lightsCount; indexLight++)
+        for (; indexLight < lman->GetCurrentCount(); indexLight++)
         {
-            namesLights +=  BJEUtils::ParseLightTypeToStr(pArrayLightDesc[indexLight].lightType)
+            namesLights +=  BJEUtils::ParseLightTypeToStr(lman->GetDesc(indexLight).lightType)
                 + " " + std::to_string(indexLight) + '\0';
         }
         ImGui::Combo("Light Focus", &currItemComboLights, namesLights.c_str(), IM_ARRAYSIZE(namesLights.c_str()));
@@ -799,28 +797,30 @@ namespace BJEngine
 
         ImGui::Separator();
 
-        ImGui::Checkbox("Enabled", (bool*)(&pArrayLightDesc[focusedLight].enabled));
+        ImGui::Checkbox("Enabled", (bool*)(&lman->lights[focusedLight].enabled));
+        ImGui::Checkbox("Enable PBR lights", (bool*)&lman->pbrEnable);
+        ImGui::Checkbox("Enable Image-Based Rendering (only irradiance)", (bool*)&lman->ibrEnable);
 
-        float* variables[3] = { &pArrayLightDesc[focusedLight].pos.x, &pArrayLightDesc[focusedLight].pos.y, &pArrayLightDesc[focusedLight].pos.z };
+        float* variables[3] = { &lman->lights[focusedLight].pos.x, &lman->lights[focusedLight].pos.y, &lman->lights[focusedLight].pos.z };
         ImGui::SeparatorText("Light Position");
 
         ImGui::SliderFloat3("Pos", *variables, -1000.0f,1000.0f, "%.2f");
 
-        if (pArrayLightDesc[focusedLight].lightType == BJEUtils::SPOTLIGHT)
+        if (lman->lights[focusedLight].lightType == BJEUtils::SPOTLIGHT)
         {
-            float* variables2[3] = { &pArrayLightDesc[focusedLight].dir.x, &pArrayLightDesc[focusedLight].dir.y, &pArrayLightDesc[focusedLight].dir.z };
+            float* variables2[3] = { &lman->lights[focusedLight].dir.x, &lman->lights[focusedLight].dir.y, &lman->lights[focusedLight].dir.z };
             ImGui::SeparatorText("Light Direction");
             ImGui::SliderFloat3("Dir", *variables2, -1.0f, 1.0f, "%.4f");
         }
 
-        float* variables3[3] = { &pArrayLightDesc[focusedLight].color.x, &pArrayLightDesc[focusedLight].color.y, &pArrayLightDesc[focusedLight].color.z };
+        float* variables3[3] = { &lman->lights[focusedLight].color.x, &lman->lights[focusedLight].color.y, &lman->lights[focusedLight].color.z };
         ImGui::SeparatorText("Light Color");
         ImGui::ColorEdit3("Color", *variables3);
         
         ImGui::SeparatorText("Light Attenuation");
-        ImGui::SliderFloat("Constant" , &pArrayLightDesc[focusedLight].att.x, 0.0f, 10.0f);
-        ImGui::SliderFloat("Lineral"  , &pArrayLightDesc[focusedLight].att.y, 0.0f, 10.0f);
-        ImGui::SliderFloat("Quadratic", &pArrayLightDesc[focusedLight].att.z, 0.0f, 10.0f);
+        ImGui::SliderFloat("Constant" , &lman->lights[focusedLight].att.x, 0.0f, 10.0f);
+        ImGui::SliderFloat("Lineral"  , &lman->lights[focusedLight].att.y, 0.0f, 10.0f);
+        ImGui::SliderFloat("Quadratic", &lman->lights[focusedLight].att.z, 0.0f, 10.0f);
 
 
         return true;
@@ -830,7 +830,7 @@ namespace BJEngine
     {
         ImGui::SeparatorText("PBR");
 
-        ImGui::Checkbox("Enable PBR lights", (bool*)&LightMananger::instance->lDesc.enablePBR);
+        
         
         ImGui::SeparatorText("Lights correction");
 

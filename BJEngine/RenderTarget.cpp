@@ -24,7 +24,7 @@ namespace BJEngine
 		Screen::Init();
 	}
 
-	RenderTarget::RenderTarget(int width, int height, DXGI_FORMAT format, bool MSAA)
+	RenderTarget::RenderTarget(int width, int height, DXGI_FORMAT format, bool createCopy, bool MSAA)
 	{
 		size++;
 
@@ -47,7 +47,8 @@ namespace BJEngine
 		
 
 		HRESULT result = GP::GetDevice()->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
-		result = GP::GetDevice()->CreateTexture2D(&textureDesc, NULL, &tempRenderTargetTexture);
+		if(createCopy) result = GP::GetDevice()->CreateTexture2D(&textureDesc, NULL, &tempRenderTargetTexture);
+
 		if (FAILED(result))
 		{
 			Log::Get()->Err("Can't create texture for RTV ", size);
@@ -91,7 +92,7 @@ namespace BJEngine
 		}
 
 		result = GP::GetDevice()->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &shaderResourceView);
-		result = GP::GetDevice()->CreateShaderResourceView(tempRenderTargetTexture, &shaderResourceViewDesc, &tempShaderResourceView);
+		if (createCopy) result = GP::GetDevice()->CreateShaderResourceView(tempRenderTargetTexture, &shaderResourceViewDesc, &tempShaderResourceView);
 
 		if (FAILED(result))
 		{
@@ -102,6 +103,96 @@ namespace BJEngine
 
 		
 	
+	}
+
+	RenderTarget::RenderTarget(int width, int height, DXGI_FORMAT format, bool createCopy, int arraySize, bool isCubeMap, bool MSAA)
+	{
+		size++;
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		textureDesc.Width = width;
+		textureDesc.Height = height;
+		textureDesc.MipLevels = 1;
+		textureDesc.Format = format;
+
+		textureDesc.ArraySize = arraySize;
+		textureDesc.MiscFlags = isCubeMap ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0;
+
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+
+
+		HRESULT result = GP::GetDevice()->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
+		if (createCopy) result = GP::GetDevice()->CreateTexture2D(&textureDesc, NULL, &tempRenderTargetTexture);
+
+		if (FAILED(result))
+		{
+			Log::Get()->Err("Can't create texture for RTV ", size);
+			size--;
+			return;
+		}
+
+		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+		renderTargetViewDesc.Format = format == DXGI_FORMAT_R32_TYPELESS ? DXGI_FORMAT_R32_FLOAT : textureDesc.Format;
+		if (MSAA && arraySize == 1)
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+		}
+		else if (arraySize > 1)
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+			renderTargetViewDesc.Texture2DArray.FirstArraySlice = 0;
+			renderTargetViewDesc.Texture2DArray.MipSlice = 0;
+			renderTargetViewDesc.Texture2DArray.ArraySize = arraySize;
+		}
+		else
+		{
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			renderTargetViewDesc.Texture2D.MipSlice = 0;
+		}
+		result = GP::GetDevice()->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
+
+
+		if (FAILED(result))
+		{
+			Log::Get()->Err("Can't create RTV ", size);
+			size--;
+			return;
+		}
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+		shaderResourceViewDesc.Format = format == DXGI_FORMAT_R32_TYPELESS ? DXGI_FORMAT_R32_FLOAT : textureDesc.Format;
+		if (MSAA)
+		{
+			shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+		}
+		else if (arraySize > 1)
+		{
+			shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+			shaderResourceViewDesc.TextureCube.MipLevels = 1;
+			shaderResourceViewDesc.TextureCube.MostDetailedMip = 0;
+		}
+		else
+		{
+			shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			shaderResourceViewDesc.Texture2D.MipLevels = 1;
+			shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+		}
+
+		result = GP::GetDevice()->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &shaderResourceView);
+		if (createCopy) result = GP::GetDevice()->CreateShaderResourceView(tempRenderTargetTexture, &shaderResourceViewDesc, &tempShaderResourceView);
+
+		if (FAILED(result))
+		{
+			Log::Get()->Err("Can't create shaderResourceView for RTV ", size);
+			size--;
+			return;
+		}
 	}
 
 	ID3D11RenderTargetView*& RenderTarget::GetRTV()

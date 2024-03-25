@@ -1,37 +1,11 @@
 #pragma once
 #include "pch.h"
 #include "Shader.h"
+#include "RenderTarget.h"
 
 namespace BJEngine {
 
-	struct LightDesc 
-	{
-		
-		LightDesc()
-		{
-			ZeroMemory(this, sizeof(LightDesc));
-			color = dx::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-			dir = dx::XMFLOAT4(-1.0f, 0.0f, -1.0f, 1.0f);
-			pos = dx::XMFLOAT4(0.0f, 500.0f, 0.0f, 1.0f);
-			att = dx::XMFLOAT3(0.01f, 0.02f, 0.0f);
-			angle = M_PI / 8;
-			enabled = 1;
-			shadowEnabled = 1;
-		}
-
-		dx::XMFLOAT4 pos;
-		dx::XMFLOAT4 dir;
-		dx::XMFLOAT4 color;
-
-		dx::XMFLOAT3 att;
-		float angle;
-
-		int lightType;
-		int enabled;
-		int shadowEnabled;
-		int pad1;
-
-	};
+	
 
 	class Shadow
 	{
@@ -42,7 +16,7 @@ namespace BJEngine {
 		
 		virtual void Draw() = 0;
 
-		virtual void GenerateView(const LightDesc ld) = 0;
+		virtual void GenerateView(const BJEStruct::LightDesc ld) = 0;
 
 		virtual void BindSRV(int deltIndex) = 0;
 
@@ -54,7 +28,6 @@ namespace BJEngine {
 
 		bool isInited;
 
-		Shader* shader;
 		D3D11_VIEWPORT vp;
 		DepthStencil* depthStencil;
 		
@@ -63,13 +36,10 @@ namespace BJEngine {
 	class OmnidirectionalShadow
 		: public Shadow
 	{
-		struct OmnidirectionalShadowConstantBuffer
-		{
-			dx::XMMATRIX shViewProjection[6];
-		};
+		
 		static ID3D11Buffer* shadowCBuffer;
 
-		OmnidirectionalShadowConstantBuffer matrices;
+		BJEStruct::CubeGenerateConstantBuffer matrices;
 
 		void Init() override;
 
@@ -80,7 +50,7 @@ namespace BJEngine {
 		
 		void Draw() override;
 
-		void GenerateView(const LightDesc ld) override;
+		void GenerateView(const BJEStruct::LightDesc ld) override;
 
 		void BindSRV(int deltIndex) override;
 
@@ -109,7 +79,7 @@ namespace BJEngine {
 
 		void Draw() override;
 
-		void GenerateView(const LightDesc ld) override;
+		void GenerateView(const BJEStruct::LightDesc ld) override;
 
 		void BindSRV(int deltIndex) override;
 
