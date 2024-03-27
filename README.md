@@ -58,5 +58,7 @@ GUI and something new
 version -1.9
 Useless functions are deleted. Added deferred shading but with out light pre-pass. Fixed omnidirectional shadows
 
+Progress stoped
+
 ![изображение](https://github.com/JustBloodJoker/BJEngine/assets/113119625/20fbcd77-6a6d-4b70-9bae-6dfd3f6c6801)
 ![изображение](https://github.com/JustBloodJoker/BJEngine/assets/113119625/56d2e0f8-0c5c-413a-9328-859778a7c594)
