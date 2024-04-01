@@ -58,6 +58,9 @@ GUI and something new
 version -1.9
 Useless functions are deleted. Added deferred shading but with out light pre-pass. Fixed omnidirectional shadows
 
+version -1.7001
+Add GUI for the model (modify matrix, add scripts). Improve filesystem and add samples.
+
 Progress stoped
 
 ![изображение](https://github.com/JustBloodJoker/BJEngine/assets/113119625/20fbcd77-6a6d-4b70-9bae-6dfd3f6c6801)
