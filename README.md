@@ -59,7 +59,7 @@ version -1.9
 Useless functions are deleted. Added deferred shading but with out light pre-pass. Fixed omnidirectional shadows
 
 version -1.7001
-Add GUI for the model (modify matrix, add scripts). Improve filesystem and add samples.
+Added GUI for the model (modify matrix, add scripts). Improved filesystem and added samples.
 
 Progress stoped
 
