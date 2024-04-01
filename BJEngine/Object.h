@@ -16,8 +16,6 @@ namespace BJEngine {
 	{
 	public:
 
-		Object();
-		Object(float x, float y, float z);
 		~Object();
 
 		virtual void Close();
@@ -33,14 +31,6 @@ namespace BJEngine {
 	protected:
 	
 		bool isInited = false;
-
-		
-		Script* script;
-
-		ID3D11Buffer* pVertexBuffer;
-		ID3D11Buffer* pIndexBuffer;
-		ID3D11Buffer* ConstantBuffers;
-
 
 		std::vector<Materials*> materials;
 		std::vector<BaseElement*> elements;

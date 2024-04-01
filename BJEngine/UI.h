@@ -30,6 +30,8 @@ namespace BJEngine
 
 		static std::unordered_map<BJEUtils::POST_PROCESSING, bool>& GetPostProcessingStatus()noexcept;
 
+		static void AddModelString(std::string str);
+
 	private:
 		
 		static Render* render;
@@ -119,7 +121,12 @@ namespace BJEngine
 		////
 
 		static bool Model();
-
+		static std::string models;
+		static int currModelCombo;
+		static dx::XMFLOAT3 pos;
+		static dx::XMFLOAT3 rot;
+		static dx::XMFLOAT3 scale;
+		static char text[200];
 		/// 
 		///    CAMERA UI
 		/// 	

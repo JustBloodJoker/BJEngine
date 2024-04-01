@@ -7,9 +7,11 @@ namespace BJEngine
 						const std::vector<BJEStruct::LightDesc>& cbLightBuffer,
 						std::vector<Materials*> materials, 
 						std::vector<BaseElement*> defferedElements,
-						std::vector<BaseElement*> forwardElements)
+						std::vector<BaseElement*> forwardElements,
+						std::vector<Drawable*> drawableElements)
 		: path(std::move(path)), name(std::move(name)),cbLightBuffer(cbLightBuffer), materials(materials), 
-										defferedElements(defferedElements), forwardElements(forwardElements), file(nullptr)
+										defferedElements(defferedElements), forwardElements(forwardElements), drawableElements(drawableElements),
+								file(nullptr)
 	{
 	}
 
@@ -372,6 +374,7 @@ namespace BJEngine
 					}
 				}
 				(*elVec).push_back(new Element(std::move(vertices), std::move(indices), tmpPtr, dx::XMVectorSet(minExtent.x, minExtent.y, minExtent.z, 1.0f), dx::XMVectorSet(maxExtent.x, maxExtent.y, maxExtent.z, 1.0f)));
+				(*drawableElements).push_back(*(elVec->end() - 1));
 			}
 		}
 	}
@@ -506,8 +509,8 @@ namespace BJEngine
 		}
 	}
 
-	FileOpen::FileOpen(std::string&& path, std::vector<BaseElement*>* defferedElements, std::vector<BaseElement*>* forwardElements, std::vector<BJEStruct::LightDesc>* cbLightBuffer)
-		: path(std::move(path)), defferedElements(defferedElements), forwardElements(forwardElements), cbLightBuffer(cbLightBuffer)
+	FileOpen::FileOpen(std::string&& path, std::vector<BaseElement*>* defferedElements, std::vector<BaseElement*>* forwardElements, std::vector<Drawable*>* drawableElements, std::vector<BJEStruct::LightDesc>* cbLightBuffer)
+		: path(std::move(path)), defferedElements(defferedElements), forwardElements(forwardElements), cbLightBuffer(cbLightBuffer), drawableElements(drawableElements)
 	{
 		
 	}
@@ -545,7 +548,6 @@ namespace BJEngine
 				else if (chk == PROJECT_MODELS_DEFFERED_RENDER)
 				{
 					InitModels(defferedElements);
-
 				}
 				else if (chk == PROJECT_MODELS_FORWARD_RENDER)
 				{

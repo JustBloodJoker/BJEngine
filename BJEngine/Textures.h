@@ -12,12 +12,13 @@ namespace BJEngine {
 		Textures() = default;
 		Textures(const wchar_t* TextureName);
 		Textures(std::wstring TextureName);
-		virtual ~Textures();
+		~Textures();
 
-		virtual void Close();
+		void Close();
 
-		virtual bool InitTextures();
+		bool InitTextures();
 		bool InitCubeMap();
+		bool InitHDRCubeMap();
 
 		static bool InitStates();
 		static ID3D11SamplerState* const* GetBorderState();

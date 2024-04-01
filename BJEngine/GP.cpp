@@ -88,7 +88,16 @@ bool GP::InitShaders()
 		shaders[IRRADIANCE_SKYBOX_TEXTURE]->SetInputLayout(layout, ARRAYSIZE(layout));
 		shaders[IRRADIANCE_SKYBOX_TEXTURE]->Init();
 	}
-
+	if (shaders[PARTICLE_SYSTEM_SHADER] == nullptr)
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		shaders[PARTICLE_SYSTEM_SHADER] = new BJEngine::Shader(L"shaders\\ParticleSystemShader.hlsl", L"shaders\\ParticleSystemShader.hlsl", L"shaders\\ParticleSystemShader.hlsl", "GS", "VS", "PS");
+		//shaders[PARTICLE_SYSTEM_SHADER]->SetInputLayout(layout, ARRAYSIZE(layout));
+		shaders[PARTICLE_SYSTEM_SHADER]->Init();
+	}
 
 
 

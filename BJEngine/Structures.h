@@ -159,5 +159,14 @@ namespace BJEStruct
     {
         dx::XMMATRIX shViewProjection[6];
     };
+
+
+    struct ParticleBuffer
+    {
+        dx::XMFLOAT4 pos;
+        dx::XMFLOAT4 velocity;
+        dx::XMFLOAT4 color;
+    };
+
 }
 

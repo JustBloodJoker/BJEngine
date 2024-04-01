@@ -25,9 +25,8 @@ namespace BJEngine
 	{
 	public:
 
-		Script() = default;
+		Script(char* fileName);
 		
-		void ParseScript(char* fileName);
 		
 		dx::XMMATRIX DrawScript();
 
@@ -55,6 +54,8 @@ namespace BJEngine
 
 	private:
 		
+		void ParseScript(char* fileName);
+
 		float* GetPointerParameter(std::string data);
 		const float GetParameter(std::string data) const;
 

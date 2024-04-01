@@ -3,6 +3,11 @@
 namespace BJEngine
 {
     size_t line = 0;
+    Script::Script(char* fileName)
+    {
+        ParseScript(fileName);
+    }
+
     void Script::ParseScript(char* fileName)
     {
         std::string dat = fileName;
@@ -95,7 +100,7 @@ namespace BJEngine
                 }
                 else 
                 {
-                ++it;
+                    ++it;
                 }
             }
 

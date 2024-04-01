@@ -141,6 +141,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraCone.h" />
     <ClInclude Include="DepthStencil.h" />
+    <ClInclude Include="Drawable.h" />
     <ClInclude Include="Element.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="FileSystemHelper.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraCone.cpp" />
     <ClCompile Include="DepthStencil.cpp" />
+    <ClCompile Include="Drawable.cpp" />
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="FWork.cpp" />

@@ -48,10 +48,17 @@ namespace BJEngine
     int UI::currItemComboLights = 0;
     size_t UI::indexLight = 0;
 
-
+    std::string UI::models = "";
+    int UI::currModelCombo = 0;
+    char UI::text[200] = "";
+    dx::XMFLOAT3 UI::scale = dx::XMFLOAT3(1.0f, 1.0f, 1.0f);
+    dx::XMFLOAT3 UI::rot = dx::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    dx::XMFLOAT3 UI::pos = dx::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
     std::vector<Textures*> UI::textures_UI;
     int UI::currLightAddItem = 0;
+
+
 
     std::unordered_map<BJEUtils::POST_PROCESSING, bool> UI::postProcessingBools;
 
@@ -157,6 +164,11 @@ namespace BJEngine
     std::unordered_map<BJEUtils::POST_PROCESSING, bool>& UI::GetPostProcessingStatus() noexcept
     {
         return postProcessingBools;
+    }
+
+    void UI::AddModelString(std::string str)
+    {
+        models += str + '\0';
     }
 
     bool UI::ParseBooleans()
@@ -363,12 +375,13 @@ namespace BJEngine
             ImGui::SetWindowPos("Save", ImVec2(BJEUtils::GetWindowWidth() / 2 - ImGui::GetWindowSize().x / 2, BJEUtils::GetWindowHeight() / 2 - ImGui::GetWindowSize().y / 2));
             
             static char pathto[100] = "C:\\";
+            static char name[100] = "hehe.bje";
 
             ImGui::InputText("Input path", pathto, 100);
-
+            ImGui::InputText("Name: ", name, 100);
             if (ImGui::Button("Yes", ImVec2(50, 30)))
             {
-                render->SaveProject(std::string(pathto), std::string("hehe.bje"));
+                render->SaveProject(std::string(pathto), std::string(name));
                 saveas = false;
             }
 
@@ -715,12 +728,72 @@ namespace BJEngine
 
     bool UI::Model()
     {
-        
-        ImGui::Text("In future");
-        
+        if (models != "")
+        {
+            ImGui::Text("Model: ");
+            if (ImGui::Combo("Light Focus", &currModelCombo, models.c_str(), IM_ARRAYSIZE(models.c_str())))
+            {
+                rot = render->GetDrawable(currModelCombo)->GetRotate();
+                pos = render->GetDrawable(currModelCombo)->GetPos();
+                scale = render->GetDrawable(currModelCombo)->GetScale();
+            }
 
+            ImGui::SeparatorText("Settings  ");
 
+            ImGui::SeparatorText("Rotate");
+            if (ImGui::SliderFloat("X ", &rot.x, 0.0f, 3.14f))
+            {
+                render->GetDrawable(currModelCombo)->SetRotateX(rot.x);
+            }
+            if (ImGui::SliderFloat("Y ", &rot.y, 0.0f, 3.14f))
+            {
+                render->GetDrawable(currModelCombo)->SetRotateY(rot.y);
+            }
+            if (ImGui::SliderFloat("Z ", &rot.z, 0.0f, 3.14f))
+            {
+                render->GetDrawable(currModelCombo)->SetRotateZ(rot.z);
+            }
 
+            ImGui::SeparatorText("Scale");
+            if (ImGui::SliderFloat("X  ", &scale.x, 0.001f, 100.0f))
+            {
+                render->GetDrawable(currModelCombo)->SetScaleX(scale.x);
+            }
+            if (ImGui::SliderFloat("Y  ", &scale.y, 0.001f, 100.0f))
+            {
+                render->GetDrawable(currModelCombo)->SetScaleY(scale.y);
+            }
+            if (ImGui::SliderFloat("Z  ", &scale.z, 0.001f, 100.0f))
+            {
+                render->GetDrawable(currModelCombo)->SetScaleZ(scale.z);
+            }
+
+            ImGui::SeparatorText("Position");
+            if (ImGui::SliderFloat("X   ", &pos.x, -100.0f, 100.0f))
+            {
+                render->GetDrawable(currModelCombo)->SetChangePosX(pos.x);
+            }
+            if (ImGui::SliderFloat("Y   ", &pos.y, -100.0f, 100.0f))
+            {
+                render->GetDrawable(currModelCombo)->SetChangePosY(pos.y);
+            }
+            if (ImGui::SliderFloat("Z   ", &pos.z, -100.0f, 100.0f))
+            {
+                render->GetDrawable(currModelCombo)->SetChangePosZ(pos.z);
+            }
+
+            ImGui::SeparatorText("Set script");
+            ImGui::InputText("Path", text, 200);
+            if (ImGui::Button("Add script"))
+            {
+                render->GetDrawable(currModelCombo)->CreateScript(new Script(text));
+                text[0] = '\0';
+            }
+        }
+        else
+        {
+            ImGui::Text("Project doesn't have models!");
+        }
         return false;
     }
 

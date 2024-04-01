@@ -1,5 +1,5 @@
 #include "Textures.h"
-
+#include <directxtk/WICTextureLoader.h>
 namespace BJEngine {
 
 	size_t Textures::count = 0;
@@ -100,6 +100,14 @@ namespace BJEngine {
 		{
 			Textures::InitStates();
 		}
+
+		return false;
+	}
+
+	bool Textures::InitHDRCubeMap()
+	{
+		
+
 
 		return false;
 	}

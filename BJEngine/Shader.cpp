@@ -58,7 +58,7 @@ namespace BJEngine {
 	{
 		HRESULT hr = S_OK;
 		
-		if (vertexShaderName != L"" || EPVS != "" || layout != nullptr)
+		if (vertexShaderName != L"" || EPVS != "" )
 		{
 			ID3DBlob* pVSBlob = NULL;
 			hr = m_compileshaderfromfile(vertexShaderName, EPVS, "vs_5_0", &pVSBlob);
@@ -74,12 +74,14 @@ namespace BJEngine {
 				Log::Get()->Err("create vertex shader error");
 				return false;
 			}
-
-			hr = GP::GetDevice()->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), &pVertexLayout);
-			if (FAILED(hr))
+			if (layout != NULL || layout != nullptr)
 			{
-				Log::Get()->Err("create IL error");
-				return false;
+				hr = GP::GetDevice()->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), &pVertexLayout);
+				if (FAILED(hr))
+				{
+					Log::Get()->Err("create IL error");
+					return false;
+				}
 			}
 		}
 		

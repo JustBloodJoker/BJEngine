@@ -406,9 +406,17 @@ namespace BJEngine
 			};
 		}
 		std::vector<BaseElement*> tmp = std::move(object->MoveElements());
+
+		for (auto& el : tmp)
+		{
+			drawableOnScene.push_back(el);
+			UI::AddModelString(el->GetName());
+			indexStr++;
+		}
+
 		defferedElements.insert(defferedElements.end(), tmp.begin(), tmp.end());
 
-		std::sort(defferedElements.begin(), defferedElements.end(), [](BaseElement*& a, BaseElement*& b) { return a < b; });
+		std::sort(defferedElements.begin(), defferedElements.end(), [](BaseElement*& a, BaseElement*& b) { return a->GetPriorityRender() < b->GetPriorityRender(); });
 		
 		objects.push_back(object);
 
@@ -485,12 +493,17 @@ namespace BJEngine
 
 	void Render::LoadProject(std::string path)
 	{
-		fileSysExecution.push(new FileOpen(std::move(path), &defferedElements, &forwardElements, &ldtmp));
+		fileSysExecution.push(new FileOpen(std::move(path), &defferedElements, &forwardElements,&drawableOnScene, &ldtmp));
 	}
 
 	void Render::SaveProject(std::string path, std::string name)
 	{
-		fileSysExecution.push(new FileSave(std::move(path), std::move(name), lmananger->GetLights(), Materials::GetAllMaterials(), defferedElements, forwardElements));
+		fileSysExecution.push(new FileSave(std::move(path), std::move(name), lmananger->GetLights(), Materials::GetAllMaterials(), defferedElements, forwardElements, drawableOnScene));
+	}
+
+	Drawable*& Render::GetDrawable(size_t index)
+	{
+		return drawableOnScene[index];
 	}
 
 	void Render::ExecuteFileSystemCommand()
@@ -504,6 +517,11 @@ namespace BJEngine
 				for (auto& el : ldtmp)
 				{
 					SetLight(el);
+				}
+				for (auto it = drawableOnScene.begin()  + indexStr; it != drawableOnScene.end(); it++)
+				{
+					UI::AddModelString((*it)->GetName());
+					indexStr++;
 				}
 			}
 			fileSysExecution.pop();

@@ -183,12 +183,18 @@ namespace BJEngine
 
 			case OPACITY:
 				cmbDesc.matDesc.diffuse.w = param;
+				if (param < 1.0f)
+				{
+					cmbDesc.matDesc.ishaveTransparency = true;
+				}
 				break;
 
 			default:
 				Log::Get()->Err("Incorrect param type");
 				break;
 			}
+
+			
 		}
 	}
 

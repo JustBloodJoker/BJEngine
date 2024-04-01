@@ -51,7 +51,7 @@ namespace BJEngine {
 		void LoadProject(std::string path);
 		void SaveProject(std::string path, std::string name);
 
-
+		Drawable*& GetDrawable(size_t index);
 	protected:
 
 		BJEStruct::MainSceneProcessingBuffer mainDesc;
@@ -62,7 +62,9 @@ namespace BJEngine {
 		std::queue<FileSystem*> fileSysExecution;
 
 		bool DrawScene();
-
+		
+		std::vector<Drawable*> drawableOnScene;
+		size_t indexStr = 0;
 		std::vector<BaseElement*> defferedElements;
 		std::vector<BaseElement*> forwardElements;
 		std::vector<Object*> objects;

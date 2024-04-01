@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Materials.h"
+#include "Drawable.h"
 
 namespace BJEngine
 {
@@ -15,6 +16,7 @@ namespace BJEngine
     };
 
     class BaseElement
+        : public Drawable
     {
         
         static ID3D11Buffer* pConstantBuffer;
@@ -41,7 +43,7 @@ namespace BJEngine
             return priority;
         };
 
-        const std::string& GetName() const
+        const std::string& GetName() const override
         {
             return name;
         }
@@ -81,7 +83,7 @@ namespace BJEngine
 
 	private:
         
-        dx::XMMATRIX world;
+        //dx::XMMATRIX world;
         dx::XMVECTOR minLocal;
         dx::XMVECTOR maxLocal;
         dx::BoundingBox objectBox;
@@ -120,7 +122,6 @@ namespace BJEngine
         Textures* GetTexture() { return ttext; };
 
     private:
-        dx::XMMATRIX world;
 
         std::vector<BJEStruct::VertexPosOnly> vertices;
         std::vector<WORD> indices;
@@ -160,4 +161,5 @@ namespace BJEngine
         D3D11_VIEWPORT vp;
         BJEStruct::CubeGenerateConstantBuffer matrices;
     };
+
 }

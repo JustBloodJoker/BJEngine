@@ -18,21 +18,6 @@ namespace BJEngine
 			}
 
 			
-			/*for (int i = 0; i < 19; i++)
-			{
-				BJEStruct::LightDesc ld;
-				ld.enabled = 1;
-				ld.shadowEnabled = 0;
-				ld.pos.y = 10.0f;
-				ld.pos.x = i * 10 - 24 * 10;
-				ld.color.x = (rand() % 10) / 10.0f;
-				ld.color.y = (rand() % 10) / 10.0f;
-				ld.color.z = (rand() % 10) / 10.0f;
-				ld.att.y = 0.4;
-				lights.push_back(ld);
-			}
-			lightsCount = lights.size();*/
-
 			isInited = true;
 		}
 

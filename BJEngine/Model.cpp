@@ -31,12 +31,6 @@ namespace BJEngine
 		Log::Get()->Debug("Model was inited");
 		isInited = true;
 		
-		if(!script)
-			script = new Script();
-
-		
-
-		
 		return true;
 	}
 
@@ -44,12 +38,6 @@ namespace BJEngine
 	{
 		Object::Close();
 		materials.clear();
-	}
-
-	void Model::SetScript(std::string data)
-	{
-		script = new Script();
-		script->ParseScript(_strdup(data.c_str()));
 	}
 
 	bool Model::LoadModel()

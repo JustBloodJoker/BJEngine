@@ -2,18 +2,6 @@
 
 namespace BJEngine {
 
-	Object::Object()
-	{
-		
-		pVertexBuffer = nullptr;
-		pIndexBuffer = nullptr;
-	}
-
-	Object::Object(float x, float y, float z)
-	{
-		pVertexBuffer = nullptr;
-		pIndexBuffer = nullptr;
-	}
 
 	Object::~Object()
 	{
@@ -24,12 +12,6 @@ namespace BJEngine {
 	{
 		if (isInited)
 		{
-			CLOSE(script);
-			RELEASE(pVertexBuffer);
-			RELEASE(pIndexBuffer);
-
-			RELEASE(ConstantBuffers);
-
 			isInited = false;
 
 			for (auto& material : materials)

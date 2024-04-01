@@ -19,14 +19,10 @@ namespace BJEngine {
         bool Init() override;
         void Close() override;
        
-        void SetScript(std::string data);
     private:
 
         bool LoadModel();       
         std::string filename;
-
-        bool isSimulate = false, returned = false;
-
 
     };
 

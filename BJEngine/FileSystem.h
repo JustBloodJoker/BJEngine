@@ -20,7 +20,7 @@ namespace BJEngine
 	class FileSave
 		: public FileSystem
 	{
-
+		std::vector<Drawable*> drawableElements;
 		std::vector<BaseElement*> defferedElements;
 		std::vector<BaseElement*> forwardElements;
 		std::vector<Materials*> materials;
@@ -31,7 +31,7 @@ namespace BJEngine
 
 	public:
 
-		FileSave(std::string&& path,std::string&& name,const std::vector<BJEStruct::LightDesc>& cbLightBuffer, std::vector<Materials*> materials, std::vector<BaseElement*> defferedElements, std::vector<BaseElement*> forwardElements);
+		FileSave(std::string&& path,std::string&& name,const std::vector<BJEStruct::LightDesc>& cbLightBuffer, std::vector<Materials*> materials, std::vector<BaseElement*> defferedElements, std::vector<BaseElement*> forwardElements, std::vector<Drawable*> drawableElements);
 
 		bool Execute() override;
 
@@ -40,6 +40,7 @@ namespace BJEngine
 	class FileOpen
 		: public FileSystem
 	{
+		std::vector<Drawable*>* drawableElements;
 		std::vector<BaseElement*>* defferedElements;
 		std::vector<BaseElement*>* forwardElements;
 		std::vector<BJEStruct::LightDesc>* cbLightBuffer;
@@ -54,7 +55,7 @@ namespace BJEngine
 
 	public:
 
-		FileOpen(std::string&& path, std::vector<BaseElement*>* defferedElements, std::vector<BaseElement*>* forwardElements, std::vector<BJEStruct::LightDesc>* cbLightBuffer);
+		FileOpen(std::string&& path, std::vector<BaseElement*>* defferedElements, std::vector<BaseElement*>* forwardElements, std::vector<Drawable*>* drawableElements, std::vector<BJEStruct::LightDesc>* cbLightBuffer);
 
 		bool Execute() override;
 

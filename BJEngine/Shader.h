@@ -31,7 +31,7 @@ namespace BJEngine {
 			layout = tempLayout; numElements = elementsNum;
 		}
 
-		ID3D11InputLayout* GetInputLayout() { return pVertexLayout; }
+		ID3D11InputLayout* GetInputLayout() { return pVertexLayout ? pVertexLayout : nullptr; }
 		ID3D11VertexShader* GetVertexShader() { return pVertexShader; }
 		ID3D11PixelShader* GetPixelShader() { return pPixelShader; }
 		ID3D11GeometryShader* GetGeometryShader() { 

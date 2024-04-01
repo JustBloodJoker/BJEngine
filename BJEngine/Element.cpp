@@ -31,9 +31,6 @@ namespace BJEngine
 	Element::Element(std::vector<BJEStruct::ModelVertex>&& v, std::vector<WORD>&& i, Materials* material,
 		dx::XMVECTOR min, dx::XMVECTOR max)
 	{
-		
-		world = dx::XMMatrixIdentity();
-
 		vertices = std::move(v);
 		indices = std::move(i);
 		this->pMaterial = material; material = nullptr;
@@ -54,6 +51,7 @@ namespace BJEngine
 
 	void Element::Close()
 	{
+		CloseS();
 		vertices.clear();
 		indices.clear();
 		RELEASE(pVertexBuffer);
@@ -71,6 +69,8 @@ namespace BJEngine
 
 	void Element::Draw(CameraDesc cam, ID3D11DeviceContext* context)
 	{	
+		UpdateMatrix();
+
 		objectBox.CreateFromPoints(objectBox, dx::XMVector3Transform(maxLocal, world),
 			dx::XMVector3Transform(minLocal, world)
 		);
@@ -213,8 +213,6 @@ namespace BJEngine
 		GP::BindShader(GP::BACKGROUND_SHADER);
 
 		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		world = dx::XMMatrixIdentity();
 
 		world = dx::XMMatrixScaling(10000.0f, 10000.0f, 10000.0f) *
 
